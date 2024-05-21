@@ -1,0 +1,73 @@
+{
+    "initialize": {
+        "schema": {
+            "width": "uint16",
+            "height": "uint16"
+        }
+    },
+    "start": {
+        "schema": {}
+    },
+    "createUnit": {
+        "schema": {
+            "playerId": "uint8",
+            "unitType": "uint8"
+        }
+    },
+    "assignUnit": {
+        "schema": {
+            "playerId": "uint8",
+            "unitId": "uint8",
+            "command": "uint64",
+            "commandExtra": "uint64",
+            "commandMeta": "uint8"
+        }
+    },
+    "placeBuilding": {
+        "schema": {
+            "playerId": "uint8",
+            "buildingType": "uint8",
+            "x": "uint16",
+            "y": "uint16"
+        }
+    },
+    "addPlayer": {
+        "schema": {
+            "spawnAreaX": "uint16",
+            "spawnAreaY": "uint16",
+            "workerPortX": "uint16",
+            "workerPortY": "uint16"
+        }
+    },
+    "addUnitPrototype": {
+        "schema": {
+            "layer": "uint8",
+            "resourceCost": "uint16",
+            "computeCost": "uint8",
+            "spawnTime": "uint8",
+            "maxIntegrity": "uint8",
+            "landStrength": "uint8",
+            "hoverStrength": "uint8",
+            "airStrength": "uint8",
+            "attackRange": "uint8",
+            "attackCooldown": "uint8",
+            "isAssault": "bool",
+            "isWorker": "bool"
+        }
+    },
+    "addBuildingPrototype": {
+        "schema": {
+            "width": "uint8",
+            "height": "uint8",
+            "resourceCost": "uint16",
+            "resourceCapacity": "uint16",
+            "computeCapacity": "uint8",
+            "resourceMine": "uint8",
+            "mineTime": "uint8",
+            "maxIntegrity": "uint8",
+            "buildingTime": "uint8",
+            "isArmory": "bool",
+            "isEnvironment": "bool"
+        }
+    }
+}
