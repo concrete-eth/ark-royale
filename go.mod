@@ -3,7 +3,7 @@ module github.com/concrete-eth/ark-rts
 go 1.21.5
 
 require (
-	github.com/concrete-eth/archetype v0.0.0-00010101000000-000000000000
+	github.com/concrete-eth/archetype v0.0.0-20240729141012-9dd87e15b30a
 	github.com/ebitenui/ebitenui v0.5.6
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/fogleman/gg v1.3.0
@@ -127,7 +127,5 @@ require (
 	nhooyr.io/websocket v1.8.11 // indirect
 	rsc.io/tmplfunc v0.0.3 // indirect
 )
-
-replace github.com/concrete-eth/archetype => ../archetype
 
 replace github.com/ethereum/go-ethereum => ../framework/concrete-geth
