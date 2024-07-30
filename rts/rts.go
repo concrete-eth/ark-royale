@@ -217,7 +217,7 @@ func (c *Core) EventHandler() InternalEventHandler {
 }
 
 func (c *Core) emitInternalEvent(eventId uint8, data interface{}) {
-	if c.eventHandler != nil {
+	if c.eventHandler != nil && !c.Rebasing() {
 		c.eventHandler(eventId, data)
 	}
 }

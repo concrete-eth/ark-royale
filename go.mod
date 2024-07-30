@@ -129,3 +129,5 @@ require (
 )
 
 replace github.com/ethereum/go-ethereum => ../framework/concrete-geth
+
+replace github.com/concrete-eth/archetype => ../archetype
