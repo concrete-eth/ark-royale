@@ -26,12 +26,17 @@ func BoardDefaultKey() []byte {
 }
 
 type BoardRow struct {
-	lib.DatastoreStruct
+	lib.DatastoreStructWithParent
 }
 
 func NewBoardRow(dsSlot lib.DatastoreSlot) *BoardRow {
 	sizes := []int{1, 1, 1, 1, 1, 1, 1}
-	return &BoardRow{*lib.NewDatastoreStruct(dsSlot, sizes)}
+	return &BoardRow{*lib.NewDatastoreStructWithParent(dsSlot, sizes, nil, nil)}
+}
+
+func NewBoardRowWithParent(dsSlot lib.DatastoreSlot, parent lib.Parent, rowKey lib.RowKey) *BoardRow {
+	sizes := []int{1, 1, 1, 1, 1, 1, 1}
+	return &BoardRow{*lib.NewDatastoreStructWithParent(dsSlot, sizes, parent, rowKey)}
 }
 
 func (v *BoardRow) Get() (
@@ -141,17 +146,31 @@ func (v *BoardRow) SetAirUnitId(value uint8) {
 }
 
 type Board struct {
-	dsSlot lib.DatastoreSlot
+	dsSlot  lib.DatastoreSlot
+	parent  lib.Parent
+	tableId lib.TableId
 }
 
 func NewBoard(ds lib.Datastore) *Board {
 	dsSlot := ds.Get(BoardDefaultKey())
-	return &Board{dsSlot}
+	return &Board{
+		dsSlot:  dsSlot,
+		parent:  nil,
+		tableId: nil,
+	}
+}
+
+func NewBoardWithParent(ds lib.Datastore, parent lib.Parent, tableId lib.TableId) *Board {
+	t := NewBoard(ds)
+	t.parent = parent
+	t.tableId = tableId
+	return t
 }
 
 func NewBoardFromSlot(dsSlot lib.DatastoreSlot) *Board {
-	return &Board{dsSlot}
+	return &Board{dsSlot: dsSlot}
 }
+
 func (m *Board) Get(
 	x uint16,
 	y uint16,
@@ -160,5 +179,13 @@ func (m *Board) Get(
 		codec.EncodeUint16(2, x),
 		codec.EncodeUint16(2, y),
 	)
-	return NewBoardRow(dsSlot)
+	return NewBoardRowWithParent(dsSlot, m, lib.RowKey{
+		x, y,
+	})
+}
+
+func (m *Board) SetFieldCallback(tableId lib.TableId, rowKey lib.RowKey, columnIndex int, value []byte) {
+	if m.parent != nil {
+		m.parent.SetFieldCallback(m.tableId, rowKey, columnIndex, value)
+	}
 }

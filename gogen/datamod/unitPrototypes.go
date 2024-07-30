@@ -26,12 +26,17 @@ func UnitPrototypesDefaultKey() []byte {
 }
 
 type UnitPrototypesRow struct {
-	lib.DatastoreStruct
+	lib.DatastoreStructWithParent
 }
 
 func NewUnitPrototypesRow(dsSlot lib.DatastoreSlot) *UnitPrototypesRow {
 	sizes := []int{1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
-	return &UnitPrototypesRow{*lib.NewDatastoreStruct(dsSlot, sizes)}
+	return &UnitPrototypesRow{*lib.NewDatastoreStructWithParent(dsSlot, sizes, nil, nil)}
+}
+
+func NewUnitPrototypesRowWithParent(dsSlot lib.DatastoreSlot, parent lib.Parent, rowKey lib.RowKey) *UnitPrototypesRow {
+	sizes := []int{1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+	return &UnitPrototypesRow{*lib.NewDatastoreStructWithParent(dsSlot, sizes, parent, rowKey)}
 }
 
 func (v *UnitPrototypesRow) Get() (
@@ -211,22 +216,44 @@ func (v *UnitPrototypesRow) SetIsWorker(value bool) {
 }
 
 type UnitPrototypes struct {
-	dsSlot lib.DatastoreSlot
+	dsSlot  lib.DatastoreSlot
+	parent  lib.Parent
+	tableId lib.TableId
 }
 
 func NewUnitPrototypes(ds lib.Datastore) *UnitPrototypes {
 	dsSlot := ds.Get(UnitPrototypesDefaultKey())
-	return &UnitPrototypes{dsSlot}
+	return &UnitPrototypes{
+		dsSlot:  dsSlot,
+		parent:  nil,
+		tableId: nil,
+	}
+}
+
+func NewUnitPrototypesWithParent(ds lib.Datastore, parent lib.Parent, tableId lib.TableId) *UnitPrototypes {
+	t := NewUnitPrototypes(ds)
+	t.parent = parent
+	t.tableId = tableId
+	return t
 }
 
 func NewUnitPrototypesFromSlot(dsSlot lib.DatastoreSlot) *UnitPrototypes {
-	return &UnitPrototypes{dsSlot}
+	return &UnitPrototypes{dsSlot: dsSlot}
 }
+
 func (m *UnitPrototypes) Get(
 	unitType uint8,
 ) *UnitPrototypesRow {
 	dsSlot := m.dsSlot.Mapping().GetNested(
 		codec.EncodeUint8(1, unitType),
 	)
-	return NewUnitPrototypesRow(dsSlot)
+	return NewUnitPrototypesRowWithParent(dsSlot, m, lib.RowKey{
+		unitType,
+	})
+}
+
+func (m *UnitPrototypes) SetFieldCallback(tableId lib.TableId, rowKey lib.RowKey, columnIndex int, value []byte) {
+	if m.parent != nil {
+		m.parent.SetFieldCallback(m.tableId, rowKey, columnIndex, value)
+	}
 }

@@ -3,7 +3,7 @@ module github.com/concrete-eth/ark-rts
 go 1.21.5
 
 require (
-	github.com/concrete-eth/archetype v0.0.0-20240729141012-9dd87e15b30a
+	github.com/concrete-eth/archetype v0.0.0-20240730114953-802b4646c681
 	github.com/ebitenui/ebitenui v0.5.6
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/fogleman/gg v1.3.0

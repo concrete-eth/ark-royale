@@ -26,12 +26,17 @@ func UnitsDefaultKey() []byte {
 }
 
 type UnitsRow struct {
-	lib.DatastoreStruct
+	lib.DatastoreStructWithParent
 }
 
 func NewUnitsRow(dsSlot lib.DatastoreSlot) *UnitsRow {
 	sizes := []int{2, 2, 1, 1, 1, 1, 4, 8, 8, 1, 1}
-	return &UnitsRow{*lib.NewDatastoreStruct(dsSlot, sizes)}
+	return &UnitsRow{*lib.NewDatastoreStructWithParent(dsSlot, sizes, nil, nil)}
+}
+
+func NewUnitsRowWithParent(dsSlot lib.DatastoreSlot, parent lib.Parent, rowKey lib.RowKey) *UnitsRow {
+	sizes := []int{2, 2, 1, 1, 1, 1, 4, 8, 8, 1, 1}
+	return &UnitsRow{*lib.NewDatastoreStructWithParent(dsSlot, sizes, parent, rowKey)}
 }
 
 func (v *UnitsRow) Get() (
@@ -197,17 +202,31 @@ func (v *UnitsRow) SetIsPreTicked(value bool) {
 }
 
 type Units struct {
-	dsSlot lib.DatastoreSlot
+	dsSlot  lib.DatastoreSlot
+	parent  lib.Parent
+	tableId lib.TableId
 }
 
 func NewUnits(ds lib.Datastore) *Units {
 	dsSlot := ds.Get(UnitsDefaultKey())
-	return &Units{dsSlot}
+	return &Units{
+		dsSlot:  dsSlot,
+		parent:  nil,
+		tableId: nil,
+	}
+}
+
+func NewUnitsWithParent(ds lib.Datastore, parent lib.Parent, tableId lib.TableId) *Units {
+	t := NewUnits(ds)
+	t.parent = parent
+	t.tableId = tableId
+	return t
 }
 
 func NewUnitsFromSlot(dsSlot lib.DatastoreSlot) *Units {
-	return &Units{dsSlot}
+	return &Units{dsSlot: dsSlot}
 }
+
 func (m *Units) Get(
 	playerId uint8,
 	unitId uint8,
@@ -216,5 +235,13 @@ func (m *Units) Get(
 		codec.EncodeUint8(1, playerId),
 		codec.EncodeUint8(1, unitId),
 	)
-	return NewUnitsRow(dsSlot)
+	return NewUnitsRowWithParent(dsSlot, m, lib.RowKey{
+		playerId, unitId,
+	})
+}
+
+func (m *Units) SetFieldCallback(tableId lib.TableId, rowKey lib.RowKey, columnIndex int, value []byte) {
+	if m.parent != nil {
+		m.parent.SetFieldCallback(m.tableId, rowKey, columnIndex, value)
+	}
 }

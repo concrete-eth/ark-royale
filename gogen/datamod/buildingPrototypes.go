@@ -26,12 +26,17 @@ func BuildingPrototypesDefaultKey() []byte {
 }
 
 type BuildingPrototypesRow struct {
-	lib.DatastoreStruct
+	lib.DatastoreStructWithParent
 }
 
 func NewBuildingPrototypesRow(dsSlot lib.DatastoreSlot) *BuildingPrototypesRow {
 	sizes := []int{1, 1, 2, 2, 1, 1, 1, 1, 1, 1, 1}
-	return &BuildingPrototypesRow{*lib.NewDatastoreStruct(dsSlot, sizes)}
+	return &BuildingPrototypesRow{*lib.NewDatastoreStructWithParent(dsSlot, sizes, nil, nil)}
+}
+
+func NewBuildingPrototypesRowWithParent(dsSlot lib.DatastoreSlot, parent lib.Parent, rowKey lib.RowKey) *BuildingPrototypesRow {
+	sizes := []int{1, 1, 2, 2, 1, 1, 1, 1, 1, 1, 1}
+	return &BuildingPrototypesRow{*lib.NewDatastoreStructWithParent(dsSlot, sizes, parent, rowKey)}
 }
 
 func (v *BuildingPrototypesRow) Get() (
@@ -197,22 +202,44 @@ func (v *BuildingPrototypesRow) SetIsEnvironment(value bool) {
 }
 
 type BuildingPrototypes struct {
-	dsSlot lib.DatastoreSlot
+	dsSlot  lib.DatastoreSlot
+	parent  lib.Parent
+	tableId lib.TableId
 }
 
 func NewBuildingPrototypes(ds lib.Datastore) *BuildingPrototypes {
 	dsSlot := ds.Get(BuildingPrototypesDefaultKey())
-	return &BuildingPrototypes{dsSlot}
+	return &BuildingPrototypes{
+		dsSlot:  dsSlot,
+		parent:  nil,
+		tableId: nil,
+	}
+}
+
+func NewBuildingPrototypesWithParent(ds lib.Datastore, parent lib.Parent, tableId lib.TableId) *BuildingPrototypes {
+	t := NewBuildingPrototypes(ds)
+	t.parent = parent
+	t.tableId = tableId
+	return t
 }
 
 func NewBuildingPrototypesFromSlot(dsSlot lib.DatastoreSlot) *BuildingPrototypes {
-	return &BuildingPrototypes{dsSlot}
+	return &BuildingPrototypes{dsSlot: dsSlot}
 }
+
 func (m *BuildingPrototypes) Get(
 	buildingType uint8,
 ) *BuildingPrototypesRow {
 	dsSlot := m.dsSlot.Mapping().GetNested(
 		codec.EncodeUint8(1, buildingType),
 	)
-	return NewBuildingPrototypesRow(dsSlot)
+	return NewBuildingPrototypesRowWithParent(dsSlot, m, lib.RowKey{
+		buildingType,
+	})
+}
+
+func (m *BuildingPrototypes) SetFieldCallback(tableId lib.TableId, rowKey lib.RowKey, columnIndex int, value []byte) {
+	if m.parent != nil {
+		m.parent.SetFieldCallback(m.tableId, rowKey, columnIndex, value)
+	}
 }

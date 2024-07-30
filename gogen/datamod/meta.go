@@ -26,12 +26,17 @@ func MetaDefaultKey() []byte {
 }
 
 type MetaRow struct {
-	lib.DatastoreStruct
+	lib.DatastoreStructWithParent
 }
 
 func NewMetaRow(dsSlot lib.DatastoreSlot) *MetaRow {
 	sizes := []int{2, 2, 1, 1, 1, 1, 1, 4}
-	return &MetaRow{*lib.NewDatastoreStruct(dsSlot, sizes)}
+	return &MetaRow{*lib.NewDatastoreStructWithParent(dsSlot, sizes, nil, nil)}
+}
+
+func NewMetaRowWithParent(dsSlot lib.DatastoreSlot, parent lib.Parent, rowKey lib.RowKey) *MetaRow {
+	sizes := []int{2, 2, 1, 1, 1, 1, 1, 4}
+	return &MetaRow{*lib.NewDatastoreStructWithParent(dsSlot, sizes, parent, rowKey)}
 }
 
 func (v *MetaRow) Get() (
@@ -155,17 +160,37 @@ func (v *MetaRow) SetCreationBlockNumber(value uint32) {
 }
 
 type Meta struct {
-	dsSlot lib.DatastoreSlot
+	dsSlot  lib.DatastoreSlot
+	parent  lib.Parent
+	tableId lib.TableId
 }
 
 func NewMeta(ds lib.Datastore) *Meta {
 	dsSlot := ds.Get(MetaDefaultKey())
-	return &Meta{dsSlot}
+	return &Meta{
+		dsSlot:  dsSlot,
+		parent:  nil,
+		tableId: nil,
+	}
+}
+
+func NewMetaWithParent(ds lib.Datastore, parent lib.Parent, tableId lib.TableId) *Meta {
+	t := NewMeta(ds)
+	t.parent = parent
+	t.tableId = tableId
+	return t
 }
 
 func NewMetaFromSlot(dsSlot lib.DatastoreSlot) *Meta {
-	return &Meta{dsSlot}
+	return &Meta{dsSlot: dsSlot}
 }
+
 func (m *Meta) Get() *MetaRow {
-	return NewMetaRow(m.dsSlot)
+	return NewMetaRowWithParent(m.dsSlot, m, nil)
+}
+
+func (m *Meta) SetFieldCallback(tableId lib.TableId, rowKey lib.RowKey, columnIndex int, value []byte) {
+	if m.parent != nil {
+		m.parent.SetFieldCallback(m.tableId, rowKey, columnIndex, value)
+	}
 }

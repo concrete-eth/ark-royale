@@ -26,12 +26,17 @@ func PlayersDefaultKey() []byte {
 }
 
 type PlayersRow struct {
-	lib.DatastoreStruct
+	lib.DatastoreStructWithParent
 }
 
 func NewPlayersRow(dsSlot lib.DatastoreSlot) *PlayersRow {
 	sizes := []int{2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1}
-	return &PlayersRow{*lib.NewDatastoreStruct(dsSlot, sizes)}
+	return &PlayersRow{*lib.NewDatastoreStructWithParent(dsSlot, sizes, nil, nil)}
+}
+
+func NewPlayersRowWithParent(dsSlot lib.DatastoreSlot, parent lib.Parent, rowKey lib.RowKey) *PlayersRow {
+	sizes := []int{2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1}
+	return &PlayersRow{*lib.NewDatastoreStructWithParent(dsSlot, sizes, parent, rowKey)}
 }
 
 func (v *PlayersRow) Get() (
@@ -239,22 +244,44 @@ func (v *PlayersRow) SetUnitPayQueuePointer(value uint8) {
 }
 
 type Players struct {
-	dsSlot lib.DatastoreSlot
+	dsSlot  lib.DatastoreSlot
+	parent  lib.Parent
+	tableId lib.TableId
 }
 
 func NewPlayers(ds lib.Datastore) *Players {
 	dsSlot := ds.Get(PlayersDefaultKey())
-	return &Players{dsSlot}
+	return &Players{
+		dsSlot:  dsSlot,
+		parent:  nil,
+		tableId: nil,
+	}
+}
+
+func NewPlayersWithParent(ds lib.Datastore, parent lib.Parent, tableId lib.TableId) *Players {
+	t := NewPlayers(ds)
+	t.parent = parent
+	t.tableId = tableId
+	return t
 }
 
 func NewPlayersFromSlot(dsSlot lib.DatastoreSlot) *Players {
-	return &Players{dsSlot}
+	return &Players{dsSlot: dsSlot}
 }
+
 func (m *Players) Get(
 	playerId uint8,
 ) *PlayersRow {
 	dsSlot := m.dsSlot.Mapping().GetNested(
 		codec.EncodeUint8(1, playerId),
 	)
-	return NewPlayersRow(dsSlot)
+	return NewPlayersRowWithParent(dsSlot, m, lib.RowKey{
+		playerId,
+	})
+}
+
+func (m *Players) SetFieldCallback(tableId lib.TableId, rowKey lib.RowKey, columnIndex int, value []byte) {
+	if m.parent != nil {
+		m.parent.SetFieldCallback(m.tableId, rowKey, columnIndex, value)
+	}
 }

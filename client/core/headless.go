@@ -28,6 +28,7 @@ type IHeadlessClient interface {
 	InterpolatedSync() (bool, bool, error)
 	// Interpolating() bool
 	Simulate(f func(core arch.Core))
+	Hinter() *rpc.TxHinter
 
 	SendAction(action arch.Action) error
 	Start()
@@ -65,6 +66,10 @@ func NewHeadlessClient(
 
 func (c *HeadlessClient) Game() *rts.Core {
 	return c.Core().(*rts.Core)
+}
+
+func (c *HeadlessClient) Hinter() *rpc.TxHinter {
+	return c.hinter
 }
 
 // func (c *HeadlessClient) LastTickTime() time.Time {

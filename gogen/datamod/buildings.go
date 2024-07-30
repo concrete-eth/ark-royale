@@ -26,12 +26,17 @@ func BuildingsDefaultKey() []byte {
 }
 
 type BuildingsRow struct {
-	lib.DatastoreStruct
+	lib.DatastoreStructWithParent
 }
 
 func NewBuildingsRow(dsSlot lib.DatastoreSlot) *BuildingsRow {
 	sizes := []int{2, 2, 1, 1, 1, 4}
-	return &BuildingsRow{*lib.NewDatastoreStruct(dsSlot, sizes)}
+	return &BuildingsRow{*lib.NewDatastoreStructWithParent(dsSlot, sizes, nil, nil)}
+}
+
+func NewBuildingsRowWithParent(dsSlot lib.DatastoreSlot, parent lib.Parent, rowKey lib.RowKey) *BuildingsRow {
+	sizes := []int{2, 2, 1, 1, 1, 4}
+	return &BuildingsRow{*lib.NewDatastoreStructWithParent(dsSlot, sizes, parent, rowKey)}
 }
 
 func (v *BuildingsRow) Get() (
@@ -127,17 +132,31 @@ func (v *BuildingsRow) SetTimestamp(value uint32) {
 }
 
 type Buildings struct {
-	dsSlot lib.DatastoreSlot
+	dsSlot  lib.DatastoreSlot
+	parent  lib.Parent
+	tableId lib.TableId
 }
 
 func NewBuildings(ds lib.Datastore) *Buildings {
 	dsSlot := ds.Get(BuildingsDefaultKey())
-	return &Buildings{dsSlot}
+	return &Buildings{
+		dsSlot:  dsSlot,
+		parent:  nil,
+		tableId: nil,
+	}
+}
+
+func NewBuildingsWithParent(ds lib.Datastore, parent lib.Parent, tableId lib.TableId) *Buildings {
+	t := NewBuildings(ds)
+	t.parent = parent
+	t.tableId = tableId
+	return t
 }
 
 func NewBuildingsFromSlot(dsSlot lib.DatastoreSlot) *Buildings {
-	return &Buildings{dsSlot}
+	return &Buildings{dsSlot: dsSlot}
 }
+
 func (m *Buildings) Get(
 	playerId uint8,
 	buildingId uint8,
@@ -146,5 +165,13 @@ func (m *Buildings) Get(
 		codec.EncodeUint8(1, playerId),
 		codec.EncodeUint8(1, buildingId),
 	)
-	return NewBuildingsRow(dsSlot)
+	return NewBuildingsRowWithParent(dsSlot, m, lib.RowKey{
+		playerId, buildingId,
+	})
+}
+
+func (m *Buildings) SetFieldCallback(tableId lib.TableId, rowKey lib.RowKey, columnIndex int, value []byte) {
+	if m.parent != nil {
+		m.parent.SetFieldCallback(m.tableId, rowKey, columnIndex, value)
+	}
 }

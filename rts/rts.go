@@ -8,6 +8,7 @@ import (
 	"github.com/concrete-eth/archetype/utils"
 	"github.com/concrete-eth/ark-rts/gogen/archmod"
 	"github.com/concrete-eth/ark-rts/gogen/datamod"
+	"github.com/ethereum/go-ethereum/concrete/lib"
 )
 
 const (
@@ -149,6 +150,8 @@ type InternalEvent_Destroyed struct {
 	Building Object
 }
 
+type SetFieldHandler func(table arch.TableSchema, rowKey lib.RowKey, columnName string, value []byte)
+
 type (
 	Tick                      = arch.CanonicalTickAction
 	Start                     = archmod.ActionData_Start
@@ -183,9 +186,20 @@ var (
 	ErrUnitDead                      = errors.New("unit dead")
 )
 
+var (
+	TableId_Meta, _               = archmod.TableSchemas.TableIdFromName("Meta")
+	TableId_Players, _            = archmod.TableSchemas.TableIdFromName("Players")
+	TableId_Board, _              = archmod.TableSchemas.TableIdFromName("Board")
+	TableId_Units, _              = archmod.TableSchemas.TableIdFromName("Units")
+	TableId_Buildings, _          = archmod.TableSchemas.TableIdFromName("Buildings")
+	TableId_UnitPrototypes, _     = archmod.TableSchemas.TableIdFromName("UnitPrototypes")
+	TableId_BuildingPrototypes, _ = archmod.TableSchemas.TableIdFromName("BuildingPrototypes")
+)
+
 type Core struct {
 	arch.BaseCore
-	eventHandler InternalEventHandler
+	eventHandler    InternalEventHandler
+	setFieldHandler SetFieldHandler
 }
 
 var _ archmod.IActions = &Core{}
@@ -208,20 +222,33 @@ func (c *Core) emitInternalEvent(eventId uint8, data interface{}) {
 	}
 }
 
+func (c *Core) SetSetFieldHandler(handler SetFieldHandler) {
+	c.setFieldHandler = handler
+}
+
+func (c *Core) SetFieldCallback(tableId lib.TableId, rowKey lib.RowKey, columnIndex int, value []byte) {
+	if c.setFieldHandler == nil {
+		return
+	}
+	table := archmod.TableSchemas.GetTableSchema(tableId.(arch.ValidTableId))
+	columnName := table.Values[columnIndex].Name
+	c.setFieldHandler(table, rowKey, columnName, value)
+}
+
 func (c *Core) GetMeta() *datamod.MetaRow {
-	return datamod.NewMeta(c.Datastore()).Get()
+	return datamod.NewMetaWithParent(c.Datastore(), c, TableId_Meta).Get()
 }
 
 func (c *Core) GetPlayer(playerId uint8) *datamod.PlayersRow {
-	return datamod.NewPlayers(c.Datastore()).Get(playerId)
+	return datamod.NewPlayersWithParent(c.Datastore(), c, TableId_Players).Get(playerId)
 }
 
 func (c *Core) GetBoardTile(x, y uint16) *datamod.BoardRow {
-	return datamod.NewBoard(c.Datastore()).Get(x, y)
+	return datamod.NewBoardWithParent(c.Datastore(), c, TableId_Board).Get(x, y)
 }
 
 func (c *Core) GetBuilding(playerId uint8, buildingId uint8) *datamod.BuildingsRow {
-	return datamod.NewBuildings(c.Datastore()).Get(playerId, buildingId)
+	return datamod.NewBuildingsWithParent(c.Datastore(), c, TableId_Buildings).Get(playerId, buildingId)
 }
 
 func (c *Core) GetBuildingObject(playerId uint8, buildingId uint8) BuildingObjectWithRow {
@@ -238,7 +265,7 @@ func (c *Core) GetBuildingObject(playerId uint8, buildingId uint8) BuildingObjec
 }
 
 func (c *Core) GetUnit(playerId uint8, unitId uint8) *datamod.UnitsRow {
-	return datamod.NewUnits(c.Datastore()).Get(playerId, unitId)
+	return datamod.NewUnitsWithParent(c.Datastore(), c, TableId_Units).Get(playerId, unitId)
 }
 
 func (c *Core) GetUnitObject(playerId uint8, uintId uint8) UnitObjectWithRow {
@@ -255,11 +282,11 @@ func (c *Core) GetUnitObject(playerId uint8, uintId uint8) UnitObjectWithRow {
 }
 
 func (c *Core) GetUnitPrototype(unitTypeId uint8) *datamod.UnitPrototypesRow {
-	return datamod.NewUnitPrototypes(c.Datastore()).Get(unitTypeId)
+	return datamod.NewUnitPrototypesWithParent(c.Datastore(), c, TableId_UnitPrototypes).Get(unitTypeId)
 }
 
 func (c *Core) GetBuildingPrototype(prototypeId uint8) *datamod.BuildingPrototypesRow {
-	return datamod.NewBuildingPrototypes(c.Datastore()).Get(prototypeId)
+	return datamod.NewBuildingPrototypesWithParent(c.Datastore(), c, TableId_BuildingPrototypes).Get(prototypeId)
 }
 
 func (c *Core) AbsSubTickIndex() uint32 {

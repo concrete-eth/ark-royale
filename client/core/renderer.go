@@ -11,8 +11,11 @@ import (
 	"github.com/concrete-eth/ark-rts/client/assets"
 	"github.com/concrete-eth/ark-rts/client/decren"
 	client_utils "github.com/concrete-eth/ark-rts/client/utils"
+	"github.com/concrete-eth/ark-rts/gogen/archmod"
 	"github.com/concrete-eth/ark-rts/gogen/datamod"
 	"github.com/concrete-eth/ark-rts/rts"
+	"github.com/ethereum/go-ethereum/concrete/lib"
+	"github.com/ethereum/go-ethereum/log"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/colorm"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -468,117 +471,119 @@ func (c *CoreRenderer) anticipateSubTick() {
 
 // Pre-runs any hinted actions and updates the sprites of the affected objects.
 func (c *CoreRenderer) anticipateActions() {
-	// if c.hinter == nil {
-	// 	return
-	// }
-	// hintNonce := c.hinter.HintNonce()
-	// if hintNonce <= c.hintNonce {
-	// 	return
-	// }
-	// hintNonce, hintsBatch := c.hinter.GetHints()
-	// c.hintNonce = hintNonce
+	hinter := c.Hinter()
+	if hinter == nil {
+		return
+	}
+	hintNonce := hinter.HintNonce()
+	if hintNonce <= c.hintNonce {
+		return
+	}
 
-	// // Create a child game instance to pre-run the hinted actions
-	// gg := NewScratchLayer(c.Game())
+	hintNonce, hintsBatch := hinter.GetHints()
+	c.hintNonce = hintNonce
 
-	// anticipatedObjects := make(map[rts.Object]struct{}, 0)
-	// commandAnticipatedObject := make(map[rts.Object]struct{}, 0)
+	c.Simulate(func(_gg arch.Core) {
+		gg := _gg.(*rts.Core)
 
-	// // Set the child instances state update handler to update the present sprites based on anticipated table updates
-	// gg.State().SetTableUpdateHandler(func(tableId uint8, rowKey []interface{}, columnIndex int, value []byte) {
-	// 	columnName := archmod.Tables[tableId].Columns[columnIndex]
-	// 	if tableId == archmod.TableId_Buildings {
-	// 		playerId := rowKey[0].(uint8)
-	// 		buildingId := rowKey[1].(uint8)
-	// 		object := rts.Object{
-	// 			Type:     rts.ObjectType_Building,
-	// 			PlayerId: playerId,
-	// 			ObjectId: buildingId,
-	// 		}
-	// 		if columnName == "state" {
-	// 			anticipatedObjects[object] = struct{}{}
-	// 		}
-	// 	} else if tableId == archmod.TableId_Units {
-	// 		playerId := rowKey[0].(uint8)
-	// 		unitId := rowKey[1].(uint8)
-	// 		object := rts.Object{
-	// 			Type:     rts.ObjectType_Unit,
-	// 			PlayerId: playerId,
-	// 			ObjectId: unitId,
-	// 		}
-	// 		if columnName == "state" {
-	// 			anticipatedObjects[object] = struct{}{}
-	// 		} else if columnName == "command" {
-	// 			commandAnticipatedObject[object] = struct{}{}
-	// 		}
-	// 	}
-	// })
+		anticipatedObjects := make(map[rts.Object]struct{}, 0)
+		commandAnticipatedObject := make(map[rts.Object]struct{}, 0)
 
-	// c.anticipating = true
+		// Set the child instances state update handler to update the present sprites based on anticipated table updates
+		gg.SetSetFieldHandler(func(table arch.TableSchema, rowKey lib.RowKey, columnName string, value []byte) {
+			if table.Name == "Buildings" {
+				playerId := rowKey[0].(uint8)
+				buildingId := rowKey[1].(uint8)
+				object := rts.Object{
+					Type:     rts.ObjectType_Building,
+					PlayerId: playerId,
+					ObjectId: buildingId,
+				}
+				if columnName == "state" {
+					anticipatedObjects[object] = struct{}{}
+				}
+			} else if table.Name == "Units" {
+				playerId := rowKey[0].(uint8)
+				unitId := rowKey[1].(uint8)
+				object := rts.Object{
+					Type:     rts.ObjectType_Unit,
+					PlayerId: playerId,
+					ObjectId: unitId,
+				}
+				if columnName == "state" {
+					anticipatedObjects[object] = struct{}{}
+				} else if columnName == "command" {
+					commandAnticipatedObject[object] = struct{}{}
+				}
+			}
+		})
 
-	// // Execute every hinted non-tick action on the child game instance
-	// for _, hint := range hintsBatch {
-	// 	for _, action := range hint {
-	// 		switch action := action.(type) {
-	// 		case *rts.Tick, *rts.Initialization, *rts.Start:
-	// 			continue
-	// 		default:
-	// 			err := gg.ExecuteAction(action)
-	// 			if err != nil {
-	// 				log.Debug("Anticipating action error", "action", action, "error", err)
-	// 			}
-	// 		}
-	// 	}
-	// }
+		c.anticipating = true
 
-	// setAnticipatedObjectSprite := func(obj rts.Object) {
-	// 	if obj.Type == rts.ObjectType_Building {
-	// 		building := gg.GetBuilding(obj.PlayerId, obj.ObjectId)
-	// 		c.setBuildingSprite(obj.PlayerId, obj.ObjectId, building)
-	// 	} else if obj.Type == rts.ObjectType_Unit {
-	// 		unit := gg.GetUnit(obj.PlayerId, obj.ObjectId)
-	// 		c.setUnitSprite(obj.PlayerId, obj.ObjectId, unit)
-	// 	}
-	// }
+		// Execute every hinted non-tick action on the child game instance
+		for _, hint := range hintsBatch {
+			for _, action := range hint {
+				switch action := action.(type) {
+				case *rts.Tick, *rts.Initialization, *rts.Start:
+					continue
+				default:
+					err := archmod.ActionSchemas.ExecuteAction(action, gg)
+					if err != nil {
+						log.Debug("Anticipating action error", "action", action, "error", err)
+					}
+				}
+			}
+		}
 
-	// // Anticipate objects
-	// for obj := range anticipatedObjects {
-	// 	delete(c.anticipatedObjects, obj)
-	// 	setAnticipatedObjectSprite(obj)
-	// }
-	// // Re-anticipate all previously anticipated object that have not been anticipated this round
-	// // to clear the sprites of objects that are no longer anticipated
-	// for obj := range c.anticipatedObjects {
-	// 	// Skip object that have already been set in the canonical state
-	// 	playerId := obj.PlayerId
-	// 	if obj.Type == rts.ObjectType_Building {
-	// 		buildingId := obj.ObjectId
-	// 		nBuildings := gg.GetPlayer(playerId).GetBuildingCount()
-	// 		if buildingId <= nBuildings {
-	// 			continue
-	// 		}
-	// 	} else if obj.Type == rts.ObjectType_Unit {
-	// 		unitId := obj.ObjectId
-	// 		nUnits := gg.GetPlayer(playerId).GetUnitCount()
-	// 		if unitId <= nUnits {
-	// 			continue
-	// 		}
-	// 	}
-	// 	setAnticipatedObjectSprite(obj)
-	// }
-	// c.anticipatedObjects = anticipatedObjects
+		setAnticipatedObjectSprite := func(obj rts.Object) {
+			if obj.Type == rts.ObjectType_Building {
+				building := gg.GetBuilding(obj.PlayerId, obj.ObjectId)
+				c.setBuildingSprite(obj.PlayerId, obj.ObjectId, building)
+			} else if obj.Type == rts.ObjectType_Unit {
+				unit := gg.GetUnit(obj.PlayerId, obj.ObjectId)
+				c.setUnitSprite(obj.PlayerId, obj.ObjectId, unit)
+			}
+		}
 
-	// c.anticipatedCommands = make(map[rts.Object]AnticipatedCommand, 0)
-	// for obj := range commandAnticipatedObject {
-	// 	unit := gg.GetUnit(obj.PlayerId, obj.ObjectId)
-	// 	c.anticipatedCommands[obj] = AnticipatedCommand{
-	// 		Command: unit.GetCommand(),
-	// 		Extra:   unit.GetCommandExtra(),
-	// 		Meta:    unit.GetCommandMeta(),
-	// 	}
-	// }
+		// Anticipate objects
+		for obj := range anticipatedObjects {
+			delete(c.anticipatedObjects, obj)
+			setAnticipatedObjectSprite(obj)
+		}
+		// Re-anticipate all previously anticipated object that have not been anticipated this round
+		// to clear the sprites of objects that are no longer anticipated
+		for obj := range c.anticipatedObjects {
+			// Skip object that have already been set in the canonical state
+			playerId := obj.PlayerId
+			if obj.Type == rts.ObjectType_Building {
+				buildingId := obj.ObjectId
+				nBuildings := gg.GetPlayer(playerId).GetBuildingCount()
+				if buildingId <= nBuildings {
+					continue
+				}
+			} else if obj.Type == rts.ObjectType_Unit {
+				unitId := obj.ObjectId
+				nUnits := gg.GetPlayer(playerId).GetUnitCount()
+				if unitId <= nUnits {
+					continue
+				}
+			}
+			setAnticipatedObjectSprite(obj)
+		}
+		c.anticipatedObjects = anticipatedObjects
 
-	// c.anticipating = false
+		c.anticipatedCommands = make(map[rts.Object]AnticipatedCommand, 0)
+		for obj := range commandAnticipatedObject {
+			unit := gg.GetUnit(obj.PlayerId, obj.ObjectId)
+			c.anticipatedCommands[obj] = AnticipatedCommand{
+				Command: unit.GetCommand(),
+				Extra:   unit.GetCommandExtra(),
+				Meta:    unit.GetCommandMeta(),
+			}
+		}
+
+		c.anticipating = false
+	})
 }
 
 // Initialize the sprite layers and set the tile display size.
