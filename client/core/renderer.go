@@ -47,10 +47,10 @@ var (
 	MinZoomLevel = -gen_utils.Min(1, assets.TileSizeLog2)
 )
 
-type Hinter interface {
-	GetHints() (uint64, [][]interface{})
-	HintNonce() uint64
-}
+// type Hinter interface {
+// 	GetHints() (uint64, [][]interface{})
+// 	HintNonce() uint64
+// }
 
 type UpdatableWithRenderer interface {
 	Update(c *CoreRenderer)
@@ -123,10 +123,13 @@ type AnticipatedCommand struct {
 type CoreRenderer struct {
 	IHeadlessClient // Embedded headless client
 
+	// hinter    Hinter // Hinter
+	hintNonce uint64 // Hinter nonce
+
 	config ClientConfig // Client configuration
 
-	hinter    Hinter // Hinter
-	hintNonce uint64 // Hinter nonce
+	anticipatedObjects  map[rts.Object]struct{}           // Anticipated objects
+	anticipatedCommands map[rts.Object]AnticipatedCommand // Anticipated commands
 
 	cameraPosition   image.Point     // Camera position in internal scale
 	zoomLevel        int             // Zoom level
@@ -149,10 +152,7 @@ type CoreRenderer struct {
 	lastSubTickTime       time.Time // Last tick time
 	lastInterpolationTime time.Time // Last sub-tick time
 
-	anticipatedObjects  map[rts.Object]struct{}           // Anticipated objects
-	anticipatedCommands map[rts.Object]AnticipatedCommand // Anticipated commands
-
-	internalEventBuffer []InternalEvent // Internal event buffer
+	internalEventQueue []InternalEvent // Internal event buffer
 
 	onNewBatch   func() // On new batch callback
 	onCameraMove func() // On camera move callback
@@ -171,7 +171,7 @@ var _ ebiten.Game = (*CoreRenderer)(nil)
 // The headless client keeps the local game state in sync with the backend.
 // The hinter provides a list of actions expected to be executed in the next block so the can
 // be anticipated by the client.
-func NewCoreRenderer(headlessClient IHeadlessClient, config ClientConfig, hinter Hinter, spriteGetter assets.SpriteGetter) *CoreRenderer {
+func NewCoreRenderer(headlessClient IHeadlessClient, config ClientConfig, spriteGetter assets.SpriteGetter) *CoreRenderer {
 	// Wait for the headless client to be synced up to initial state
 	for !headlessClient.Game().IsInitialized() {
 		time.Sleep(50 * time.Millisecond)
@@ -183,7 +183,6 @@ func NewCoreRenderer(headlessClient IHeadlessClient, config ClientConfig, hinter
 	// }
 
 	worldLayers := decren.NewLayerSet()
-
 	animationSet := NewAnimationSet()
 	taskSet := NewTaskSet()
 
@@ -191,7 +190,6 @@ func NewCoreRenderer(headlessClient IHeadlessClient, config ClientConfig, hinter
 		IHeadlessClient: headlessClient,
 		config:          config,
 
-		hinter:    hinter,
 		hintNonce: 0,
 
 		worldLayers: worldLayers,
@@ -206,7 +204,7 @@ func NewCoreRenderer(headlessClient IHeadlessClient, config ClientConfig, hinter
 
 		lastSubTickTime:       headlessClient.LastNewBatchTime(),
 		lastInterpolationTime: headlessClient.LastNewBatchTime(),
-		internalEventBuffer:   make([]InternalEvent, 0),
+		internalEventQueue:    make([]InternalEvent, 0),
 
 		spriteGetter: spriteGetter,
 	}
@@ -215,6 +213,7 @@ func NewCoreRenderer(headlessClient IHeadlessClient, config ClientConfig, hinter
 		Min: image.Point{0, 0},
 		Max: image.Point{c.config.ScreenSize.X - 254, c.config.ScreenSize.Y},
 	}
+
 	c.initLayers()
 	c.setCamera(c.Game().GetMainBuildingPosition(c.PlayerId()).Add(image.Point{1, 1}).Mul(InternalTileSize), 0)
 
@@ -230,6 +229,10 @@ func NewCoreRenderer(headlessClient IHeadlessClient, config ClientConfig, hinter
 
 func (c *CoreRenderer) Config() ClientConfig {
 	return c.config
+}
+
+func (c *CoreRenderer) Interpolating() bool {
+	return c.config.Interpolate
 }
 
 func (c *CoreRenderer) TileDisplaySize() int {
@@ -280,14 +283,14 @@ func (c *CoreRenderer) onInternalEvent(eventId uint8, data interface{}) {
 		Id:   eventId,
 		Data: data,
 	}
-	c.internalEventBuffer = append(c.internalEventBuffer, event)
+	c.internalEventQueue = append(c.internalEventQueue, event)
 }
 
 func (c *CoreRenderer) handleInternalEvents() {
-	for _, event := range c.internalEventBuffer {
+	for _, event := range c.internalEventQueue {
 		c.handleInternalEvent(event.Id, event.Data)
 	}
-	c.internalEventBuffer = make([]InternalEvent, 0)
+	c.internalEventQueue = make([]InternalEvent, 0)
 }
 
 func (c *CoreRenderer) handleInternalEvent(eventId uint8, data interface{}) {

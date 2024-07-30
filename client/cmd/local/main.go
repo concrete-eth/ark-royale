@@ -28,7 +28,7 @@ var (
 )
 
 func main() {
-	log.SetDefault(log.NewLogger(log.NewTerminalHandlerWithLevel(os.Stderr, log.LevelError, true)))
+	log.SetDefault(log.NewLogger(log.NewTerminalHandlerWithLevel(os.Stderr, log.LevelWarn, true)))
 
 	// Create schemas from codegen
 	schemas := arch.ArchSchemas{Actions: archmod.ActionSchemas, Tables: archmod.TableSchemas}
@@ -48,7 +48,7 @@ func main() {
 	defer io.Stop()
 
 	io.SetTxUpdateHook(func(txUpdate *rpc.ActionTxUpdate) {
-		log.Error("Transaction "+txUpdate.Status.String(), "nonce", txUpdate.Nonce, "txHash", txUpdate.TxHash.Hex(), "err", txUpdate.Err)
+		log.Warn("Transaction "+txUpdate.Status.String(), "nonce", txUpdate.Nonce, "txHash", txUpdate.TxHash.Hex(), "err", txUpdate.Err)
 	})
 
 	// Create and start client
@@ -56,10 +56,10 @@ func main() {
 	hl := core.NewHeadlessClient(kv, io)
 	hl.SetPlayerId(1)
 	c := game.NewClient(hl, core.ClientConfig{
-		ScreenSize:  image.Point{1280 / 2, 720 / 2},
+		ScreenSize:  image.Point{1280, 720},
 		Interpolate: true,
 		FixedCamera: false,
-	}, nil, true)
+	}, true)
 	w, h := c.Layout(-1, -1)
 	ebiten.SetWindowSize(w, h)
 	ebiten.SetWindowTitle("Ark RTS")

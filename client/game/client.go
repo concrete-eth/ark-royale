@@ -23,7 +23,7 @@ type Client struct {
 	buildingGhost   *core.BuildingGhost
 }
 
-func NewClient(headlessClient core.IHeadlessClient, config core.ClientConfig, hinter core.Hinter, active bool) *Client {
+func NewClient(headlessClient core.IHeadlessClient, config core.ClientConfig, active bool) *Client {
 	hudSet := core.NewHudSet()
 	hudSet.AddComponents(
 		core.NewTargetLines(),
@@ -35,7 +35,7 @@ func NewClient(headlessClient core.IHeadlessClient, config core.ClientConfig, hi
 	)
 	var (
 		whl          = &HeadlessClient{headlessClient}
-		coreRenderer = core.NewCoreRenderer(whl, config, hinter, assets.DefaultSpriteGetter)
+		coreRenderer = core.NewCoreRenderer(whl, config, assets.DefaultSpriteGetter)
 		cli          = core.NewClient(coreRenderer, hudSet, active)
 		uim          = NewUI(cli, assets.DefaultSpriteGetter)
 	)

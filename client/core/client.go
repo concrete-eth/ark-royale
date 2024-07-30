@@ -594,7 +594,7 @@ type GenericClient struct {
 	uim *UIManager
 }
 
-func NewGenericClient(headlessClient IHeadlessClient, config ClientConfig, hinter Hinter, active bool) *GenericClient {
+func NewGenericClient(headlessClient IHeadlessClient, config ClientConfig, active bool) *GenericClient {
 	var (
 		nUnitPrototypes           = headlessClient.Game().GetMeta().GetUnitPrototypeCount()
 		nBuildingPrototypes       = headlessClient.Game().GetMeta().GetBuildingPrototypeCount()
@@ -630,7 +630,7 @@ func NewGenericClient(headlessClient IHeadlessClient, config ClientConfig, hinte
 		NewBuildingGhost(),
 	)
 	var (
-		coreRenderer = NewCoreRenderer(headlessClient, config, hinter, assets.DefaultSpriteGetter)
+		coreRenderer = NewCoreRenderer(headlessClient, config, assets.DefaultSpriteGetter)
 		cli          = NewClient(coreRenderer, hudSet, active)
 		uim          = NewUI(
 			cli,

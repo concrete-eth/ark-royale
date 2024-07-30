@@ -19,14 +19,14 @@ type IHeadlessClient interface {
 	PlayerId() uint8
 	SetPlayerId(playerId uint8)
 
-	TickPeriod() time.Duration
+	// TickPeriod() time.Duration
 	SubTickPeriod() time.Duration
-	// LastTickTime() time.Time
 	LastNewBatchTime() time.Time
 
 	Sync() (bool, bool, error)
 	SyncUntil(tickIndex uint64) error
 	InterpolatedSync() (bool, bool, error)
+	// Interpolating() bool
 	Simulate(f func(core arch.Core))
 
 	SendAction(action arch.Action) error
@@ -37,16 +37,11 @@ type IHeadlessClient interface {
 	AssignUnits(unitIds []uint8, command rts.UnitCommandData)
 	AssignUnitsWithPath(unitIds []uint8, command rts.UnitCommandData, path []image.Point)
 	PlaceBuilding(buildingType uint8, position image.Point)
-
-	Interpolating() bool
-
-	// NextSubTickIndex() uint32
-	// StartInterpolation()
 }
 
 // Implements a headless client that can sync state and send actions.
 type HeadlessClient struct {
-	arch_client.Client
+	*arch_client.Client
 	hinter    *rpc.TxHinter
 	playerId  uint8
 	_tickTime time.Duration
@@ -62,13 +57,12 @@ func NewHeadlessClient(
 	cli := io.NewClient(kv, c)
 	hinter := io.Hinter()
 	return &HeadlessClient{
-		Client:    *cli,
+		Client:    cli,
 		hinter:    hinter,
 		_tickTime: cli.BlockTime() / time.Duration(c.TicksPerBlock()),
 	}
 }
 
-// TODO: remove [?]
 func (c *HeadlessClient) Game() *rts.Core {
 	return c.Core().(*rts.Core)
 }
@@ -77,17 +71,17 @@ func (c *HeadlessClient) Game() *rts.Core {
 // 	panic("not implemented")
 // }
 
-func (c *HeadlessClient) TickPeriod() time.Duration {
-	return c.BlockTime()
-}
+// func (c *HeadlessClient) TickPeriod() time.Duration {
+// 	return c.BlockTime()
+// }
 
 func (c *HeadlessClient) SubTickPeriod() time.Duration {
 	return c._tickTime
 }
 
-func (c *HeadlessClient) Interpolating() bool {
-	return false
-}
+// func (c *HeadlessClient) Interpolating() bool {
+// 	return false
+// }
 
 func (c *HeadlessClient) SetPlayerId(playerId uint8) {
 	c.playerId = playerId

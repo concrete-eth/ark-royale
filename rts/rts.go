@@ -2,7 +2,6 @@ package rts
 
 import (
 	"errors"
-	"fmt"
 	"image"
 
 	"github.com/concrete-eth/archetype/arch"
@@ -1854,7 +1853,7 @@ func (c *Core) AssignUnit(action *UnitAssignation) error {
 }
 
 func (c *Core) PlaceBuilding(action *BuildingPlacement) error {
-	fmt.Println("PlaceBuilding!!!")
+	// fmt.Println("PlaceBuilding!!!")
 
 	if !c.IsInitialized() {
 		return ErrNotInitialized
