@@ -36,6 +36,7 @@ const (
 	KeyFunction_ZoomOut
 	KeyFunction_ToggleTargetLines
 	KeyFunction_ToggleDebugInfo
+	KeyFunction_Deselect
 )
 
 type KeyMap map[KeyFunction][]ebiten.Key
@@ -72,7 +73,7 @@ func (k KeyMap) IsPressedWithShift(f KeyFunction) bool {
 }
 
 var DefaultKeyMap = KeyMap{
-	KeyFunction_Quit:              {ebiten.KeyEscape},
+	// KeyFunction_Quit:              {ebiten.KeyEscape},
 	KeyFunction_SetPath:           {ebiten.KeyShift},
 	KeyFunction_Up:                {ebiten.KeyW, ebiten.KeyUp},
 	KeyFunction_Down:              {ebiten.KeyS, ebiten.KeyDown},
@@ -84,6 +85,7 @@ var DefaultKeyMap = KeyMap{
 	KeyFunction_ZoomOut:           {ebiten.KeyMinus, ebiten.KeyKPSubtract, ebiten.KeyQ},
 	KeyFunction_ToggleTargetLines: {ebiten.KeyL},
 	KeyFunction_ToggleDebugInfo:   {ebiten.KeyF3, ebiten.KeyK},
+	KeyFunction_Deselect:          {ebiten.KeyEscape},
 }
 
 // Selection holds the current selection state.
@@ -115,6 +117,10 @@ type Client struct {
 	onSelectionChange func() // On selection change callback
 
 	active bool // Actively update state
+
+	_pendingRightClickRelease bool
+	_pendingLeftClickRelease  bool
+	_drawSelectionBox         bool
 }
 
 var _ ebiten.Game = (*Client)(nil)
@@ -266,7 +272,9 @@ func (c *Client) handleLeftClickSelection(cursorScreenPosition image.Point) {
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 		c.ClearSelection()
 		c.lastLeftClickedScreenPosition = cursorScreenPosition
+		c._drawSelectionBox = true
 	} else if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+		c._drawSelectionBox = false
 		if !c.lastLeftClickedScreenPosition.In(c.coreRenderer.boardDisplayRect) {
 			return
 		}
@@ -308,14 +316,17 @@ func (c *Client) handleLeftClickSelection(cursorScreenPosition image.Point) {
 	}
 }
 
-func (c *Client) handleRightClickAction(cursorScreenPosition image.Point) {
+func (c *Client) handleRightClickAction(cursorScreenPosition image.Point) (hasEffect bool) {
 	pathKeyDown := c.keyMap.IsPressed(KeyFunction_SetPath)
 	isSettingPath := pathKeyDown && c.IsSelectingUnits()
 
-	if !inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
+	if !(inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) ||
+		// Handle left click as if it was right click
+		inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft)) {
 		return
 	}
 	if !cursorScreenPosition.In(c.coreRenderer.boardDisplayRect) {
+		// Clicked outside the board
 		return
 	}
 
@@ -338,6 +349,7 @@ func (c *Client) handleRightClickAction(cursorScreenPosition image.Point) {
 				proto            = c.Game().GetBuildingPrototype(protoId)
 			)
 			if proto.GetIsEnvironment() {
+				hasEffect = true // Left click ok since it has no effect on environment buildings
 				// Mine
 				// Gather
 				command := rts.NewWorkerCommandData(rts.WorkerCommandType_Gather)
@@ -409,8 +421,20 @@ func (c *Client) handleRightClickAction(cursorScreenPosition image.Point) {
 					c.Headless().PlaceBuilding(c.SelectedBuildingType(), snapTilePosition)
 				}
 			} else if isSettingPath && len(c.getCommandPath()) < 4 {
+				hasEffect = true // Left-click ok since people can deselect with escape key
 				c.addCommandPathPoint(tilePosition)
 			} else if len(c.SelectedUnits()) > 0 {
+				c.forEachSelectedUnit(func(unitId uint8, unit *datamod.UnitsRow) {
+					var (
+						protoId = unit.GetUnitType()
+						proto   = c.Game().GetUnitPrototype(protoId)
+					)
+					if !proto.GetIsWorker() {
+						// Left-click ok but only if fighters are selected
+						hasEffect = true
+						return
+					}
+				})
 				// Command fighters to move and hold position
 				command := rts.NewFighterCommandData(rts.FighterCommandType_HoldPosition)
 				command.SetTargetPosition(tilePosition)
@@ -422,11 +446,13 @@ func (c *Client) handleRightClickAction(cursorScreenPosition image.Point) {
 		// Own building
 		tileBuilding := c.Game().GetBuilding(tilePlayerId, tileBuildingId)
 		if tileBuildingId == 1 {
+			hasEffect = true // Left-click ok it has no effect on main building
 			command := rts.NewWorkerCommandData(rts.WorkerCommandType_Idle)
 			// Main building
 			// Command workers to idle
 			c.assignSelectedWorkers(command, false)
 		} else if rts.BuildingState(tileBuilding.GetState()) == rts.BuildingState_Building {
+			hasEffect = true // Left-click ok since it has no effect on building under construction
 			// Building not main
 			// Building not built
 			command := rts.NewWorkerCommandData(rts.WorkerCommandType_Build)
@@ -447,12 +473,14 @@ func (c *Client) handleRightClickAction(cursorScreenPosition image.Point) {
 			}
 		}
 	} else {
+		hasEffect = true // Left-click since it has no effect on enemy buildings
 		// Enemy building
 		command := rts.NewFighterCommandData(rts.FighterCommandType_AttackBuilding)
 		command.SetTargetBuilding(tilePlayerId, tileBuildingId)
 		c.assignSelectedFighters(command, c.getCommandPath())
 		c.clearCommandPath()
 	}
+	return
 }
 
 func (c *Client) handleSetPathKeyAction() {
@@ -546,9 +574,9 @@ func (c *Client) moveCamera() {
 
 func (c *Client) Update() error {
 	// Quitting
-	if c.keyMap.IsPressedWithShift(KeyFunction_Quit) {
-		return ErrQuit
-	}
+	// if c.keyMap.IsPressedWithShift(KeyFunction_Quit) {
+	// 	return ErrQuit
+	// }
 
 	// Camera
 	c.moveCamera()
@@ -559,16 +587,42 @@ func (c *Client) Update() error {
 	// Cursor
 	cursorScreenPosition := client_utils.CursorPosition()
 
-	// Selection with left click
-	c.handleLeftClickSelection(cursorScreenPosition)
+	justClearedPendingClick := false
+
+	if c._pendingRightClickRelease {
+		if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonRight) {
+			c._pendingRightClickRelease = false
+			justClearedPendingClick = true
+		}
+	}
+
+	if c._pendingLeftClickRelease {
+		if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+			c._pendingLeftClickRelease = false
+			justClearedPendingClick = true
+		}
+	}
 
 	// Action with right click
-	c.handleRightClickAction(cursorScreenPosition)
+	if hadEffect := c.handleRightClickAction(cursorScreenPosition); hadEffect {
+		c._pendingRightClickRelease = false
+		c._pendingLeftClickRelease = false
+		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight) {
+			// Action due to right click
+			c._pendingRightClickRelease = true
+		} else if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+			// Action due to left click
+			c._pendingLeftClickRelease = true
+		}
+	} else if !justClearedPendingClick && !c._pendingRightClickRelease && !c._pendingLeftClickRelease {
+		// Selection with left click
+		c.handleLeftClickSelection(cursorScreenPosition)
+	}
 
 	// Path setter release
 	c.handleSetPathKeyAction()
 
-	if c.keyMap.IsPressed(KeyFunction_Quit) {
+	if c.keyMap.IsPressed(KeyFunction_Deselect) {
 		c.ClearSelection()
 	}
 
