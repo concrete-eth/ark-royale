@@ -533,7 +533,7 @@ func (c *Client) assignSelectedFighters(command rts.UnitCommandData, path []imag
 }
 
 func (c *Client) moveCamera() {
-	if c.coreRenderer.config.FixedCamera {
+	if c.coreRenderer.settings.FixedCamera {
 		return
 	}
 

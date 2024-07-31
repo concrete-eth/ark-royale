@@ -199,7 +199,7 @@ func (m *UIManager) Update() {
 
 	m.updateCreationMenu()
 	m.updateFPSLabel()
-	// m.updateInterpolationLabel()
+	m.updateInterpolationLabel()
 	m.updateInspectionView()
 
 	m.eui.Update()
@@ -209,10 +209,10 @@ func (m *UIManager) Draw(screen *ebiten.Image) {
 	m.eui.Draw(screen)
 }
 
-// func (m *UIManager) updateInterpolationLabel() {
-// 	label := m.GetLabel(UI_Label_Interpolation)
-// 	label.Label = boolToOnOff(m.client.coreRenderer.Interpolating())
-// }
+func (m *UIManager) updateInterpolationLabel() {
+	label := m.GetLabel(UI_Label_Interpolation)
+	label.Label = boolToOnOff(m.client.coreRenderer.Interpolating())
+}
 
 // Updates the FPS label.
 func (m *UIManager) updateFPSLabel() {

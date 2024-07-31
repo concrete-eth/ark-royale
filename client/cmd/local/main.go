@@ -56,9 +56,7 @@ func main() {
 	hl := core.NewHeadlessClient(kv, io)
 	hl.SetPlayerId(1)
 	c := game.NewClient(hl, core.ClientConfig{
-		ScreenSize:  image.Point{1280, 720},
-		Interpolate: true,
-		FixedCamera: false,
+		ScreenSize: image.Point{1280, 720},
 	}, true)
 	w, h := c.Layout(-1, -1)
 	ebiten.SetWindowSize(w, h)

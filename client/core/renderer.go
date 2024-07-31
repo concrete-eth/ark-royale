@@ -64,7 +64,10 @@ type DrawableWithRenderer interface {
 }
 
 type ClientConfig struct {
-	ScreenSize  image.Point
+	ScreenSize image.Point
+}
+
+type ClientSettings struct {
 	Interpolate bool
 	FixedCamera bool
 }
@@ -129,7 +132,8 @@ type CoreRenderer struct {
 	// hinter    Hinter // Hinter
 	hintNonce uint64 // Hinter nonce
 
-	config ClientConfig // Client configuration
+	config   ClientConfig   // Client configuration (immutable)
+	settings ClientSettings // Client settings (modifiable)
 
 	anticipatedObjects  map[rts.Object]struct{}           // Anticipated objects
 	anticipatedCommands map[rts.Object]AnticipatedCommand // Anticipated commands
@@ -192,6 +196,7 @@ func NewCoreRenderer(headlessClient IHeadlessClient, config ClientConfig, sprite
 	c := &CoreRenderer{
 		IHeadlessClient: headlessClient,
 		config:          config,
+		settings:        ClientSettings{Interpolate: true, FixedCamera: false},
 
 		hintNonce: 0,
 
@@ -234,8 +239,12 @@ func (c *CoreRenderer) Config() ClientConfig {
 	return c.config
 }
 
+func (c *CoreRenderer) Settings() ClientSettings {
+	return c.settings
+}
+
 func (c *CoreRenderer) Interpolating() bool {
-	return c.config.Interpolate
+	return c.settings.Interpolate
 }
 
 func (c *CoreRenderer) TileDisplaySize() int {
@@ -614,21 +623,21 @@ func (c *CoreRenderer) initLayers() {
 			DestRect: c.boardDisplayRect,
 			Depth:    20,
 			ColorM:   assets.NewUnitColorMatrix(),
-			Cache:    !c.config.Interpolate,
+			Cache:    !c.settings.Interpolate,
 		},
 		{
 			LayerId:  LayerName_Hover,
 			DestRect: c.boardDisplayRect,
 			Depth:    30,
 			ColorM:   assets.NewUnitColorMatrix(),
-			Cache:    !c.config.Interpolate,
+			Cache:    !c.settings.Interpolate,
 		},
 		{
 			LayerId:  LayerName_Air,
 			DestRect: c.boardDisplayRect,
 			Depth:    40,
 			ColorM:   assets.NewUnitColorMatrix(),
-			Cache:    !c.config.Interpolate,
+			Cache:    !c.settings.Interpolate,
 		},
 		{
 			LayerId:  LayerName_HudLines,
@@ -642,7 +651,7 @@ func (c *CoreRenderer) initLayers() {
 			DestRect: c.boardDisplayRect,
 			Depth:    1,
 			ColorM:   colorm.ColorM{},
-			Cache:    !c.config.Interpolate,
+			Cache:    !c.settings.Interpolate,
 		},
 		{
 			LayerId:  LayerName_Bars,
@@ -1138,7 +1147,7 @@ func (c *CoreRenderer) GetUnitScreenPosition(playerId uint8, unitId uint8) image
 }
 
 func (c *CoreRenderer) dragMoveCamera() {
-	if c.config.FixedCamera {
+	if c.settings.FixedCamera {
 		return
 	}
 	var (
