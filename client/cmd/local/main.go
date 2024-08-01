@@ -23,7 +23,6 @@ import (
 )
 
 // TODO: locked vs not enough capacity etc
-// TODO: deselect with right click
 
 var (
 	pcAddr = common.HexToAddress("0x1234")

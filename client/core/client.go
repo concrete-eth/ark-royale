@@ -267,6 +267,9 @@ func (c *Client) handleInput() {
 	if c.keyMap.IsJustPressed(KeyFunction_Deselect) {
 		c.ClearSelection()
 	}
+	if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonRight) {
+		c.ClearSelection()
+	}
 
 	pathKeyDown := c.keyMap.IsPressed(KeyFunction_SetPath)
 	if c.keyMap.IsJustReleased(KeyFunction_SetPath) {
