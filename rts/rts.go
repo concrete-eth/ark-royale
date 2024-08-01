@@ -35,7 +35,6 @@ func (t ObjectType) IsNil() bool {
 	return t == ObjectType_Nil
 }
 
-// TODO: stronger type checking
 type Object struct {
 	Type     ObjectType
 	PlayerId uint8

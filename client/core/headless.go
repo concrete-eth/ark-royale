@@ -11,8 +11,9 @@ import (
 	"github.com/ethereum/go-ethereum/concrete/lib"
 )
 
-// TODO: consistent interface naming
 // TODO: read-only player id 0
+
+// TODO: figure out why some tx don't go t/, maybe gas?
 
 type IHeadlessClient interface {
 	Game() *rts.Core

@@ -793,5 +793,3 @@ func boolToOnOff(b bool) string {
 	}
 	return "OFF"
 }
-
-// TODO: clean, generalize

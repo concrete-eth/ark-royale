@@ -27,7 +27,6 @@ contract Game is Arch {
         return 0;
     }
 
-    // TODO: rename, reorg
     function _initialize() internal override {
         ActionData_Initialize memory initializeData;
         initializeData.width = SIZE;

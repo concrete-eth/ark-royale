@@ -9,7 +9,6 @@ import (
 	"github.com/concrete-eth/archetype/deploy"
 	"github.com/concrete-eth/archetype/kvstore"
 	"github.com/concrete-eth/archetype/precompile"
-	"github.com/concrete-eth/archetype/rpc"
 	"github.com/concrete-eth/ark-rts/client/core"
 	"github.com/concrete-eth/ark-rts/client/game"
 	game_contract "github.com/concrete-eth/ark-rts/gogen/abigen/game"
@@ -22,6 +21,9 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/hajimehoshi/ebiten/v2"
 )
+
+// TODO: locked vs not enough capacity etc
+// TODO: deselect with right click
 
 var (
 	pcAddr = common.HexToAddress("0x1234")
@@ -46,10 +48,6 @@ func main() {
 		panic(err)
 	}
 	defer io.Stop()
-
-	io.SetTxUpdateHook(func(txUpdate *rpc.ActionTxUpdate) {
-		log.Warn("Transaction "+txUpdate.Status.String(), "nonce", txUpdate.Nonce, "txHash", txUpdate.TxHash.Hex(), "err", txUpdate.Err)
-	})
 
 	// Create and start client
 	kv := kvstore.NewMemoryKeyValueStore()

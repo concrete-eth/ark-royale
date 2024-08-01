@@ -12,8 +12,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
-// TODO: spawn area, group assign
-
 type UpdatableWithClient interface {
 	Update(c *Client)
 }
@@ -266,6 +264,10 @@ func (c *Client) IterSelectedUnits(filters ...rts.UnitFilter) *rts.Iterator_uint
 }
 
 func (c *Client) handleInput() {
+	if c.keyMap.IsJustPressed(KeyFunction_Deselect) {
+		c.ClearSelection()
+	}
+
 	pathKeyDown := c.keyMap.IsPressed(KeyFunction_SetPath)
 	if c.keyMap.IsJustReleased(KeyFunction_SetPath) {
 		path := c.getCommandPath()
@@ -278,7 +280,7 @@ func (c *Client) handleInput() {
 		command.SetTargetPosition(position)
 		c.assignSelectedFighters(command, path)
 		c.clearCommandPath()
-		return
+		// return
 	}
 
 	cursorScreenPosition := image.Pt(ebiten.CursorPosition())
@@ -338,6 +340,8 @@ func (c *Client) handleInput() {
 
 	if !cursorScreenPosition.In(c.coreRenderer.boardDisplayRect) {
 		// Clicked outside the board
+		c.clearCommandPath()
+		c.selected.Units = []uint8{}
 		return
 	}
 
