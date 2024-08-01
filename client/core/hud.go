@@ -352,14 +352,14 @@ func NewSelectionBox() *selectionBox {
 
 // Draws the selection box when the left mouse button is held down.
 func (bg *selectionBox) Draw(c *Client, screen *ebiten.Image) {
-	if !c.lastLeftClickedScreenPosition.In(c.coreRenderer.boardDisplayRect) {
+	if !c.lastClickedScreenPosition.In(c.coreRenderer.boardDisplayRect) {
 		return
 	}
-	if !ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) || !c._drawSelectionBox {
+	if !ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) || !c.selecting {
 		return
 	}
 	cursorPosition := client_utils.CursorPosition()
-	selectionRect := image.Rectangle{Min: c.lastLeftClickedScreenPosition, Max: cursorPosition}.Canon()
+	selectionRect := image.Rectangle{Min: c.lastClickedScreenPosition, Max: cursorPosition}.Canon()
 	if selectionRect.Dx() == 0 || selectionRect.Dy() == 0 {
 		return
 	}

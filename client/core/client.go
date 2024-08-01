@@ -6,12 +6,13 @@ import (
 
 	gen_utils "github.com/concrete-eth/archetype/utils"
 	"github.com/concrete-eth/ark-rts/client/assets"
-	client_utils "github.com/concrete-eth/ark-rts/client/utils"
 	"github.com/concrete-eth/ark-rts/gogen/datamod"
 	"github.com/concrete-eth/ark-rts/rts"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
+
+// TODO: spawn area, group assign
 
 type UpdatableWithClient interface {
 	Update(c *Client)
@@ -108,19 +109,15 @@ type Client struct {
 
 	hud *HudSet // HUD component set
 
-	lastRightClickedScreenPosition image.Point // Last right clicked screen position
-	lastLeftClickedScreenPosition  image.Point // Last left clicked screen position
-	selected                       Selection   // Current selection
+	lastClickedScreenPosition image.Point // Last left clicked screen position
+	selected                  Selection   // Current selection
+	selecting                 bool        // Draw selection box
 
 	commandPath []image.Point // Command path
 
 	onSelectionChange func() // On selection change callback
 
 	active bool // Actively update state
-
-	_pendingRightClickRelease bool
-	_pendingLeftClickRelease  bool
-	_drawSelectionBox         bool
 }
 
 var _ ebiten.Game = (*Client)(nil)
@@ -268,18 +265,41 @@ func (c *Client) IterSelectedUnits(filters ...rts.UnitFilter) *rts.Iterator_uint
 	}
 }
 
-func (c *Client) handleLeftClickSelection(cursorScreenPosition image.Point) {
-	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-		c.ClearSelection()
-		c.lastLeftClickedScreenPosition = cursorScreenPosition
-		c._drawSelectionBox = true
-	} else if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
-		c._drawSelectionBox = false
-		if !c.lastLeftClickedScreenPosition.In(c.coreRenderer.boardDisplayRect) {
+func (c *Client) handleInput() {
+	pathKeyDown := c.keyMap.IsPressed(KeyFunction_SetPath)
+	if c.keyMap.IsJustReleased(KeyFunction_SetPath) {
+		path := c.getCommandPath()
+		if len(path) == 0 {
 			return
 		}
+		position := path[len(path)-1]
+		path = path[:len(path)-1]
+		command := rts.NewFighterCommandData(rts.FighterCommandType_HoldPosition)
+		command.SetTargetPosition(position)
+		c.assignSelectedFighters(command, path)
+		c.clearCommandPath()
+		return
+	}
+
+	cursorScreenPosition := image.Pt(ebiten.CursorPosition())
+	selectionScreenRect := image.Rectangle{Min: c.lastClickedScreenPosition, Max: cursorScreenPosition}.Canon()
+
+	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		c.selecting = false
+		c.lastClickedScreenPosition = cursorScreenPosition
+		return
+	} else {
+		if selectionScreenRect.Dx() > 4 || selectionScreenRect.Dy() > 4 {
+			c.selecting = true
+		}
+	}
+
+	if !inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+		return
+	}
+
+	if c.selecting {
 		c.ClearSelection()
-		selectionScreenRect := image.Rectangle{Min: c.lastLeftClickedScreenPosition, Max: cursorScreenPosition}.Canon()
 		if selectionScreenRect.Dx() < c.coreRenderer.tileDisplaySize/2 && selectionScreenRect.Dy() < c.coreRenderer.tileDisplaySize/2 {
 			tilePosition := c.coreRenderer.ScreenCoordToTileCoord(cursorScreenPosition)
 			tile := c.Game().GetBoardTile(uint16(tilePosition.X), uint16(tilePosition.Y))
@@ -313,24 +333,30 @@ func (c *Client) handleLeftClickSelection(cursorScreenPosition image.Point) {
 			})
 			c.SelectUnits(selectedUnits...)
 		}
-	}
-}
-
-func (c *Client) handleRightClickAction(cursorScreenPosition image.Point) (hasEffect bool) {
-	pathKeyDown := c.keyMap.IsPressed(KeyFunction_SetPath)
-	isSettingPath := pathKeyDown && c.IsSelectingUnits()
-
-	if !(inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) ||
-		// Handle left click as if it was right click
-		inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft)) {
 		return
 	}
+
 	if !cursorScreenPosition.In(c.coreRenderer.boardDisplayRect) {
 		// Clicked outside the board
 		return
 	}
 
-	c.lastRightClickedScreenPosition = cursorScreenPosition
+	var isSelectingFighters bool
+	// Check if any fighters are selected
+	for _, unitId := range c.SelectedUnits() {
+		var (
+			unit      = c.Game().GetUnit(c.PlayerId(), unitId)
+			protoId   = unit.GetUnitType()
+			proto     = c.Game().GetUnitPrototype(protoId)
+			unitState = rts.UnitState(unit.GetState())
+		)
+		if !proto.GetIsWorker() && unitState != rts.UnitState_Dead {
+			isSelectingFighters = true
+			break
+		}
+	}
+	isSettingPath := pathKeyDown && isSelectingFighters
+
 	var (
 		tilePosition   = c.coreRenderer.ScreenCoordToTileCoord(cursorScreenPosition)
 		tile           = c.Game().GetBoardTile(uint16(tilePosition.X), uint16(tilePosition.Y))
@@ -338,26 +364,47 @@ func (c *Client) handleRightClickAction(cursorScreenPosition image.Point) (hasEf
 		tileObjectType = rts.ObjectType(tile.GetLandObjectType())
 		tileBuildingId = tile.GetLandObjectId()
 	)
-	if tilePlayerId == rts.NilPlayerId || tileObjectType != rts.ObjectType_Building {
-		// Empty or neutral tile
-		if tileObjectType == rts.ObjectType_Building {
-			// Neutral building
-			var (
-				building         = c.Game().GetBuilding(tilePlayerId, tileBuildingId)
-				buildingPosition = rts.GetPositionAsPoint(building)
-				protoId          = building.GetBuildingType()
-				proto            = c.Game().GetBuildingPrototype(protoId)
-			)
-			if proto.GetIsEnvironment() {
-				hasEffect = true // Left click ok since it has no effect on environment buildings
-				// Mine
-				// Gather
-				command := rts.NewWorkerCommandData(rts.WorkerCommandType_Gather)
-				command.SetTargetBuilding(rts.NilPlayerId, tileBuildingId)
-				if len(c.SelectedUnits()) == 0 {
-					// Assign nearest idle worker
-					buildingSize := rts.GetDimensionsAsPoint(proto)
-					targetArea := image.Rectangle{Min: buildingPosition, Max: buildingPosition.Add(buildingSize)}
+
+	if !tilePosition.In(c.Game().BoardRect()) {
+		c.ClearSelection()
+		return
+	}
+
+	if tilePlayerId == rts.NilPlayerId && tileObjectType == rts.ObjectType_Building {
+		// Neutral building (mine)
+		var (
+			building         = c.Game().GetBuilding(tilePlayerId, tileBuildingId)
+			buildingPosition = rts.GetPositionAsPoint(building)
+			protoId          = building.GetBuildingType()
+			proto            = c.Game().GetBuildingPrototype(protoId)
+		)
+		if proto.GetResourceMine() > 0 {
+			command := rts.NewWorkerCommandData(rts.WorkerCommandType_Gather)
+			command.SetTargetBuilding(rts.NilPlayerId, tileBuildingId)
+
+			if len(c.SelectedUnits()) == 0 {
+				c.ClearSelection()
+				// Assign nearest idle worker
+				buildingSize := rts.GetDimensionsAsPoint(proto)
+				targetArea := image.Rectangle{Min: buildingPosition, Max: buildingPosition.Add(buildingSize)}
+				iter := c.Game().IterUnits(c.PlayerId(), func(playerId, unitId uint8, unit *datamod.UnitsRow) bool {
+					var (
+						unitProtoId = unit.GetUnitType()
+						unitProto   = c.Game().GetUnitPrototype(unitProtoId)
+						unitState   = rts.UnitState(unit.GetState())
+						unitCommand = rts.WorkerCommandData(unit.GetCommand())
+					)
+					return unitProto.GetIsWorker() &&
+						unitState.HasSpawned() &&
+						unitState.IsAlive() &&
+						unitCommand.Type() == rts.WorkerCommandType_Idle
+				})
+				match := c.Game().GetNearest(iter, targetArea)
+				workerId := match.ObjectId
+				if workerId != rts.NilUnitId {
+					c.Headless().AssignUnit(workerId, command)
+				} else {
+					// Assign spawning worker if no spawned worker is available
 					iter := c.Game().IterUnits(c.PlayerId(), func(playerId, unitId uint8, unit *datamod.UnitsRow) bool {
 						var (
 							unitProtoId = unit.GetUnitType()
@@ -366,93 +413,69 @@ func (c *Client) handleRightClickAction(cursorScreenPosition image.Point) (hasEf
 							unitCommand = rts.WorkerCommandData(unit.GetCommand())
 						)
 						return unitProto.GetIsWorker() &&
-							unitState.HasSpawned() &&
-							unitState.IsAlive() &&
+							unitState.IsSpawning() &&
 							unitCommand.Type() == rts.WorkerCommandType_Idle
 					})
 					match := c.Game().GetNearest(iter, targetArea)
 					workerId := match.ObjectId
 					if workerId != rts.NilUnitId {
 						c.Headless().AssignUnit(workerId, command)
-					} else {
-						// Assign spawning worker if no spawned worker is available
-						iter := c.Game().IterUnits(c.PlayerId(), func(playerId, unitId uint8, unit *datamod.UnitsRow) bool {
-							var (
-								unitProtoId = unit.GetUnitType()
-								unitProto   = c.Game().GetUnitPrototype(unitProtoId)
-								unitState   = rts.UnitState(unit.GetState())
-								unitCommand = rts.WorkerCommandData(unit.GetCommand())
-							)
-							return unitProto.GetIsWorker() &&
-								unitState.IsSpawning() &&
-								unitCommand.Type() == rts.WorkerCommandType_Idle
-						})
-						match := c.Game().GetNearest(iter, targetArea)
-						workerId := match.ObjectId
-						if workerId != rts.NilUnitId {
-							c.Headless().AssignUnit(workerId, command)
-						}
 					}
-				} else {
-					// Assign selected workers
-					unitIds := make([]uint8, 0)
-					c.forEachSelectedUnit(func(unitId uint8, unit *datamod.UnitsRow) {
-						var (
-							unitProtoId = unit.GetUnitType()
-							unitProto   = c.Game().GetUnitPrototype(unitProtoId)
-							unitState   = rts.UnitState(unit.GetState())
-						)
-						if !unitProto.GetIsWorker() || unitState == rts.UnitState_Dead {
-							return
-						}
-						unitIds = append(unitIds, unitId)
-					})
-					c.Headless().AssignUnits(unitIds, command)
 				}
-			}
-		} else {
-			// Empty tile
-			if c.IsSelectingBuildingType() {
-				// Build building
-				var (
-					snapTilePosition = tilePosition.Div(2).Mul(2)
-				)
-				if snapTilePosition.In(c.Game().BoardRect()) {
-					c.Headless().PlaceBuilding(c.SelectedBuildingType(), snapTilePosition)
-				}
-			} else if isSettingPath && len(c.getCommandPath()) < 4 {
-				hasEffect = true // Left-click ok since people can deselect with escape key
-				c.addCommandPathPoint(tilePosition)
-			} else if len(c.SelectedUnits()) > 0 {
+			} else {
+				// Assign selected workers
+				unitIds := make([]uint8, 0)
 				c.forEachSelectedUnit(func(unitId uint8, unit *datamod.UnitsRow) {
 					var (
-						protoId = unit.GetUnitType()
-						proto   = c.Game().GetUnitPrototype(protoId)
+						unitProtoId = unit.GetUnitType()
+						unitProto   = c.Game().GetUnitPrototype(unitProtoId)
+						unitState   = rts.UnitState(unit.GetState())
 					)
-					if !proto.GetIsWorker() {
-						// Left-click ok but only if fighters are selected
-						hasEffect = true
+					if !unitProto.GetIsWorker() || unitState == rts.UnitState_Dead {
 						return
 					}
+					unitIds = append(unitIds, unitId)
 				})
-				// Command fighters to move and hold position
-				command := rts.NewFighterCommandData(rts.FighterCommandType_HoldPosition)
-				command.SetTargetPosition(tilePosition)
-				c.assignSelectedFighters(command, c.getCommandPath())
-				c.clearCommandPath()
+				c.Headless().AssignUnits(unitIds, command)
 			}
 		}
-	} else if tilePlayerId == c.PlayerId() {
+		return
+	}
+
+	if tilePlayerId == rts.NilPlayerId || tileObjectType != rts.ObjectType_Building {
+		// Empty tile
+		if c.IsSelectingBuildingType() {
+			// Build building
+			var (
+				snapTilePosition = tilePosition.Div(2).Mul(2)
+			)
+			if snapTilePosition.In(c.Game().BoardRect()) {
+				c.Headless().PlaceBuilding(c.SelectedBuildingType(), snapTilePosition)
+				c.ClearSelection()
+			}
+			return
+		} else if isSettingPath && len(c.getCommandPath()) < 4 {
+			c.addCommandPathPoint(tilePosition)
+			return
+		} else if isSelectingFighters {
+			command := rts.NewFighterCommandData(rts.FighterCommandType_HoldPosition)
+			command.SetTargetPosition(tilePosition)
+			c.assignSelectedFighters(command, c.getCommandPath())
+			c.clearCommandPath()
+			return
+		} else {
+			c.ClearSelection()
+		}
+	}
+
+	if tilePlayerId == c.PlayerId() && tileObjectType == rts.ObjectType_Building {
 		// Own building
 		tileBuilding := c.Game().GetBuilding(tilePlayerId, tileBuildingId)
 		if tileBuildingId == 1 {
-			hasEffect = true // Left-click ok it has no effect on main building
-			command := rts.NewWorkerCommandData(rts.WorkerCommandType_Idle)
 			// Main building
 			// Command workers to idle
-			c.assignSelectedWorkers(command, false)
+			c.assignSelectedWorkers(rts.NewWorkerCommandData(rts.WorkerCommandType_Idle), false)
 		} else if rts.BuildingState(tileBuilding.GetState()) == rts.BuildingState_Building {
-			hasEffect = true // Left-click ok since it has no effect on building under construction
 			// Building not main
 			// Building not built
 			command := rts.NewWorkerCommandData(rts.WorkerCommandType_Build)
@@ -472,31 +495,34 @@ func (c *Client) handleRightClickAction(cursorScreenPosition image.Point) (hasEf
 				c.Headless().AssignUnit(workerId, command)
 			}
 		}
-	} else {
-		hasEffect = true // Left-click since it has no effect on enemy buildings
+		return
+	}
+
+	if tile.GetLandPlayerId() == c.PlayerId() && rts.ObjectType(tile.GetLandObjectType()) == rts.ObjectType_Unit {
+		c.SelectUnits(tile.GetLandObjectId())
+		return
+	}
+
+	if tile.GetHoverPlayerId() == c.PlayerId() && tile.GetHoverUnitId() != rts.NilObjectId {
+		c.SelectUnits(tile.GetHoverUnitId())
+		return
+	}
+
+	if tile.GetAirPlayerId() == c.PlayerId() && tile.GetAirUnitId() != rts.NilObjectId {
+		c.SelectUnits(tile.GetAirUnitId())
+		return
+	}
+
+	if tilePlayerId != rts.NilPlayerId && tilePlayerId != c.PlayerId() && tileObjectType == rts.ObjectType_Building {
 		// Enemy building
 		command := rts.NewFighterCommandData(rts.FighterCommandType_AttackBuilding)
 		command.SetTargetBuilding(tilePlayerId, tileBuildingId)
 		c.assignSelectedFighters(command, c.getCommandPath())
 		c.clearCommandPath()
+		return
 	}
-	return
-}
 
-func (c *Client) handleSetPathKeyAction() {
-	if !c.keyMap.IsJustReleased(KeyFunction_SetPath) {
-		return
-	}
-	path := c.getCommandPath()
-	if len(path) == 0 {
-		return
-	}
-	position := path[len(path)-1]
-	path = path[:len(path)-1]
-	command := rts.NewFighterCommandData(rts.FighterCommandType_HoldPosition)
-	command.SetTargetPosition(position)
-	c.assignSelectedFighters(command, path)
-	c.clearCommandPath()
+	c.ClearSelection()
 }
 
 func (c *Client) assignSelectedWorkers(command rts.UnitCommandData, idle bool) {
@@ -584,48 +610,10 @@ func (c *Client) Update() error {
 	// Hud
 	c.hud.Update(c)
 
-	// Cursor
-	cursorScreenPosition := client_utils.CursorPosition()
+	// Inputs
+	c.handleInput()
 
-	justClearedPendingClick := false
-
-	if c._pendingRightClickRelease {
-		if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonRight) {
-			c._pendingRightClickRelease = false
-			justClearedPendingClick = true
-		}
-	}
-
-	if c._pendingLeftClickRelease {
-		if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
-			c._pendingLeftClickRelease = false
-			justClearedPendingClick = true
-		}
-	}
-
-	// Action with right click
-	if hadEffect := c.handleRightClickAction(cursorScreenPosition); hadEffect {
-		c._pendingRightClickRelease = false
-		c._pendingLeftClickRelease = false
-		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight) {
-			// Action due to right click
-			c._pendingRightClickRelease = true
-		} else if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
-			// Action due to left click
-			c._pendingLeftClickRelease = true
-		}
-	} else if !justClearedPendingClick && !c._pendingRightClickRelease && !c._pendingLeftClickRelease {
-		// Selection with left click
-		c.handleLeftClickSelection(cursorScreenPosition)
-	}
-
-	// Path setter release
-	c.handleSetPathKeyAction()
-
-	if c.keyMap.IsPressed(KeyFunction_Deselect) {
-		c.ClearSelection()
-	}
-
+	// Update
 	if c.active {
 		return c.coreRenderer.Update()
 	}
