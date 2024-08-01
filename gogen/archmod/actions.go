@@ -7,7 +7,7 @@ import (
 
 	"github.com/concrete-eth/archetype/arch"
 
-	contract "github.com/concrete-eth/ark-rts/gogen/abigen/actions"
+	contract "github.com/concrete-eth/ark-rts/gogen/abigen/entrypoint"
 )
 
 var ActionsABIJson = contract.ContractABI
