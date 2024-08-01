@@ -13,8 +13,6 @@ import (
 
 // TODO: read-only player id 0
 
-// TODO: figure out why some tx don't go t/, maybe gas?
-
 type IHeadlessClient interface {
 	Game() *rts.Core
 	PlayerId() uint8
