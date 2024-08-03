@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Ark RTS</title>
+    <link rel="stylesheet" href="{{.BaseURL}}/static/style.css">
+</head>
+
+<body>
+    <script type="module">
+        import * as main from "{{.BaseURL}}/static/script.js";
+
+        main.postHogInit();
+
+        // Function to initialize the app once the DOM is fully loaded
+        function initializeApp() {
+            const factoryAddress = "{{.FactoryAddress}}";
+            const rpcUrl = "{{.RpcURL}}";
+            const playerAddress = main.getOrCreateBurnerWallet().address;
+
+            // Display the wallet address
+            updateWalletAddressDisplay(playerAddress);
+
+            // Request some initial funds for the wallet to allow transactions
+            main.requestDrip(playerAddress);
+
+            // Initialize the blockchain provider and wallet
+            const provider = main.newProvider(rpcUrl);
+            const wallet = main.getOrCreateBurnerWallet(provider);
+
+            // Setup event listeners for UI actions
+            setupEventListeners(wallet, factoryAddress, rpcUrl);
+
+            // Check the blockchain utilization and update the UI accordingly
+            updateChainUtilizationStatus(provider, factoryAddress);
+        }
+
+        // Update the displayed wallet address
+        function updateWalletAddressDisplay(address) {
+            document.getElementById("label-address").innerText = address.toLowerCase();
+        }
+
+        // Set up UI button click event listeners
+        function setupEventListeners(wallet, factoryAddress, rpcUrl) {
+            document.getElementById("button-new-game").addEventListener("click", function () {
+                createNewLobby(wallet);
+            });
+
+            document.getElementById("button-self-play").addEventListener("click", function () {
+                startSelfPlay(wallet, factoryAddress, rpcUrl);
+            });
+        }
+
+        // Create a new game lobby
+        function createNewLobby(wallet) {
+            main.newLobby({ players: [wallet.address] }).then((response) => {
+                if (response && response.lobbyId) {
+                    window.location.href = `${location.origin}/lobby/${response.lobbyId}`;
+                }
+            });
+        }
+
+        // Start a game in self-play mode
+        function startSelfPlay(wallet, factoryAddress, rpcUrl) {
+            main.createGame(wallet, factoryAddress, "self-play", [wallet.address, wallet.address]).then((response) => {
+                if (response && response.gameAddress) {
+                    // window.open(`${location.origin}/game/${response.gameAddress}?ws=${rpcUrl}`);
+                    window.location.href = `${location.origin}/game/${response.gameAddress}?ws=${rpcUrl}`;
+                }
+            });
+        }
+
+        // Check the blockchain utilization and update the UI status message
+        function updateChainUtilizationStatus(provider, factoryAddress) {
+            main.getChainUtilization(provider, factoryAddress).then((response) => {
+                if (response.utilization < 0.95) {
+                    main.setStatus("Ready Player One.");
+                    document.getElementById("button-new-game").disabled = false;
+                    document.getElementById("button-self-play").disabled = false;
+                } else {
+                    const percentStr = (response.utilization * 100).toFixed(0);
+                    main.setStatus(`Chain is at ${percentStr}% of allocated capacity. Try again later.`);
+                }
+            });
+        }
+
+        // Wait for the DOM to be fully loaded before initializing the app
+        document.addEventListener("DOMContentLoaded", initializeApp);
+    </script>
+    <div>
+        <div class="logo">
+            <img src="{{.BaseURL}}/static/logo.png" alt="">
+        </div>
+        <div>
+            <p id="label-status">Ready Player One.</p>
+        </div>
+        <div>
+            <button disabled id="button-new-game">New Game</button>
+            <button disabled id="button-self-play">Self Play</button>
+            <a id="button-how-to" href="https://redirects.concretelabs.dev/rts/how-to" target="_blank">How to Play</a>
+        </div>
+        <div>
+            <small>
+                <strong>Burner Wallet</strong><br>
+                <span>Address:</span>
+                <span id="label-address">0x0000000000000000000000000000000000000000</span>
+            </small>
+        </div>
+    </div>
+</body>
+
+</html>

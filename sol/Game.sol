@@ -38,7 +38,7 @@ contract Game is Arch {
         BuildingPrototypeAdder.addBuildingPrototypes(ICore(proxy));
 
         address[] memory _players = new address[](2);
-        _players[0] = msg.sender;
+        _players[0] = tx.origin;
         _players[1] = _players[0];
         _addPlayers(_players);
 

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Ark RTS</title>
+    <link rel="stylesheet" href="{{.BaseURL}}/static/style.css">
+</head>
+
+<body>
+    <script type="module">
+        import * as main from "{{.BaseURL}}/static/script.js";
+
+        main.postHogInit();
+
+        document.getElementById("button-main-menu").addEventListener("click", () => {
+            navigateToMainMenu();
+        });
+        document.getElementById("input-lobby-url").value = document.location.href;
+
+        const buttonCopyLobbyUrl = document.getElementById("button-copy-lobby-url")
+        buttonCopyLobbyUrl.addEventListener("click", () => {
+            navigator.clipboard.writeText(document.location.href).then(() => {
+                buttonCopyLobbyUrl.innerText = "Copied.";
+            }).catch(err => {
+                console.error('Error:', err);
+            });
+        });
+
+        function initializeApp() {
+            const factoryAddress = "{{.FactoryAddress}}";
+            const rpcUrl = "{{.RpcURL}}";
+            const playerAddress = main.getOrCreateBurnerWallet().address;
+
+            main.requestDrip(playerAddress);
+
+            const provider = main.newProvider(rpcUrl);
+            const wallet = main.getOrCreateBurnerWallet(provider);
+
+            const lobbyId = extractLobbyIdFromPath();
+
+            // Setup UI button event listeners
+            setupUIEventListeners(wallet, factoryAddress, lobbyId, rpcUrl);
+
+            // Fetch and display player addresses, update the UI based on lobby membership
+            updatePlayerAddresses(lobbyId, wallet)
+                .then((players) => setupGameListeners(wallet, factoryAddress, lobbyId, players, rpcUrl));
+
+            // Continuously refresh player addresses
+            setInterval(() => updatePlayerAddresses(lobbyId, wallet), 3000);
+
+            // Request initial funds for the wallet
+            main.requestDrip(wallet.address);
+        }
+
+        // Extract the lobby ID from the URL path
+        function extractLobbyIdFromPath() {
+            const path = window.location.pathname;
+            const segments = path.split('/');
+            return segments[segments.length - 1];
+        }
+
+        // Fetch and display player addresses, update the UI based on lobby membership
+        async function updatePlayerAddresses(lobbyId, wallet) {
+            const response = await fetch("{{.BaseURL}}/data/lobby/" + lobbyId);
+            const data = await response.json();
+            const players = data.players;
+            displayPlayerAddresses(players);
+            checkAndEnableGameStart(players, wallet);
+            return players;
+        }
+
+        // Display the player addresses in the UI
+        function displayPlayerAddresses(players) {
+            players.forEach((player, index) => {
+                const playerAddressElement = document.getElementById(`label-player-address-${index + 1}`);
+                playerAddressElement.innerText = player.toLowerCase();
+            });
+            document.getElementById("label-player-n").innerText = players.length;
+        }
+
+        // Check if the current player is the lobby admin and enable the game start button
+        function checkAndEnableGameStart(players, wallet) {
+            if (players.length > 0 && players[0].toLowerCase() === wallet.address.toLowerCase()) {
+                document.getElementById("button-start-game").disabled = false;
+            }
+        }
+
+        // Setup listeners for game creation events
+        async function setupGameListeners(wallet, factoryAddress, lobbyId, players, rpcUrl) {
+            let isAddressInPlayers = players.some(address => address.toLowerCase() === wallet.address.toLowerCase());
+            if (!isAddressInPlayers) {
+                await main.joinLobby({ lobbyId, playerAddress: wallet.address });
+                await updatePlayerAddresses(lobbyId, wallet);
+            }
+            main.listenForGameCreation(wallet, factoryAddress, lobbyId).then((gameAddress) => {
+                if (gameAddress) {
+                    // window.open(`${location.origin}/game/${gameAddress}?ws=${rpcUrl}`);
+                    window.location.href = `${location.origin}/game/${gameAddress}?ws=${rpcUrl}`;
+                }
+            });
+        }
+
+        // Set up UI button click event listeners
+        function setupUIEventListeners(wallet, factoryAddress, lobbyId, rpcUrl) {
+            document.getElementById("button-start-game").addEventListener("click", () => {
+                updatePlayerAddresses(lobbyId, wallet)
+                    .then((players) => startGame(wallet, factoryAddress, lobbyId, players, rpcUrl));
+            });
+        }
+
+        // Start a game
+        function startGame(wallet, factoryAddress, lobbyId, players, rpcUrl) {
+            main.createGame(wallet, factoryAddress, lobbyId, players).then((response) => {
+                if (response && response.gameAddress) {
+                    // window.open(`${location.origin}/game/${response.gameAddress}?ws=${rpcUrl}`);
+                    window.location.href = `${location.origin}/game/${response.gameAddress}?ws=${rpcUrl}`;
+                }
+            });
+        }
+
+        // Navigate to the main menu
+        function navigateToMainMenu() {
+            window.location.href = location.origin;
+        }
+
+        // Wait for the DOM to be fully loaded before initializing the app
+        document.addEventListener("DOMContentLoaded", initializeApp);
+    </script>
+    <div>
+        <div class="logo">
+            <img src="{{.BaseURL}}/static/logo.png" alt="">
+        </div>
+        <div>
+            <p id="label-status">Lobby ready.</p>
+        </div>
+        <div>
+            <div id="container-lobby-url">
+                <input id="input-lobby-url" value="" readonly><button id="button-copy-lobby-url">Copy</button>
+            </div>
+            <button disabled id="button-start-game">Start Game</button>
+            <button id="button-main-menu">Main Menu</button>
+        </div>
+        <div id="container-player-list">
+            <small>
+                <strong><span id="label-player-n">0</span>/4 Players</strong><br>
+                <p>Player 1: <span id="label-player-address-1">0x0000000000000000000000000000000000000000</span> (admin)
+                </p>
+                <p>Player 2: <span id="label-player-address-2">0x0000000000000000000000000000000000000000</span></p>
+                <p>Player 3: <span id="label-player-address-3">0x0000000000000000000000000000000000000000</span></p>
+                <p>Player 4: <span id="label-player-address-4">0x0000000000000000000000000000000000000000</span></p>
+            </small>
+        </div>
+    </div>
+</body>
+
+</html>

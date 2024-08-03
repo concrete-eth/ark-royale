@@ -40,7 +40,7 @@ func main() {
 	registry.AddPrecompile(0, pcAddr, pc)
 
 	// Create local simulated io
-	io, err := deploy.NewLocalIO(registry, schemas, func(auth *bind.TransactOpts, ethcli bind.ContractBackend) (common.Address, *types.Transaction, deploy.InitializableProxyAdmin, error) {
+	io, err := deploy.NewLocalIO(registry, schemas, func(auth *bind.TransactOpts, ethcli bind.ContractBackend) (addr common.Address, tx *types.Transaction, game deploy.InitializableProxyAdmin, err error) {
 		return game_contract.DeployContract(auth, ethcli)
 	}, pcAddr, 1*time.Second)
 	if err != nil {

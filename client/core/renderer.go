@@ -181,8 +181,11 @@ var _ ebiten.Game = (*CoreRenderer)(nil)
 func NewCoreRenderer(headlessClient IHeadlessClient, config ClientConfig, spriteGetter assets.SpriteGetter) *CoreRenderer {
 	// Wait for the headless client to be synced up to initial state
 	for !headlessClient.Game().IsInitialized() {
-		time.Sleep(50 * time.Millisecond)
-		headlessClient.Sync()
+		time.Sleep(500 * time.Millisecond)
+		_, _, err := headlessClient.Sync()
+		if err != nil {
+			log.Error("Sync error", "error", err)
+		}
 	}
 
 	// if config.Interpolate {

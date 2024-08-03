@@ -15,3 +15,12 @@ docs/
 
 # Node modules
 node_modules/
+
+# WebAssembly
+*.wasm
+
+# Binary
+bin/
+
+# Devnet
+.devnet/

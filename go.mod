@@ -7,10 +7,12 @@ require (
 	github.com/ebitenui/ebitenui v0.5.6
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/fogleman/gg v1.3.0
+	github.com/google/uuid v1.4.0
 	github.com/hajimehoshi/bitmapfont/v3 v3.0.0
 	github.com/hajimehoshi/ebiten/v2 v2.7.1
 	github.com/holiman/uint256 v1.2.4
 	github.com/lucasb-eyer/go-colorful v1.2.0
+	github.com/posthog/posthog-go v0.0.0-20240327112532-87b23fe11103
 	github.com/urfave/cli/v2 v2.25.7
 	golang.org/x/image v0.15.0
 	golang.org/x/text v0.15.0
@@ -62,7 +64,6 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.5-0.20220116011046-fa5810519dcb // indirect
 	github.com/google/pprof v0.0.0-20230207041349-798e818bf904 // indirect
-	github.com/google/uuid v1.4.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/graph-gophers/graphql-go v1.3.0 // indirect
 	github.com/hashicorp/go-bexpr v0.1.10 // indirect
