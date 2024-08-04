@@ -355,7 +355,8 @@ func (bg *selectionBox) Draw(c *Client, screen *ebiten.Image) {
 	if !c.lastClickedScreenPosition.In(c.coreRenderer.boardDisplayRect) {
 		return
 	}
-	if !ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) || !c.selecting {
+	// if !ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) || !c.selecting {
+	if !ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 		return
 	}
 	cursorPosition := client_utils.CursorPosition()

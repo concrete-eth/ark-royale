@@ -294,7 +294,7 @@ func (c *Client) handleInput() {
 		c.lastClickedScreenPosition = cursorScreenPosition
 		return
 	} else {
-		if selectionScreenRect.Dx() > 4 || selectionScreenRect.Dy() > 4 {
+		if selectionScreenRect.Dx() > 16 || selectionScreenRect.Dy() > 16 {
 			c.selecting = true
 		}
 	}

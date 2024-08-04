@@ -26,11 +26,13 @@ import (
 )
 
 var (
-	pcAddr        = common.HexToAddress("0x80")
-	rpcUrl        = "ws://127.0.0.1:8546"
+	pcAddr = common.HexToAddress("0x80")
+	rpcUrl = "wss://dcp.concretelabs.dev"
+	// rpcUrl        = "ws://127.0.0.1:8546"
 	privateKeyHex = "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
 	blockTime     = 1 * time.Second
-	chainId       = big.NewInt(1337)
+	chainId       = big.NewInt(901)
+	// chainId = big.NewInt(1337)
 )
 
 func waitForTx(ethcli *ethclient.Client, tx *types.Transaction) {
@@ -124,6 +126,9 @@ func main() {
 
 	fmt.Println("Game deployed at", gameAddr.Hex(), "with tx", gameCreated.Raw.TxHash.Hex())
 
+	// blockNum := uint64(0)
+	// gameAddr := common.HexToAddress("0x856e4424f806D16E8CBC702B3c0F2ede5468eae5")
+
 	gameContract, err := game_contract.NewContract(gameAddr, ethcli)
 	if err != nil {
 		panic(err)
@@ -137,7 +142,7 @@ func main() {
 	// Create local simulated io
 	// Create schemas from codegen
 	schemas := arch.ArchSchemas{Actions: archmod.ActionSchemas, Tables: archmod.TableSchemas}
-	io := rpc.NewIO(ethcli, blockTime, schemas, auth, gameAddr, coreAddr, blockNum, 0)
+	io := rpc.NewIO(ethcli, blockTime, schemas, auth, gameAddr, coreAddr, blockNum, 300*time.Millisecond)
 	// io := rpc.NewIO(ethcli, blockTime, schemas, auth, gameAddr, coreAddr, 0, 0)
 	defer io.Stop()
 
@@ -151,6 +156,13 @@ func main() {
 	kv := kvstore.NewMemoryKeyValueStore()
 	hl := core.NewHeadlessClient(kv, io)
 	hl.SetPlayerId(1)
+
+	lastBlockNum, err := ethcli.BlockNumber(context.Background())
+	if err != nil {
+		panic(err)
+	}
+	hl.SyncUntil(lastBlockNum)
+
 	c := game.NewClient(hl, core.ClientConfig{
 		ScreenSize: image.Point{1280, 720},
 	}, true)
