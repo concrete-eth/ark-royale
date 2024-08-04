@@ -13,6 +13,8 @@
 		"game:web:build": "env GOOS=js GOARCH=wasm go build -trimpath -o ./web/static/play.wasm ./web/cmd/app",
 		"game:web:run": "go run ./web/cmd/server ./web/templates ./web/static",
 		"engine:build": "go build -o ./bin/geth ./engine/cmd/geth.go",
-		"engine:build:docker": "docker buildx build --platform linux/amd64,linux/arm64 --push -t ghcr.io/concrete-eth/ark-rts/engine:latest ."
+		"engine:build:docker": "docker buildx build -f ./Dockerfile --platform linux/amd64,linux/arm64 --push -t ghcr.io/concrete-eth/ark-rts/engine:latest .",
+		"server:build:docker": "docker buildx build -f ./Dockerfile.server --platform linux/amd64,linux/arm64 --push -t ghcr.io/concrete-eth/ark-rts/server:latest .",
+		"sidecar:build:docker": "docker buildx build -f ./Dockerfile.sidecar --platform linux/amd64,linux/arm64 --push -t ghcr.io/concrete-eth/ark-rts/sidecar:latest ."
 	}
 }

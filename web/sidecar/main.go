@@ -138,7 +138,7 @@ func (s *Sidecar) onGameCreated(game *factory_contract.ContractGameCreated) erro
 		return fmt.Errorf("failed to get core address: %w", err)
 	}
 	var resp snapshot_types.ScheduleResponse
-	err = s.rpc.Client().Call(&resp, "ccsnap_addSchedule", snapshot_types.Schedule{
+	err = s.rpc.Client().Call(&resp, "arch_addSchedule", snapshot_types.Schedule{
 		Addresses:   []common.Address{coreAddress},
 		BlockPeriod: s.config.SnapshotInterval,
 		Replace:     true,
@@ -187,7 +187,7 @@ func (s *Sidecar) cleanup() error {
 	}
 
 	var schedules map[uint64]snapshot_types.Schedule
-	err = s.rpc.Client().Call(&schedules, "ccsnap_getSchedules")
+	err = s.rpc.Client().Call(&schedules, "arch_getSchedules")
 	if err != nil {
 		return fmt.Errorf("failed to get schedules: %w", err)
 	}
@@ -206,7 +206,7 @@ func (s *Sidecar) cleanup() error {
 
 			evict := s.config.EvictionThreshold > 0 && currentBlockNumber-uint64(metaRow.CreationBlockNumber) > s.config.EvictionThreshold
 			if evict {
-				err := s.rpc.Client().Call(nil, "ccsnap_deleteSchedule", id)
+				err := s.rpc.Client().Call(nil, "arch_deleteSchedule", id)
 				if err != nil {
 					return fmt.Errorf("failed to remove schedule: %w", err)
 				}

@@ -274,7 +274,7 @@ func runGameClient(clientConfig core.ClientConfig, params URLParams, privateKeyH
 	// Check if there is a snapshot available
 	var mustLoadSnapshot bool
 	var mostRecentSnapshotMetadata snapshot_types.SnapshotMetadataWithStatus
-	err = rpcClient.Client().Call(&mostRecentSnapshotMetadata, "ccsnap_last", coreAddress)
+	err = rpcClient.Client().Call(&mostRecentSnapshotMetadata, "arch_last", coreAddress)
 	if err != nil {
 		log.Error("Failed to get most recent snapshot metadata", "err", err)
 	} else {
@@ -295,7 +295,7 @@ func runGameClient(clientConfig core.ClientConfig, params URLParams, privateKeyH
 
 		startTime := time.Now()
 		var mostRecentSnapshot snapshot_types.SnapshotResponse
-		err = rpcClient.Client().Call(&mostRecentSnapshot, "ccsnap_get", coreAddress, mostRecentSnapshotMetadata.BlockHash)
+		err = rpcClient.Client().Call(&mostRecentSnapshot, "arch_get", coreAddress, mostRecentSnapshotMetadata.BlockHash)
 		if err != nil {
 			logCrit(fmt.Errorf("Failed to get most recent snapshot: %v", err))
 		}

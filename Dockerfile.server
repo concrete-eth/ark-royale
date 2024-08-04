@@ -1,0 +1,43 @@
+# Support setting various labels on the final image
+ARG COMMIT=""
+ARG VERSION=""
+ARG BUILDNUM=""
+
+# Use a stock Go builder container
+FROM golang:1.21-alpine AS builder
+
+# Install build dependencies
+RUN apk add --no-cache gcc musl-dev linux-headers git
+
+# Copy the go.mod and go.sum files and download the dependencies
+WORKDIR /app
+COPY go.mod .
+COPY go.sum .
+RUN go mod download
+
+# Copy the rest of the application source code and build it
+COPY . .
+RUN go build -o ./bin/server ./web/cmd/server/main.go
+
+# Use Alpine for the final image
+FROM alpine:latest
+
+# Add ca-certificates for HTTPS requests (if needed)
+RUN apk add --no-cache ca-certificates
+
+# Copy the built application from the builder stage
+COPY --from=builder /app/bin/server /usr/local/bin/server
+COPY --from=builder /app/web/templates /app/templates
+COPY --from=builder /app/web/static /app/static
+
+# Expose the port(s) your app runs on
+EXPOSE 80 8080
+
+# Run the server application
+ENTRYPOINT ["/usr/local/bin/server", "/app/templates", "/app/static"]
+
+# Add metadata labels
+ARG COMMIT
+ARG VERSION
+ARG BUILDNUM
+LABEL commit="$COMMIT" version="$VERSION" buildnum="$BUILDNUM"
