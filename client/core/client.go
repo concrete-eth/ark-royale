@@ -342,6 +342,15 @@ func (c *Client) handleInput() {
 	}
 
 	if !cursorScreenPosition.In(c.coreRenderer.boardDisplayRect) {
+		return
+	}
+
+	terrainDisplayRect := image.Rectangle{
+		Min: c.coreRenderer.TileCoordToDisplayCoord(image.Pt(0, 0)),
+		Max: c.coreRenderer.TileCoordToDisplayCoord(c.Game().BoardSize()),
+	}
+
+	if !cursorScreenPosition.In(terrainDisplayRect) {
 		// Clicked outside the board
 		c.clearCommandPath()
 		c.selected.Units = []uint8{}
@@ -371,11 +380,6 @@ func (c *Client) handleInput() {
 		tileObjectType = rts.ObjectType(tile.GetLandObjectType())
 		tileBuildingId = tile.GetLandObjectId()
 	)
-
-	if !tilePosition.In(c.Game().BoardRect()) {
-		c.ClearSelection()
-		return
-	}
 
 	if tilePlayerId == rts.NilPlayerId && tileObjectType == rts.ObjectType_Building {
 		// Neutral building (mine)
