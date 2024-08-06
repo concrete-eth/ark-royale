@@ -3,7 +3,8 @@
 
 package main
 
-// TODO: wait mined
+// Click outside 0,0
+// Ghosts
 
 import (
 	"context"
@@ -24,7 +25,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/concrete/lib"
-	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/log"
@@ -361,10 +361,13 @@ func runGameClient(clientConfig core.ClientConfig, params URLParams, privateKeyH
 	)
 
 	io := rpc.NewIO(rpcClient, blockTime, schemas, opts, params.GameAddress, coreAddress, startingBlockNumber, params.Delay)
-	io.SetTxUpdateHook(func(txUpdate *rpc.ActionTxUpdate) {
-		log.Info("Transaction "+txUpdate.Status.String(), "nonce", txUpdate.Nonce, "txHash", txUpdate.TxHash.Hex())
-	})
 	defer io.Stop()
+
+	go func() {
+		for err := range io.ErrChan() {
+			log.Error("IO error", "err", err)
+		}
+	}()
 
 	// Determine client mode (VIEW ONLY, ACTIVE) and block to sync to
 	// Set mode to view only if the game was created 1800 blocks ago
@@ -392,50 +395,6 @@ func runGameClient(clientConfig core.ClientConfig, params URLParams, privateKeyH
 
 	log.Info("Started headless client")
 
-	io.SetTxUpdateHook(func(txUpdate *rpc.ActionTxUpdate) {
-		if txUpdate.Status != rpc.ActionTxStatus_Included {
-			return
-		}
-
-		tx, _, err := rpcClient.TransactionByHash(context.Background(), txUpdate.TxHash)
-		if err != nil {
-			log.Error("Failed to retrieve transaction", "err", err)
-			return
-		}
-
-		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-		receipt, err := bind.WaitMined(ctx, rpcClient, tx)
-		cancel()
-		if err != nil {
-			log.Error("Failed to retrieve receipt", "err", err)
-			return
-		}
-
-		var (
-			gasUsed         = receipt.GasUsed
-			gasLimit        = tx.Gas()
-			overpaidPercent = float64(gasLimit)/float64(gasUsed)*100 - 100
-		)
-
-		postHog.Capture("TransactionIncluded", map[string]interface{}{
-			"hash":               tx.Hash().Hex(),
-			"from":               senderAddress.Hex(),
-			"to":                 tx.To().Hex(),
-			"gasLimit":           gasLimit,
-			"gasUsed":            gasUsed,
-			"gasOverpaidPercent": overpaidPercent,
-			"gasPrice":           tx.GasPrice().String(),
-			"nonce":              tx.Nonce(),
-			"success":            receipt.Status == types.ReceiptStatusSuccessful,
-		})
-
-		if receipt.Status != types.ReceiptStatusSuccessful {
-			log.Error("Transaction status not successful", "status", receipt.Status)
-			return
-		}
-		log.Debug("New transaction", "txHash", tx.Hash(), "gasUsed", gasUsed, "gasLimit", gasLimit, "overpaid", fmt.Sprintf("%.2f%%", overpaidPercent))
-	})
-
 	// Sync from blocks
 	setLoadStatus("Syncing...0%")
 
@@ -453,7 +412,6 @@ func runGameClient(clientConfig core.ClientConfig, params URLParams, privateKeyH
 			log.Info("Syncing to block", "blockNumber", blockToSyncTo)
 		}
 
-		// TODO: track block number-based variables with at least 64-bit integers
 		syncTo := utils.Min(blockToSyncTo, syncedBlockNumber+512)
 		hl.SyncUntil(syncTo)
 		syncedBlockNumber = syncTo
@@ -502,8 +460,37 @@ func runGameClient(clientConfig core.ClientConfig, params URLParams, privateKeyH
 		"loadSnapshot": mustLoadSnapshot,
 	})
 
-	// TODO: revise head dependant logic
-	// TODO: post hog events
+	io.SetTxUpdateHook(func(txUpdate *rpc.ActionTxUpdate) {
+		if txUpdate.Status == rpc.ActionTxStatus_Failed {
+			log.Error("Failed to send transaction", "txHash", txUpdate.TxHash, "err", txUpdate.Err)
+		} else if txUpdate.Status == rpc.ActionTxStatus_Included {
+			if !params.Debug {
+				log.Info("Transaction included", "txHash", txUpdate.TxHash)
+			}
+
+			tx, _, err := rpcClient.TransactionByHash(context.Background(), txUpdate.TxHash)
+			if err != nil {
+				log.Error("Failed to retrieve transaction", "err", err)
+				return
+			}
+
+			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+			receipt, err := bind.WaitMined(ctx, rpcClient, tx)
+			cancel()
+			if err != nil {
+				log.Error("Failed to retrieve receipt", "err", err)
+				return
+			}
+
+			var (
+				gasUsed         = receipt.GasUsed
+				gasLimit        = tx.Gas()
+				overpaidPercent = float64(gasLimit)/float64(gasUsed)*100 - 100
+			)
+
+			log.Info("New transaction", "txHash", tx.Hash(), "status", receipt.Status, "gasUsed", gasUsed, "gasLimit", gasLimit, "overpaid", fmt.Sprintf("%.2f%%", overpaidPercent))
+		}
+	})
 
 	log.Info("Starting game client")
 	setLoadStatus("Starting...")
