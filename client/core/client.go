@@ -381,6 +381,24 @@ func (c *Client) handleInput() {
 		tileBuildingId = tile.GetLandObjectId()
 	)
 
+	if tile.GetLandPlayerId() == c.PlayerId() && rts.ObjectType(tile.GetLandObjectType()) == rts.ObjectType_Unit {
+		// Own land unit
+		c.SelectUnits(tile.GetLandObjectId())
+		return
+	}
+
+	if tile.GetHoverPlayerId() == c.PlayerId() && tile.GetHoverUnitId() != rts.NilObjectId {
+		// Own hover unit
+		c.SelectUnits(tile.GetHoverUnitId())
+		return
+	}
+
+	if tile.GetAirPlayerId() == c.PlayerId() && tile.GetAirUnitId() != rts.NilObjectId {
+		// Own air unit
+		c.SelectUnits(tile.GetAirUnitId())
+		return
+	}
+
 	if tilePlayerId == rts.NilPlayerId && tileObjectType == rts.ObjectType_Building {
 		// Neutral building (mine)
 		var (
@@ -506,21 +524,6 @@ func (c *Client) handleInput() {
 				c.Headless().AssignUnit(workerId, command)
 			}
 		}
-		return
-	}
-
-	if tile.GetLandPlayerId() == c.PlayerId() && rts.ObjectType(tile.GetLandObjectType()) == rts.ObjectType_Unit {
-		c.SelectUnits(tile.GetLandObjectId())
-		return
-	}
-
-	if tile.GetHoverPlayerId() == c.PlayerId() && tile.GetHoverUnitId() != rts.NilObjectId {
-		c.SelectUnits(tile.GetHoverUnitId())
-		return
-	}
-
-	if tile.GetAirPlayerId() == c.PlayerId() && tile.GetAirUnitId() != rts.NilObjectId {
-		c.SelectUnits(tile.GetAirUnitId())
 		return
 	}
 
