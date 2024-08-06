@@ -238,6 +238,11 @@ func (tl *TargetLines) drawTargetLine(c *Client, dc *gg.Context, playerId uint8,
 			targetPosition = unitCommand.TargetPosition()
 		} else if unitCommand.Type().IsTargetingBuilding() {
 			targetPlayerId, targetBuildingId = unitCommand.TargetBuilding()
+			targetBuilding := c.Game().GetBuilding(targetPlayerId, targetBuildingId)
+			targetBuildingState := rts.BuildingState(targetBuilding.GetState())
+			if targetBuildingState == rts.BuildingState_Destroyed {
+				return
+			}
 		} else {
 			return
 		}
