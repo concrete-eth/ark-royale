@@ -50,11 +50,6 @@ var (
 	MinZoomLevel = -gen_utils.Min(1, assets.TileSizeLog2)
 )
 
-// type Hinter interface {
-// 	GetHints() (uint64, [][]interface{})
-// 	HintNonce() uint64
-// }
-
 type UpdatableWithRenderer interface {
 	Update(c *CoreRenderer)
 }
@@ -129,7 +124,6 @@ type AnticipatedCommand struct {
 type CoreRenderer struct {
 	IHeadlessClient // Embedded headless client
 
-	// hinter    Hinter // Hinter
 	hintNonce uint64 // Hinter nonce
 
 	config   ClientConfig   // Client configuration (immutable)
@@ -427,57 +421,68 @@ func (c *CoreRenderer) interpolate() {
 	}
 	c.lastInterpolationTime = time.Now()
 
-	tickFraction := float64(time.Since(c.lastSubTickTime)) / float64(c.SubTickPeriod())
-
+	tickFraction := c.tickFraction()
 	nPlayers := c.Game().GetMeta().GetPlayerCount()
 	for playerId := uint8(1); playerId < nPlayers+1; playerId++ {
 		c.Game().ForEachUnit(playerId, func(unitId uint8, unit *datamod.UnitsRow) {
-			object := rts.Object{
-				Type:     rts.ObjectType_Unit,
-				PlayerId: playerId,
-				ObjectId: unitId,
-			}
-			if unitState := rts.UnitState(unit.GetState()); unitState.IsDeadOrInactive() {
-				return
-			}
-			var (
-				canonicalTilePosition     = rts.GetPositionAsPoint(unit)
-				canonicalInternalPosition = canonicalTilePosition.Mul(InternalTileSize)
-				nextTilePosition          = c.getUnitNextTilePosition(playerId, unitId)
-				nextInternalPosition      = nextTilePosition.Mul(InternalTileSize)
-				deltaInternalPosition     = nextInternalPosition.Sub(canonicalInternalPosition)
-				nextInterpolatedPosition  = canonicalInternalPosition.Add(image.Point{
-					X: int(float64(deltaInternalPosition.X) * tickFraction),
-					Y: int(float64(deltaInternalPosition.Y) * tickFraction),
-				})
-			)
-
-			c.setPosition(object, nextInterpolatedPosition)
-			c.setUnitSpritePosition(playerId, unitId, unit)
+			c.interpolateUnitPosition(playerId, unitId, unit, tickFraction)
 		})
 	}
 }
 
+func (c *CoreRenderer) tickFraction() float64 {
+	return float64(time.Since(c.lastSubTickTime)) / float64(c.SubTickPeriod())
+}
+
+func (c *CoreRenderer) interpolateUnitPosition(playerId uint8, unitId uint8, unit *datamod.UnitsRow, tickFraction float64) {
+	object := rts.Object{
+		Type:     rts.ObjectType_Unit,
+		PlayerId: playerId,
+		ObjectId: unitId,
+	}
+	if unitState := rts.UnitState(unit.GetState()); unitState.IsDeadOrInactive() {
+		return
+	}
+	var (
+		canonicalTilePosition     = rts.GetPositionAsPoint(unit)
+		canonicalInternalPosition = canonicalTilePosition.Mul(InternalTileSize)
+		nextTilePosition          = c.getUnitNextTilePosition(playerId, unitId)
+		nextInternalPosition      = nextTilePosition.Mul(InternalTileSize)
+		deltaInternalPosition     = nextInternalPosition.Sub(canonicalInternalPosition)
+		nextInterpolatedPosition  = canonicalInternalPosition.Add(image.Point{
+			X: int(float64(deltaInternalPosition.X) * tickFraction),
+			Y: int(float64(deltaInternalPosition.Y) * tickFraction),
+		})
+	)
+
+	c.setPosition(object, nextInterpolatedPosition)
+	c.setUnitSpritePosition(playerId, unitId, unit)
+}
+
 // Pre-runs the next tick and sets the next tile position of every unit.
 func (c *CoreRenderer) anticipateSubTick() {
-	c.anticipating = true
+	// c.anticipating = true
 	c.Simulate(func(_core arch.Core) {
 		core := _core.(*rts.Core)
 		arch.RunSingleTick(core)
 		core.ForEachPlayer(func(playerId uint8, player *datamod.PlayersRow) {
 			core.ForEachUnit(playerId, func(unitId uint8, unit *datamod.UnitsRow) {
-				object := rts.Object{
-					Type:     rts.ObjectType_Unit,
-					PlayerId: playerId,
-					ObjectId: unitId,
-				}
-				tilePosition := rts.GetPositionAsPoint(unit)
-				// Set the next tile position
-				c.nextTilePosition[object] = tilePosition
+				c.anticipateUnitSubTick(playerId, unitId, unit)
 			})
 		})
 	})
-	c.anticipating = false
+	// c.anticipating = false
+}
+
+func (c *CoreRenderer) anticipateUnitSubTick(playerId uint8, unitId uint8, unit *datamod.UnitsRow) {
+	object := rts.Object{
+		Type:     rts.ObjectType_Unit,
+		PlayerId: playerId,
+		ObjectId: unitId,
+	}
+	tilePosition := rts.GetPositionAsPoint(unit)
+	// Set the next tile position
+	c.nextTilePosition[object] = tilePosition
 }
 
 // Pre-runs any hinted actions and updates the sprites of the affected objects.
@@ -494,14 +499,16 @@ func (c *CoreRenderer) anticipateActions() {
 	hintNonce, hintsBatch := hinter.GetHints()
 	c.hintNonce = hintNonce
 
+	canonGame := c.Game()
+
 	c.Simulate(func(_gg arch.Core) {
-		gg := _gg.(*rts.Core)
+		simGame := _gg.(*rts.Core)
 
 		anticipatedObjects := make(map[rts.Object]struct{}, 0)
 		commandAnticipatedObject := make(map[rts.Object]struct{}, 0)
 
 		// Set the child instances state update handler to update the present sprites based on anticipated table updates
-		gg.SetSetFieldHandler(func(table arch.TableSchema, rowKey lib.RowKey, columnName string, value []byte) {
+		simGame.SetSetFieldHandler(func(table arch.TableSchema, rowKey lib.RowKey, columnName string, value []byte) {
 			if table.Name == "Buildings" {
 				playerId := rowKey[0].(uint8)
 				buildingId := rowKey[1].(uint8)
@@ -529,8 +536,6 @@ func (c *CoreRenderer) anticipateActions() {
 			}
 		})
 
-		c.anticipating = true
-
 		// Execute every hinted non-tick action on the child game instance
 		for _, hint := range hintsBatch {
 			for _, action := range hint {
@@ -538,7 +543,7 @@ func (c *CoreRenderer) anticipateActions() {
 				case *rts.Tick, *rts.Initialization, *rts.Start:
 					continue
 				default:
-					err := archmod.ActionSchemas.ExecuteAction(action, gg)
+					err := archmod.ActionSchemas.ExecuteAction(action, simGame)
 					if err != nil {
 						log.Debug("Anticipating action error", "action", action, "error", err)
 					}
@@ -546,54 +551,64 @@ func (c *CoreRenderer) anticipateActions() {
 			}
 		}
 
-		setAnticipatedObjectSprite := func(obj rts.Object) {
-			if obj.Type == rts.ObjectType_Building {
-				building := gg.GetBuilding(obj.PlayerId, obj.ObjectId)
-				c.setBuildingSprite(obj.PlayerId, obj.ObjectId, building)
-			} else if obj.Type == rts.ObjectType_Unit {
-				unit := gg.GetUnit(obj.PlayerId, obj.ObjectId)
-				c.setUnitSprite(obj.PlayerId, obj.ObjectId, unit)
-			}
-		}
-
 		// Anticipate objects
+		c.anticipating = true
 		for obj := range anticipatedObjects {
 			delete(c.anticipatedObjects, obj)
-			setAnticipatedObjectSprite(obj)
+			if obj.Type == rts.ObjectType_Building {
+				building := simGame.GetBuilding(obj.PlayerId, obj.ObjectId)
+				c.setBuildingSprite(obj.PlayerId, obj.ObjectId, building)
+			} else if obj.Type == rts.ObjectType_Unit {
+				unit := simGame.GetUnit(obj.PlayerId, obj.ObjectId)
+				// All buildings are in the same layer, but units can be in any of multiple layers
+				// We must clear them as the layer of the unit that corresponds to this ID may have changed
+				c.deleteUndefinedUnitSpriteObject(obj.PlayerId, obj.ObjectId)
+				c.setUnitSprite(obj.PlayerId, obj.ObjectId, unit)
+
+				c.resetUnitPosition(obj.PlayerId, obj.ObjectId, unit)
+				c.setUnitSpritePosition(obj.PlayerId, obj.ObjectId, unit)
+			}
 		}
+		c.anticipating = false
+
 		// Re-anticipate all previously anticipated object that have not been anticipated this round
 		// to clear the sprites of objects that are no longer anticipated
+		// Note the state is read from the canonical state, not the anticipated state
 		for obj := range c.anticipatedObjects {
 			// Skip object that have already been set in the canonical state
 			playerId := obj.PlayerId
 			if obj.Type == rts.ObjectType_Building {
 				buildingId := obj.ObjectId
-				nBuildings := gg.GetPlayer(playerId).GetBuildingCount()
+				nBuildings := canonGame.GetPlayer(playerId).GetBuildingCount()
 				if buildingId <= nBuildings {
 					continue
 				}
+				building := canonGame.GetBuilding(playerId, buildingId)
+				c.setBuildingSprite(playerId, buildingId, building)
 			} else if obj.Type == rts.ObjectType_Unit {
+				c.deleteUndefinedUnitSpriteObject(obj.PlayerId, obj.ObjectId)
 				unitId := obj.ObjectId
-				nUnits := gg.GetPlayer(playerId).GetUnitCount()
-				if unitId <= nUnits {
-					continue
+				unit := canonGame.GetUnit(playerId, unitId)
+				c.setUnitSprite(playerId, unitId, unit)
+
+				if unitState := rts.UnitState(unit.GetState()); !unitState.IsNil() {
+					c.resetUnitPosition(obj.PlayerId, obj.ObjectId, unit)
+					c.setUnitSpritePosition(obj.PlayerId, obj.ObjectId, unit)
 				}
 			}
-			setAnticipatedObjectSprite(obj)
 		}
+
 		c.anticipatedObjects = anticipatedObjects
 
 		c.anticipatedCommands = make(map[rts.Object]AnticipatedCommand, 0)
 		for obj := range commandAnticipatedObject {
-			unit := gg.GetUnit(obj.PlayerId, obj.ObjectId)
+			unit := simGame.GetUnit(obj.PlayerId, obj.ObjectId)
 			c.anticipatedCommands[obj] = AnticipatedCommand{
 				Command: unit.GetCommand(),
 				Extra:   unit.GetCommandExtra(),
 				Meta:    unit.GetCommandMeta(),
 			}
 		}
-
-		c.anticipating = false
 	})
 }
 
@@ -840,13 +855,14 @@ func (c *CoreRenderer) setUnitSprite(playerId uint8, unitId uint8, unit *datamod
 		// Remove the sprites if the unit is nil or dead
 		c.deletePosition(object)
 		healthBarSpriteObj.Delete()
-		if c.anticipating {
-			// If the unit does not exist in the canonical game state, try to delete
-			// the sprite from all unit layers as it may be in either of them.
-			c.deleteUndefinedUnitSpriteObject(playerId, unitId)
-		} else {
-			spriteObj.Delete()
-		}
+		// if c.anticipating {
+		// 	// If the unit does not exist in the game state, try to delete
+		// 	// the sprite from all unit layers as it may be in either of them.
+		// 	c.deleteUndefinedUnitSpriteObject(playerId, unitId)
+		// } else {
+		// 	spriteObj.Delete()
+		// }
+		spriteObj.Delete()
 		return
 	} else if unitState == rts.UnitState_Inactive {
 		c.resetUnitPosition(playerId, unitId, unit)
