@@ -7,3 +7,6 @@
 [submodule "lib/solmate"]
 	path = lib/solmate
 	url = https://github.com/transmissions11/solmate
+[submodule "lib/archetype"]
+	path = lib/archetype
+	url = https://github.com/concrete-eth/archetype.git
