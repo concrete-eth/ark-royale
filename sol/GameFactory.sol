@@ -34,8 +34,7 @@ contract GameFactory is TickMaster {
         address[] memory _players
     ) external returns (address) {
         address gameAddress = Clones.clone(gameImplementation);
-        bool start = true;
-        Game(gameAddress).initialize(coreImplementation);
+        Game(gameAddress).initialize(coreImplementation, abi.encode(_players));
         _setGasAlloc(
             gameAddress,
             tickAllocGasPerPlayer * _players.length,

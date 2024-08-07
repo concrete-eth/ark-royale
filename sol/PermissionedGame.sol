@@ -6,12 +6,12 @@ import {Game} from "./Game.sol";
 
 contract PermissionedGame is Game {
     modifier onlyPlayer(uint8 playerId) {
-        // require(msg.sender == players[playerId - 1], "Game: onlyPlayer");
+        require(msg.sender == players[playerId - 1], "Game: onlyPlayer");
         _;
     }
 
     modifier onlyPlayerOne() {
-        // require(msg.sender == players[0], "Game: onlyPlayerOne");
+        require(msg.sender == players[0], "Game: onlyPlayerOne");
         _;
     }
 

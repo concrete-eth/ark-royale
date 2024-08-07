@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"image"
 	"os"
 	"time"
@@ -14,15 +15,15 @@ import (
 	game_contract "github.com/concrete-eth/ark-rts/gogen/abigen/game"
 	"github.com/concrete-eth/ark-rts/gogen/archmod"
 	rts "github.com/concrete-eth/ark-rts/rts"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/concrete"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/hajimehoshi/ebiten/v2"
 )
-
-// TODO: locked vs not enough capacity etc
 
 var (
 	pcAddr = common.HexToAddress("0x1234")
@@ -39,10 +40,18 @@ func main() {
 	registry := concrete.NewRegistry()
 	registry.AddPrecompile(0, pcAddr, pc)
 
+	// Create init data
+	pk, _ := crypto.HexToECDSA(deploy.LocalPrivateKeyHex)
+	address := crypto.PubkeyToAddress(pk.PublicKey)
+	data, err := encodeAddressArray([]common.Address{address, address, {0x01}, {0x02}})
+	if err != nil {
+		panic(err)
+	}
+
 	// Create local simulated io
 	io, err := deploy.NewLocalIO(registry, schemas, func(auth *bind.TransactOpts, ethcli bind.ContractBackend) (addr common.Address, tx *types.Transaction, game deploy.InitializableProxyAdmin, err error) {
 		return game_contract.DeployContract(auth, ethcli)
-	}, pcAddr, 1*time.Second)
+	}, pcAddr, data, 100*time.Millisecond)
 	if err != nil {
 		panic(err)
 	}
@@ -52,6 +61,10 @@ func main() {
 	kv := kvstore.NewMemoryKeyValueStore()
 	hl := core.NewHeadlessClient(kv, io)
 	hl.SetPlayerId(1)
+
+	// Start game
+	hl.Start()
+
 	c := game.NewClient(hl, core.ClientConfig{
 		ScreenSize: image.Point{1280, 720},
 	}, true)
@@ -62,4 +75,20 @@ func main() {
 	if err := ebiten.RunGame(c); err != nil {
 		panic(err)
 	}
+}
+
+func encodeAddressArray(addresses []common.Address) ([]byte, error) {
+	addressArrayType, err := abi.NewType("address[]", "", nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create ABI type: %v", err)
+	}
+
+	arguments := abi.Arguments{{Type: addressArrayType}}
+
+	data, err := arguments.Pack(addresses)
+	if err != nil {
+		return nil, fmt.Errorf("failed to encode addresses: %v", err)
+	}
+
+	return data, nil
 }

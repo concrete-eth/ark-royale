@@ -27,7 +27,7 @@ contract Game is Arch {
         return 0;
     }
 
-    function _initialize() internal override {
+    function _initialize(bytes memory data) internal override {
         ActionData_Initialize memory initializeData;
         initializeData.width = SIZE;
         initializeData.height = SIZE;
@@ -37,13 +37,15 @@ contract Game is Arch {
         UnitPrototypeAdder.addUnitPrototypes(ICore(proxy));
         BuildingPrototypeAdder.addBuildingPrototypes(ICore(proxy));
 
-        address[] memory _players = new address[](2);
-        _players[0] = tx.origin;
-        _players[1] = _players[0];
+        address[] memory _players = abi.decode(data, (address[]));
         _addPlayers(_players);
 
-        start();
+        ICore(proxy).start();
     }
+
+    // function _start() internal {
+    //     ICore(proxy).start();
+    // }
 
     function _addPlayers(address[] memory _players) internal {
         if (players.length > 4) {

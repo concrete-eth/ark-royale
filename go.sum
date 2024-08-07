@@ -53,8 +53,8 @@ github.com/cockroachdb/redact v1.1.3/go.mod h1:BVNblN9mBWFyMyqK1k3AAiSxhvhfK2oOZ
 github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 h1:zuQyyAKVxetITBuuhv3BI9cMrmStnpT18zmgmTxunpo=
 github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06/go.mod h1:7nc4anLGjupUW/PeY5qiNYsdNXj7zopG+eqsS7To5IQ=
 github.com/codegangsta/inject v0.0.0-20150114235600-33e0aa1cb7c0/go.mod h1:4Zcjuz89kmFXt9morQgcfYZAYZ5n8WHjt81YYWIwtTM=
-github.com/concrete-eth/archetype v0.0.0-20240806124132-b175087aabc4 h1:AMlrjb+GI7l9xW5jYzZVRU79wnv3UMAEwQ+j2Gw3kAE=
-github.com/concrete-eth/archetype v0.0.0-20240806124132-b175087aabc4/go.mod h1:Dtof/+ZySQgDopw9h1RwW4c1IyNoKHiLYjcA3SZIQJo=
+github.com/concrete-eth/archetype v0.0.0-20240807075216-bc214229c7ab h1:b2L4+QQY7Sw9rXSeZZMOiduFJ3JGDxY8/cP9n5S51MU=
+github.com/concrete-eth/archetype v0.0.0-20240807075216-bc214229c7ab/go.mod h1:Dtof/+ZySQgDopw9h1RwW4c1IyNoKHiLYjcA3SZIQJo=
 github.com/concrete-eth/concrete-geth v0.0.0-20240803071842-e15531509300 h1:ufzAYmzEJCsSnNHudYMLwI2/cs0TWxFbJMsf7/YBMBQ=
 github.com/concrete-eth/concrete-geth v0.0.0-20240803071842-e15531509300/go.mod h1:cPB7AJGHnzk+qhnf3rEH8NkZ3YwHR1sqincpuIrXiKE=
 github.com/consensys/bavard v0.1.13 h1:oLhMLOFGTLdlda/kma4VOJazblc7IM5y5QPd2A/YjhQ=

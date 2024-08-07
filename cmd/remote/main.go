@@ -28,11 +28,11 @@ import (
 var (
 	pcAddr = common.HexToAddress("0x80")
 	rpcUrl = "wss://dcp.concretelabs.dev"
-	// rpcUrl        = "ws://127.0.0.1:8546"
+	// rpcUrl        = "ws://127.0.0.1:8545"
 	privateKeyHex = "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
 	blockTime     = 1 * time.Second
 	chainId       = big.NewInt(901)
-	// chainId = big.NewInt(1337)
+	// chainId = big.NewInt(31337)
 )
 
 func waitForTx(ethcli *ethclient.Client, tx *types.Transaction) {
@@ -107,7 +107,7 @@ func main() {
 		panic(err)
 	}
 
-	createTx, err := factoryContract.CreateGame(auth, "0", []common.Address{auth.From})
+	createTx, err := factoryContract.CreateGame(auth, "0", []common.Address{auth.From, auth.From})
 	if err != nil {
 		panic(err)
 	}
