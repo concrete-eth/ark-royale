@@ -30,18 +30,20 @@ type PlayersRow struct {
 }
 
 func NewPlayersRow(dsSlot lib.DatastoreSlot) *PlayersRow {
-	sizes := []int{2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1}
+	sizes := []int{2, 2, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1}
 	return &PlayersRow{*lib.NewDatastoreStructWithParent(dsSlot, sizes, nil, nil)}
 }
 
 func NewPlayersRowWithParent(dsSlot lib.DatastoreSlot, parent lib.Parent, rowKey lib.RowKey) *PlayersRow {
-	sizes := []int{2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1}
+	sizes := []int{2, 2, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1}
 	return &PlayersRow{*lib.NewDatastoreStructWithParent(dsSlot, sizes, parent, rowKey)}
 }
 
 func (v *PlayersRow) Get() (
 	spawnAreaX uint16,
 	spawnAreaY uint16,
+	spawnAreaWidth uint8,
+	spawnAreaHeight uint8,
 	workerPortX uint16,
 	workerPortY uint16,
 	curResource uint16,
@@ -57,23 +59,27 @@ func (v *PlayersRow) Get() (
 ) {
 	return codec.DecodeUint16(2, v.GetField(0)),
 		codec.DecodeUint16(2, v.GetField(1)),
-		codec.DecodeUint16(2, v.GetField(2)),
-		codec.DecodeUint16(2, v.GetField(3)),
+		codec.DecodeUint8(1, v.GetField(2)),
+		codec.DecodeUint8(1, v.GetField(3)),
 		codec.DecodeUint16(2, v.GetField(4)),
 		codec.DecodeUint16(2, v.GetField(5)),
-		codec.DecodeUint8(1, v.GetField(6)),
-		codec.DecodeUint8(1, v.GetField(7)),
+		codec.DecodeUint16(2, v.GetField(6)),
+		codec.DecodeUint16(2, v.GetField(7)),
 		codec.DecodeUint8(1, v.GetField(8)),
 		codec.DecodeUint8(1, v.GetField(9)),
 		codec.DecodeUint8(1, v.GetField(10)),
 		codec.DecodeUint8(1, v.GetField(11)),
 		codec.DecodeUint8(1, v.GetField(12)),
-		codec.DecodeUint8(1, v.GetField(13))
+		codec.DecodeUint8(1, v.GetField(13)),
+		codec.DecodeUint8(1, v.GetField(14)),
+		codec.DecodeUint8(1, v.GetField(15))
 }
 
 func (v *PlayersRow) Set(
 	spawnAreaX uint16,
 	spawnAreaY uint16,
+	spawnAreaWidth uint8,
+	spawnAreaHeight uint8,
 	workerPortX uint16,
 	workerPortY uint16,
 	curResource uint16,
@@ -89,18 +95,20 @@ func (v *PlayersRow) Set(
 ) {
 	v.SetField(0, codec.EncodeUint16(2, spawnAreaX))
 	v.SetField(1, codec.EncodeUint16(2, spawnAreaY))
-	v.SetField(2, codec.EncodeUint16(2, workerPortX))
-	v.SetField(3, codec.EncodeUint16(2, workerPortY))
-	v.SetField(4, codec.EncodeUint16(2, curResource))
-	v.SetField(5, codec.EncodeUint16(2, maxResource))
-	v.SetField(6, codec.EncodeUint8(1, curArmories))
-	v.SetField(7, codec.EncodeUint8(1, computeSupply))
-	v.SetField(8, codec.EncodeUint8(1, computeDemand))
-	v.SetField(9, codec.EncodeUint8(1, unitCount))
-	v.SetField(10, codec.EncodeUint8(1, buildingCount))
-	v.SetField(11, codec.EncodeUint8(1, buildingPayQueuePointer))
-	v.SetField(12, codec.EncodeUint8(1, buildingBuildQueuePointer))
-	v.SetField(13, codec.EncodeUint8(1, unitPayQueuePointer))
+	v.SetField(2, codec.EncodeUint8(1, spawnAreaWidth))
+	v.SetField(3, codec.EncodeUint8(1, spawnAreaHeight))
+	v.SetField(4, codec.EncodeUint16(2, workerPortX))
+	v.SetField(5, codec.EncodeUint16(2, workerPortY))
+	v.SetField(6, codec.EncodeUint16(2, curResource))
+	v.SetField(7, codec.EncodeUint16(2, maxResource))
+	v.SetField(8, codec.EncodeUint8(1, curArmories))
+	v.SetField(9, codec.EncodeUint8(1, computeSupply))
+	v.SetField(10, codec.EncodeUint8(1, computeDemand))
+	v.SetField(11, codec.EncodeUint8(1, unitCount))
+	v.SetField(12, codec.EncodeUint8(1, buildingCount))
+	v.SetField(13, codec.EncodeUint8(1, buildingPayQueuePointer))
+	v.SetField(14, codec.EncodeUint8(1, buildingBuildQueuePointer))
+	v.SetField(15, codec.EncodeUint8(1, unitPayQueuePointer))
 }
 
 func (v *PlayersRow) GetSpawnAreaX() uint16 {
@@ -123,124 +131,144 @@ func (v *PlayersRow) SetSpawnAreaY(value uint16) {
 	v.SetField(1, data)
 }
 
-func (v *PlayersRow) GetWorkerPortX() uint16 {
+func (v *PlayersRow) GetSpawnAreaWidth() uint8 {
 	data := v.GetField(2)
+	return codec.DecodeUint8(1, data)
+}
+
+func (v *PlayersRow) SetSpawnAreaWidth(value uint8) {
+	data := codec.EncodeUint8(1, value)
+	v.SetField(2, data)
+}
+
+func (v *PlayersRow) GetSpawnAreaHeight() uint8 {
+	data := v.GetField(3)
+	return codec.DecodeUint8(1, data)
+}
+
+func (v *PlayersRow) SetSpawnAreaHeight(value uint8) {
+	data := codec.EncodeUint8(1, value)
+	v.SetField(3, data)
+}
+
+func (v *PlayersRow) GetWorkerPortX() uint16 {
+	data := v.GetField(4)
 	return codec.DecodeUint16(2, data)
 }
 
 func (v *PlayersRow) SetWorkerPortX(value uint16) {
 	data := codec.EncodeUint16(2, value)
-	v.SetField(2, data)
+	v.SetField(4, data)
 }
 
 func (v *PlayersRow) GetWorkerPortY() uint16 {
-	data := v.GetField(3)
+	data := v.GetField(5)
 	return codec.DecodeUint16(2, data)
 }
 
 func (v *PlayersRow) SetWorkerPortY(value uint16) {
 	data := codec.EncodeUint16(2, value)
-	v.SetField(3, data)
+	v.SetField(5, data)
 }
 
 func (v *PlayersRow) GetCurResource() uint16 {
-	data := v.GetField(4)
+	data := v.GetField(6)
 	return codec.DecodeUint16(2, data)
 }
 
 func (v *PlayersRow) SetCurResource(value uint16) {
 	data := codec.EncodeUint16(2, value)
-	v.SetField(4, data)
+	v.SetField(6, data)
 }
 
 func (v *PlayersRow) GetMaxResource() uint16 {
-	data := v.GetField(5)
+	data := v.GetField(7)
 	return codec.DecodeUint16(2, data)
 }
 
 func (v *PlayersRow) SetMaxResource(value uint16) {
 	data := codec.EncodeUint16(2, value)
-	v.SetField(5, data)
+	v.SetField(7, data)
 }
 
 func (v *PlayersRow) GetCurArmories() uint8 {
-	data := v.GetField(6)
+	data := v.GetField(8)
 	return codec.DecodeUint8(1, data)
 }
 
 func (v *PlayersRow) SetCurArmories(value uint8) {
 	data := codec.EncodeUint8(1, value)
-	v.SetField(6, data)
+	v.SetField(8, data)
 }
 
 func (v *PlayersRow) GetComputeSupply() uint8 {
-	data := v.GetField(7)
+	data := v.GetField(9)
 	return codec.DecodeUint8(1, data)
 }
 
 func (v *PlayersRow) SetComputeSupply(value uint8) {
 	data := codec.EncodeUint8(1, value)
-	v.SetField(7, data)
+	v.SetField(9, data)
 }
 
 func (v *PlayersRow) GetComputeDemand() uint8 {
-	data := v.GetField(8)
+	data := v.GetField(10)
 	return codec.DecodeUint8(1, data)
 }
 
 func (v *PlayersRow) SetComputeDemand(value uint8) {
 	data := codec.EncodeUint8(1, value)
-	v.SetField(8, data)
+	v.SetField(10, data)
 }
 
 func (v *PlayersRow) GetUnitCount() uint8 {
-	data := v.GetField(9)
+	data := v.GetField(11)
 	return codec.DecodeUint8(1, data)
 }
 
 func (v *PlayersRow) SetUnitCount(value uint8) {
 	data := codec.EncodeUint8(1, value)
-	v.SetField(9, data)
+	v.SetField(11, data)
 }
 
 func (v *PlayersRow) GetBuildingCount() uint8 {
-	data := v.GetField(10)
+	data := v.GetField(12)
 	return codec.DecodeUint8(1, data)
 }
 
 func (v *PlayersRow) SetBuildingCount(value uint8) {
 	data := codec.EncodeUint8(1, value)
-	v.SetField(10, data)
+	v.SetField(12, data)
 }
 
 func (v *PlayersRow) GetBuildingPayQueuePointer() uint8 {
-	data := v.GetField(11)
+	data := v.GetField(13)
 	return codec.DecodeUint8(1, data)
 }
 
 func (v *PlayersRow) SetBuildingPayQueuePointer(value uint8) {
 	data := codec.EncodeUint8(1, value)
-	v.SetField(11, data)
+	v.SetField(13, data)
 }
 
 func (v *PlayersRow) GetBuildingBuildQueuePointer() uint8 {
-	data := v.GetField(12)
+	data := v.GetField(14)
 	return codec.DecodeUint8(1, data)
 }
 
 func (v *PlayersRow) SetBuildingBuildQueuePointer(value uint8) {
 	data := codec.EncodeUint8(1, value)
-	v.SetField(12, data)
+	v.SetField(14, data)
 }
 
 func (v *PlayersRow) GetUnitPayQueuePointer() uint8 {
-	data := v.GetField(13)
+	data := v.GetField(15)
 	return codec.DecodeUint8(1, data)
 }
 
 func (v *PlayersRow) SetUnitPayQueuePointer(value uint8) {
 	data := codec.EncodeUint8(1, value)
-	v.SetField(13, data)
+	v.SetField(15, data)
 }
 
 type Players struct {

@@ -6,10 +6,7 @@ import "./solgen/ICore.sol";
 enum BuildingType {
     Nil,
     Main,
-    Storage,
-    Lab,
-    Armory,
-    Mine
+    Pit
 }
 
 library BuildingPrototypeAdder {
@@ -20,8 +17,8 @@ library BuildingPrototypeAdder {
                 width: 2,
                 height: 2,
                 resourceCost: 0,
-                resourceCapacity: 100,
-                computeCapacity: 2,
+                resourceCapacity: 2000,
+                computeCapacity: 8,
                 resourceMine: 0,
                 mineTime: 0,
                 maxIntegrity: 200,
@@ -30,55 +27,7 @@ library BuildingPrototypeAdder {
                 isEnvironment: false
             })
         );
-        // Storage
-        core.addBuildingPrototype(
-            ActionData_AddBuildingPrototype({
-                width: 2,
-                height: 2,
-                resourceCost: 100,
-                resourceCapacity: 50,
-                computeCapacity: 0,
-                resourceMine: 0,
-                mineTime: 0,
-                maxIntegrity: 150,
-                buildingTime: 5,
-                isArmory: false,
-                isEnvironment: false
-            })
-        );
-        // Lab
-        core.addBuildingPrototype(
-            ActionData_AddBuildingPrototype({
-                width: 2,
-                height: 2,
-                resourceCost: 150,
-                resourceCapacity: 0,
-                computeCapacity: 3,
-                resourceMine: 0,
-                mineTime: 0,
-                maxIntegrity: 75,
-                buildingTime: 5,
-                isArmory: false,
-                isEnvironment: false
-            })
-        );
-        // Armory
-        core.addBuildingPrototype(
-            ActionData_AddBuildingPrototype({
-                width: 2,
-                height: 2,
-                resourceCost: 200,
-                resourceCapacity: 0,
-                computeCapacity: 0,
-                resourceMine: 0,
-                mineTime: 0,
-                maxIntegrity: 100,
-                buildingTime: 5,
-                isArmory: true,
-                isEnvironment: false
-            })
-        );
-        // Mine
+        // Pit
         core.addBuildingPrototype(
             ActionData_AddBuildingPrototype({
                 width: 1,
@@ -86,8 +35,8 @@ library BuildingPrototypeAdder {
                 resourceCost: 0,
                 resourceCapacity: 0,
                 computeCapacity: 0,
-                resourceMine: 20,
-                mineTime: 2,
+                resourceMine: 0,
+                mineTime: 0,
                 maxIntegrity: 0,
                 buildingTime: 0,
                 isArmory: false,

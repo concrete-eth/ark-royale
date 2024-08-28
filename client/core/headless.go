@@ -31,12 +31,7 @@ type IHeadlessClient interface {
 
 	SendAction(action arch.Action) error
 	Start()
-	CreateUnit(unitType uint8)
-	AssignUnit(unitId uint8, command rts.UnitCommandData)
-	AssignUnitWithPath(unitId uint8, command rts.UnitCommandData, path []image.Point)
-	AssignUnits(unitIds []uint8, command rts.UnitCommandData)
-	AssignUnitsWithPath(unitIds []uint8, command rts.UnitCommandData, path []image.Point)
-	PlaceBuilding(buildingType uint8, position image.Point)
+	CreateUnit(unitType uint8, position image.Point)
 }
 
 // Implements a headless client that can sync state and send actions.
@@ -102,58 +97,12 @@ func (c *HeadlessClient) Start() {
 }
 
 // Sends a UnitCreation action to the Tx sender
-func (c *HeadlessClient) CreateUnit(unitType uint8) {
+func (c *HeadlessClient) CreateUnit(unitType uint8, position image.Point) {
 	action := &rts.UnitCreation{
 		PlayerId: c.playerId,
 		UnitType: unitType,
-	}
-	c.SendAction(action)
-}
-
-// Sends a UnitAssignation action to the Tx sender
-func (c *HeadlessClient) AssignUnit(unitId uint8, command rts.UnitCommandData) {
-	c.AssignUnitWithPath(unitId, command, nil)
-}
-
-// Sends a UnitAssignation action to the Tx sender
-func (c *HeadlessClient) AssignUnitWithPath(unitId uint8, command rts.UnitCommandData, path []image.Point) {
-	c.AssignUnitsWithPath([]uint8{unitId}, command, path)
-}
-
-func (c *HeadlessClient) AssignUnits(unitIds []uint8, command rts.UnitCommandData) {
-	c.AssignUnitsWithPath(unitIds, command, nil)
-}
-
-func (c *HeadlessClient) AssignUnitsWithPath(unitIds []uint8, command rts.UnitCommandData, path []image.Point) {
-	if len(path) > 4 {
-		path = path[:4]
-	} else if path == nil {
-		path = make([]image.Point, 0)
-	}
-	commandPath := &rts.CommandPath{}
-	commandPath.SetPath(path)
-
-	actions := make([]arch.Action, 0)
-	for _, unitId := range unitIds {
-		action := &rts.UnitAssignation{
-			PlayerId:     c.playerId,
-			UnitId:       unitId,
-			Command:      command.Uint64(),
-			CommandExtra: commandPath.RawPath(),
-			CommandMeta:  commandPath.Meta().Uint8(),
-		}
-		actions = append(actions, action)
-	}
-	c.SendActions(actions)
-}
-
-// Sends a BuildingPlacement action to the Tx sender
-func (c *HeadlessClient) PlaceBuilding(buildingType uint8, position image.Point) {
-	action := &rts.BuildingPlacement{
-		PlayerId:     c.playerId,
-		BuildingType: buildingType,
-		X:            uint16(position.X),
-		Y:            uint16(position.Y),
+		X:        uint16(position.X),
+		Y:        uint16(position.Y),
 	}
 	c.SendAction(action)
 }

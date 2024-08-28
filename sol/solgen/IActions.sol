@@ -11,6 +11,8 @@ struct ActionData_Initialize {
 struct ActionData_CreateUnit {
     uint8 playerId;
     uint8 unitType;
+    uint16 x;
+    uint16 y;
 }
 
 struct ActionData_AssignUnit {
@@ -31,6 +33,8 @@ struct ActionData_PlaceBuilding {
 struct ActionData_AddPlayer {
     uint16 spawnAreaX;
     uint16 spawnAreaY;
+    uint8 spawnAreaWidth;
+    uint8 spawnAreaHeight;
     uint16 workerPortX;
     uint16 workerPortY;
 }

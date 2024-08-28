@@ -5,10 +5,10 @@ import "./solgen/ICore.sol";
 
 enum UnitType {
     Nil,
-    Worker,
     Air,
     AntiAir,
-    Tank
+    Tank,
+    Turret
 }
 
 enum LayerId {
@@ -20,24 +20,6 @@ enum LayerId {
 
 library UnitPrototypeAdder {
     function addUnitPrototypes(ICore core) internal {
-        // Worker
-        core.addUnitPrototype(
-            ActionData_AddUnitPrototype({
-                layer: uint8(LayerId.Hover),
-                resourceCost: 150,
-                computeCost: 1,
-                spawnTime: 1,
-                maxIntegrity: 25,
-                landStrength: 0,
-                hoverStrength: 0,
-                airStrength: 0,
-                attackCooldown: 0,
-                attackRange: 0,
-                isAssault: false,
-                isWorker: true
-            })
-        );
-
         // Air
         core.addUnitPrototype(
             ActionData_AddUnitPrototype({
@@ -86,6 +68,24 @@ library UnitPrototypeAdder {
                 hoverStrength: 3,
                 airStrength: 5,
                 attackCooldown: 6,
+                attackRange: 3,
+                isAssault: false,
+                isWorker: false
+            })
+        );
+
+        // Turret
+        core.addUnitPrototype(
+            ActionData_AddUnitPrototype({
+                layer: uint8(LayerId.Land),
+                resourceCost: 300,
+                computeCost: 1,
+                spawnTime: 8,
+                maxIntegrity: 150,
+                landStrength: 3,
+                hoverStrength: 3,
+                airStrength: 3,
+                attackCooldown: 1,
                 attackRange: 3,
                 isAssault: false,
                 isWorker: false

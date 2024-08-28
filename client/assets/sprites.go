@@ -4,14 +4,12 @@ import (
 	"fmt"
 	"image"
 
-	"github.com/concrete-eth/ark-rts/gogen/datamod"
 	"github.com/concrete-eth/ark-rts/rts"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
 const (
-	TileSizeLog2 = 4
-	TileSize     = 16
+	TileSize = 16
 )
 
 const (
@@ -27,6 +25,7 @@ const (
 	UnitSpriteId_AntiAir = iota
 	UnitSpriteId_Air
 	UnitSpriteId_Tank
+	UnitSpriteId_Turret
 	UnitSpriteId_Worker
 	UnitSpriteId_Count
 )
@@ -34,8 +33,16 @@ const (
 var (
 	SpriteSheet = LoadImage("sprite_sheet.png")
 
-	BorderTileSet   = loadConvexTileSet(SubImage(SpriteSheet, NewBounds(304, 0, 48, 48)), TileSize)
+	BorderTileSet   = loadConvexTileSet(SubImage(SpriteSheet, NewBounds(144, 0, 48, 48)), TileSize)
 	CrackTileSprite = SubImage(SpriteSheet, NewBounds(288, 0, 16, 16))
+	BrickTileSprite = SubImage(SpriteSheet, NewBounds(272, 0, 16, 16))
+	PitTileSet      = map[uint8]*ebiten.Image{
+		0: SubImage(SpriteSheet, NewBounds(192, 16, 16, 16)),
+		1: SubImage(SpriteSheet, NewBounds(208, 16, 16, 16)),
+		2: SubImage(SpriteSheet, NewBounds(224, 16, 16, 16)),
+		3: SubImage(SpriteSheet, NewBounds(192, 32, 16, 16)),
+		4: SubImage(SpriteSheet, NewBounds(208, 32, 16, 16)),
+	}
 
 	MineSprite = SubImage(SpriteSheet, NewBounds(0, 0, 18, 17))
 
@@ -56,10 +63,10 @@ var (
 	UnitSpriteOrigin = image.Point{4, 4}
 
 	unitSprites = [4][UnitSpriteId_Count][8][3]*ebiten.Image{
-		loadPlayerUnitSprites(SubImage(SpriteSheet, NewBounds(0, 112, 192, 240))),
-		loadPlayerUnitSprites(SubImage(SpriteSheet, NewBounds(192, 112, 192, 240))),
-		loadPlayerUnitSprites(SubImage(SpriteSheet, NewBounds(2*192, 112, 192, 240))),
-		loadPlayerUnitSprites(SubImage(SpriteSheet, NewBounds(3*192, 112, 192, 240))),
+		loadPlayerUnitSprites(SubImage(SpriteSheet, NewBounds(0, 112, 192, 312))),
+		loadPlayerUnitSprites(SubImage(SpriteSheet, NewBounds(192, 112, 192, 312))),
+		loadPlayerUnitSprites(SubImage(SpriteSheet, NewBounds(2*192, 112, 192, 312))),
+		loadPlayerUnitSprites(SubImage(SpriteSheet, NewBounds(3*192, 112, 192, 312))),
 	}
 
 	SelectionSprite = SubImage(SpriteSheet, NewBounds(368, 32, 16, 16))
@@ -84,142 +91,73 @@ var (
 	UINoEnoughResourcesIcon = SubImage(SpriteSheet, NewBounds(376, 24, 8, 8))
 )
 
-type SpriteGetter struct {
-	GetSpawnPointSprite            func(playerId uint8) *ebiten.Image
-	GetBuildingSpriteId            func(playerId uint8, buildingId uint8, prototype *datamod.BuildingPrototypesRow) int
-	GetBuildingSprite              func(playerId uint8, spriteId int, buildingState rts.BuildingState) *ebiten.Image
-	GetBuildingSpriteFromPrototype func(playerId uint8, buildingId uint8, prototype *datamod.BuildingPrototypesRow, buildingState rts.BuildingState) *ebiten.Image
-	GetBuildingSpriteOrigin        func(proto *datamod.BuildingPrototypesRow) image.Point
-	GetUnitSpriteId                func(playerId uint8, unitId uint8, proto *datamod.UnitPrototypesRow) int
-	GetUnitSprite                  func(playerId uint8, unitId uint8, proto *datamod.UnitPrototypesRow, direction Direction) *ebiten.Image
-	GetUnitSpriteFromPrototype     func(playerId uint8, unitId uint8, proto *datamod.UnitPrototypesRow, direction Direction) *ebiten.Image
-	GetUnitFireFrame               func(playerId uint8, unitId uint8, proto *datamod.UnitPrototypesRow, direction Direction, frame uint) *ebiten.Image
-}
-
-var DefaultSpriteGetter = SpriteGetter{
-	GetSpawnPointSprite:            GetSpawnPointSprite,
-	GetBuildingSpriteId:            GetBuildingSpriteId,
-	GetBuildingSprite:              GetBuildingSprite,
-	GetBuildingSpriteFromPrototype: GetBuildingSpriteFromPrototype,
-	GetBuildingSpriteOrigin:        GetBuildingSpriteOrigin,
-	GetUnitSpriteId:                GetUnitSpriteId,
-	GetUnitSprite:                  GetUnitSprite,
-	GetUnitSpriteFromPrototype:     GetUnitSpriteFromPrototype,
-	GetUnitFireFrame:               GetUnitFireFrame,
-}
-
-func GetSpawnPointSprite(playerId uint8) *ebiten.Image {
-	if playerId <= 0 || playerId > 4 {
-		panic(fmt.Sprintf("assets: invalid player id %v", playerId))
+func validatePlayerId(playerId uint8) {
+	if playerId == 0 && playerId > 4 {
+		panic("invalid player id")
 	}
+}
+
+func validateDirection(direction Direction) {
+	if !direction.IsValid() {
+		panic("invalid direction")
+	}
+}
+
+func validateUnitSpriteId(spriteId uint8) {
+	if spriteId >= UnitSpriteId_Count {
+		panic("invalid unit sprite id")
+	}
+}
+
+func validateBuildingSpriteId(spriteId uint8) {
+	if spriteId >= BuildingSpriteId_Count {
+		panic("invalid building sprite id")
+	}
+}
+
+type SpriteGetter interface {
+	GetSpawnPointSprite(playerId uint8) *ebiten.Image
+	GetBuildingSprite(playerId uint8, spriteId uint8, buildingState rts.BuildingState) *ebiten.Image
+	GetBuildingSpriteOrigin(spriteId uint8) image.Point
+	GetUnitSprite(playerId uint8, spriteId uint8, direction Direction) *ebiten.Image
+	GetUnitFireFrame(playerId uint8, spriteId uint8, direction Direction, frame uint) *ebiten.Image
+}
+
+var _ SpriteGetter = (*DefaultSpriteGetter)(nil)
+
+type DefaultSpriteGetter struct{}
+
+func (d *DefaultSpriteGetter) GetSpawnPointSprite(playerId uint8) *ebiten.Image {
+	validatePlayerId(playerId)
 	return spawnPointSprites[playerId-1]
 }
 
-func GetBuildingSpriteId(playerId uint8, buildingId uint8, prototype *datamod.BuildingPrototypesRow) int {
-	if playerId == 0 {
-		if !prototype.GetIsEnvironment() {
-			panic(fmt.Sprintf("assets: invalid player id %v for non-environment building", playerId))
-		}
-		return BuildingSpriteId_Mine
-	}
-	if playerId > 4 {
-		panic(fmt.Sprintf("assets: invalid player id %v", playerId))
-	}
-
-	var spriteId int
-	if buildingId == 1 {
-		spriteId = BuildingSpriteId_Main
-	} else if prototype.GetIsArmory() {
-		spriteId = BuildingSpriteId_Armory
-	} else if prototype.GetComputeCapacity() > 0 {
-		spriteId = BuildingSpriteId_Lab
-	} else if prototype.GetResourceCapacity() > 0 {
-		spriteId = BuildingSpriteId_Storage
-	} else {
-		panic(fmt.Sprintf("assets: invalid building prototype %v", prototype))
-	}
-	return spriteId
-}
-
-func GetBuildingSprite(playerId uint8, spriteId int, buildingState rts.BuildingState) *ebiten.Image {
-	if playerId == 0 {
-		if spriteId != BuildingSpriteId_Mine {
-			panic(fmt.Sprintf("assets: invalid player id %v for non-environment building", playerId))
-		}
-		return MineSprite
-	}
-	if playerId > 4 {
-		panic(fmt.Sprintf("assets: invalid player id %v", playerId))
-	}
+func (d *DefaultSpriteGetter) GetBuildingSprite(playerId uint8, spriteId uint8, buildingState rts.BuildingState) *ebiten.Image {
+	validatePlayerId(playerId)
+	validateBuildingSpriteId(spriteId)
 	return playerBuildingSprites[playerId-1][spriteId][buildingState]
 }
 
-func GetBuildingSpriteFromPrototype(playerId uint8, buildingId uint8, prototype *datamod.BuildingPrototypesRow, buildingState rts.BuildingState) *ebiten.Image {
-	if playerId == 0 {
-		if !prototype.GetIsEnvironment() {
-			panic(fmt.Sprintf("assets: invalid player id %v for non-environment building", playerId))
-		}
-		return MineSprite
-	}
-	spriteId := GetBuildingSpriteId(playerId, buildingId, prototype)
-	sprite := playerBuildingSprites[playerId-1][spriteId][buildingState]
-	if sprite == nil {
-		sprite = playerBuildingSprites[playerId-1][spriteId][rts.BuildingState_Built]
-	}
-	return sprite
-}
-
-func GetBuildingSpriteOrigin(proto *datamod.BuildingPrototypesRow) image.Point {
-	if proto.GetIsEnvironment() {
+func (d *DefaultSpriteGetter) GetBuildingSpriteOrigin(spriteId uint8) image.Point {
+	if spriteId == BuildingSpriteId_Mine {
 		return image.Point{1, 2}
 	}
 	return image.Point{0, 0}
 }
 
-func GetUnitSpriteId(playerId uint8, _ uint8, proto *datamod.UnitPrototypesRow) int {
-	if playerId <= 0 || playerId > 4 {
-		panic(fmt.Sprintf("assets: invalid player id %v", playerId))
-	}
-	var spriteId int
-	switch rts.LayerId(proto.GetLayer()) {
-	case rts.LayerId_Land:
-		if proto.GetLandStrength() > proto.GetAirStrength() {
-			spriteId = UnitSpriteId_Tank
-		} else {
-			spriteId = UnitSpriteId_AntiAir
-		}
-	case rts.LayerId_Hover:
-		spriteId = UnitSpriteId_Worker
-	case rts.LayerId_Air:
-		spriteId = UnitSpriteId_Air
-	}
-	return spriteId
-}
-
-func GetUnitSprite(playerId uint8, unitId uint8, proto *datamod.UnitPrototypesRow, direction Direction) *ebiten.Image {
-	if direction < 0 || direction >= 8 {
-		panic(fmt.Sprintf("assets: invalid direction %v", direction))
-	}
-	spriteId := GetUnitSpriteId(playerId, unitId, proto)
+func (d *DefaultSpriteGetter) GetUnitSprite(playerId uint8, spriteId uint8, direction Direction) *ebiten.Image {
+	validatePlayerId(playerId)
+	validateDirection(direction)
 	return unitSprites[playerId-1][spriteId][direction][0]
 }
 
-func GetUnitSpriteFromPrototype(playerId uint8, unitId uint8, proto *datamod.UnitPrototypesRow, direction Direction) *ebiten.Image {
-	if direction < 0 || direction >= 8 {
-		panic(fmt.Sprintf("assets: invalid direction %v", direction))
+func (d *DefaultSpriteGetter) GetUnitFireFrame(playerId uint8, spriteId uint8, direction Direction, frame uint) *ebiten.Image {
+	validatePlayerId(playerId)
+	validateUnitSpriteId(spriteId)
+	validateDirection(direction)
+	if int(frame) >= len(unitSprites[0][0][0])-1 {
+		panic(fmt.Sprintf("invalid frame %v", frame))
 	}
-	spriteId := GetUnitSpriteId(playerId, unitId, proto)
-	return unitSprites[playerId-1][spriteId][direction][0]
-}
-
-func GetUnitFireFrame(playerId uint8, unitId uint8, proto *datamod.UnitPrototypesRow, direction Direction, frame uint) *ebiten.Image {
-	if direction < 0 || direction >= 8 {
-		panic(fmt.Sprintf("assets: invalid direction %v", direction))
-	}
-	if frame > 1 {
-		panic(fmt.Sprintf("assets: invalid frame %v", frame))
-	}
-	spriteId := GetUnitSpriteId(playerId, unitId, proto)
 	return unitSprites[playerId-1][spriteId][direction][frame+1]
 }
 
@@ -263,35 +201,6 @@ func loadBuildingStateSprites(spriteSheet *ebiten.Image) [rts.BuildingState_Coun
 	return sprites
 }
 
-type Direction int
-
-const (
-	Direction_Up Direction = iota
-	Direction_UpRight
-	Direction_Right
-	Direction_DownRight
-	Direction_Down
-	Direction_DownLeft
-	Direction_Left
-	Direction_UpLeft
-)
-
-func (d Direction) IsVertical() bool {
-	return d == Direction_Up || d == Direction_Down
-}
-
-func (d Direction) IsHorizontal() bool {
-	return d == Direction_Left || d == Direction_Right
-}
-
-func (d Direction) IsStraight() bool {
-	return d.IsVertical() || d.IsHorizontal()
-}
-
-func (d Direction) IsDiagonal() bool {
-	return d == Direction_UpRight || d == Direction_DownRight || d == Direction_DownLeft || d == Direction_UpLeft
-}
-
 func loadPlayerUnitSprites(spriteSheet *ebiten.Image) [UnitSpriteId_Count][8][3]*ebiten.Image {
 	size := 24
 	sprites := [UnitSpriteId_Count][8][3]*ebiten.Image{}
@@ -299,6 +208,7 @@ func loadPlayerUnitSprites(spriteSheet *ebiten.Image) [UnitSpriteId_Count][8][3]
 		UnitSpriteId_AntiAir,
 		UnitSpriteId_Air,
 		UnitSpriteId_Tank,
+		UnitSpriteId_Turret,
 		UnitSpriteId_Worker,
 	} {
 		sprites[unitType] = loadUnitDirectionSpriteSets(SubImage(spriteSheet, NewBounds(0, 3*ii*size, 8*size, 3*size)))
@@ -331,4 +241,37 @@ func loadUnitDirectionSprites(spriteSheet *ebiten.Image) [3]*ebiten.Image {
 	sprites[1] = SubImage(spriteSheet, NewBounds(0, size, size, size))
 	sprites[2] = SubImage(spriteSheet, NewBounds(0, 2*size, size, size))
 	return sprites
+}
+
+type Direction int
+
+const (
+	Direction_Up Direction = iota
+	Direction_UpRight
+	Direction_Right
+	Direction_DownRight
+	Direction_Down
+	Direction_DownLeft
+	Direction_Left
+	Direction_UpLeft
+)
+
+func (d Direction) IsValid() bool {
+	return d >= 0 && d < 8
+}
+
+func (d Direction) IsVertical() bool {
+	return d == Direction_Up || d == Direction_Down
+}
+
+func (d Direction) IsHorizontal() bool {
+	return d == Direction_Left || d == Direction_Right
+}
+
+func (d Direction) IsStraight() bool {
+	return d.IsVertical() || d.IsHorizontal()
+}
+
+func (d Direction) IsDiagonal() bool {
+	return d == Direction_UpRight || d == Direction_DownRight || d == Direction_DownLeft || d == Direction_UpLeft
 }

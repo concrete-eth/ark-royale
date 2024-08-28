@@ -192,15 +192,15 @@ func (m *UIManager) PopButtonPress() *buttonPress {
 
 // Updates the UI state.
 func (m *UIManager) Update() {
-	m.setResourceIndicators(m.client.PlayerId())
-	m.setComputeIndicators(m.client.PlayerId())
-	m.setWorkerIndicator(m.client.PlayerId())
+	// m.setResourceIndicators(m.client.PlayerId())
+	// m.setComputeIndicators(m.client.PlayerId())
+	// m.setWorkerIndicator(m.client.PlayerId())
 	// m.setComputeIndicator(m.client.PlayerId())
 
 	m.updateCreationMenu()
 	m.updateFPSLabel()
 	m.updateInterpolationLabel()
-	m.updateInspectionView()
+	// m.updateInspectionView()
 
 	m.eui.Update()
 }
@@ -250,39 +250,39 @@ func (m *UIManager) updateInspectionView() {
 		}
 	}
 
-	if len(m.client.selected.Units) > 0 {
-		if len(m.client.selected.Units) > 1 {
-			// If there are multiple selected units, show the number
-			inspectedNameLabel.Label = fmt.Sprintf("%d units", len(m.client.selected.Units))
-		} else {
-			// If there is a single selected unit, show the unit's name
-			unitId := m.client.selected.Units[0]
-			unit := m.client.Game().GetUnit(m.client.PlayerId(), unitId)
-			protoId := unit.GetUnitType()
-			inspectedNameLabel.Label = m.unitPrototypeMetadata[protoId].Name + " Unit"
-		}
-	} else {
-		// If there are no selected units, show the name of the building under the cursor
-		cursorTilePosition := m.client.coreRenderer.ScreenCoordToTileCoord(client_utils.CursorPosition())
-		boardTile := m.client.Game().GetBoardTile(uint16(cursorTilePosition.X), uint16(cursorTilePosition.Y))
-		buildingId := boardTile.GetLandObjectId()
-		if buildingId != rts.NilBuildingId {
-			playerId := boardTile.GetLandPlayerId()
-			building := m.client.Game().GetBuilding(playerId, buildingId)
-			protoId := building.GetBuildingType()
-			if protoId != 0 {
-				inspectedNameLabel.Label = m.buildingPrototypeMetadata[protoId].Name
-				switch playerId {
-				case rts.NilPlayerId:
-					inspectedDetailsLabel.Label = "Neutral"
-				case m.client.PlayerId():
-					inspectedDetailsLabel.Label = "Friendly"
-				default:
-					inspectedDetailsLabel.Label = "Enemy"
-				}
-			}
-		}
-	}
+	// if len(m.client.selected.Units) > 0 {
+	// 	if len(m.client.selected.Units) > 1 {
+	// 		// If there are multiple selected units, show the number
+	// 		inspectedNameLabel.Label = fmt.Sprintf("%d units", len(m.client.selected.Units))
+	// 	} else {
+	// 		// If there is a single selected unit, show the unit's name
+	// 		unitId := m.client.selected.Units[0]
+	// 		unit := m.client.Game().GetUnit(m.client.PlayerId(), unitId)
+	// 		protoId := unit.GetUnitType()
+	// 		inspectedNameLabel.Label = m.unitPrototypeMetadata[protoId].Name + " Unit"
+	// 	}
+	// } else {
+	// 	// If there are no selected units, show the name of the building under the cursor
+	// 	cursorTilePosition := m.client.coreRenderer.ScreenCoordToTileCoord(client_utils.CursorPosition())
+	// 	boardTile := m.client.Game().GetBoardTile(uint16(cursorTilePosition.X), uint16(cursorTilePosition.Y))
+	// 	buildingId := boardTile.GetLandObjectId()
+	// 	if buildingId != rts.NilBuildingId {
+	// 		playerId := boardTile.GetLandPlayerId()
+	// 		building := m.client.Game().GetBuilding(playerId, buildingId)
+	// 		protoId := building.GetBuildingType()
+	// 		if protoId != 0 {
+	// 			inspectedNameLabel.Label = m.buildingPrototypeMetadata[protoId].Name
+	// 			switch playerId {
+	// 			case rts.NilPlayerId:
+	// 				inspectedDetailsLabel.Label = "Neutral"
+	// 			case m.client.PlayerId():
+	// 				inspectedDetailsLabel.Label = "Friendly"
+	// 			default:
+	// 				inspectedDetailsLabel.Label = "Enemy"
+	// 			}
+	// 		}
+	// 	}
+	// }
 }
 
 func (m *UIManager) unitDetailsString(protoId uint8, proto *datamod.UnitPrototypesRow) string {
@@ -350,16 +350,16 @@ func (m *UIManager) updateCreationMenu() {
 	for _, protoId := range m.menuUnitPrototypeIds {
 		proto := m.client.Game().GetUnitPrototype(protoId)
 		button := m.GetButton(UI_ButtonType_UnitIcon, int(protoId))
-		insufficientCompute := proto.GetComputeCost() > computeSurplus
-		insufficientResourceCapacity := proto.GetResourceCost() > resourceCapacity
-		button.GetWidget().Disabled = insufficientCompute || insufficientResourceCapacity
-	}
-	for _, protoId := range m.menuBuildingPrototypeIds {
-		proto := m.client.Game().GetBuildingPrototype(protoId)
-		button := m.GetButton(UI_ButtonType_BuildingIcon, int(protoId))
+		// insufficientCompute := proto.GetComputeCost() > computeSurplus
 		insufficientResourceCapacity := proto.GetResourceCost() > resourceCapacity
 		button.GetWidget().Disabled = insufficientResourceCapacity
 	}
+	// for _, protoId := range m.menuBuildingPrototypeIds {
+	// 	proto := m.client.Game().GetBuildingPrototype(protoId)
+	// 	button := m.GetButton(UI_ButtonType_BuildingIcon, int(protoId))
+	// 	insufficientResourceCapacity := proto.GetResourceCost() > resourceCapacity
+	// 	button.GetWidget().Disabled = insufficientResourceCapacity
+	// }
 }
 
 // Sets the resource indicators.
@@ -475,7 +475,7 @@ func newSideContainer(uim *UIManager) *widget.Container {
 		)),
 	)
 
-	container.AddChild(newInspectionView(uim))
+	// container.AddChild(newInspectionView(uim))
 	container.AddChild(newCenterMenu(uim))
 	container.AddChild(newLogisticsView(uim))
 
@@ -490,14 +490,14 @@ func newCenterMenu(uim *UIManager) *widget.Container {
 		)),
 	)
 	width := uim.client.coreRenderer.Config().ScreenSize.X - uim.client.coreRenderer.BoardDisplayRect().Max.X - BorderWidth*2
-	buildMenu := newBuildMenu(uim, uim.menuBuildingPrototypeIds, width)
+	// buildMenu := newBuildMenu(uim, uim.menuBuildingPrototypeIds, width)
 	unitMenu := newUnitMenu(uim, uim.menuUnitPrototypeIds, width)
 	resourceInfo := newResourceDisplay(uim, width)
-	computeInfo := newComputeDisplay(uim, width)
-	container.AddChild(buildMenu)
+	// computeInfo := newComputeDisplay(uim, width)
+	// container.AddChild(buildMenu)
 	container.AddChild(unitMenu)
 	container.AddChild(resourceInfo)
-	container.AddChild(computeInfo)
+	// container.AddChild(computeInfo)
 	return container
 }
 
@@ -542,8 +542,7 @@ func newUnitMenu(uim *UIManager, unitPrototypeIds []uint8, width int) *widget.Co
 }
 
 func newBuildingIcon(uim *UIManager, protoId uint8, size int) *widget.Button {
-	proto := uim.client.Game().GetBuildingPrototype(protoId)
-	sprite := uim.spriteGetter.GetBuildingSpriteFromPrototype(uim.client.PlayerId(), 0, proto, rts.BuildingState_Built)
+	sprite := uim.spriteGetter.GetBuildingSprite(uim.client.PlayerId(), protoId, rts.BuildingState_Built)
 	buttonImage := newIconButtonImage(uim, sprite, size, assets.UICornerSize*3/2, nil)
 	button := newIconButton(
 		buttonImage,
@@ -555,8 +554,7 @@ func newBuildingIcon(uim *UIManager, protoId uint8, size int) *widget.Button {
 }
 
 func newUnitIcon(uim *UIManager, protoId uint8, size int) *widget.Button {
-	proto := uim.client.Game().GetUnitPrototype(protoId)
-	sprite := uim.spriteGetter.GetUnitSpriteFromPrototype(uim.client.PlayerId(), 0, proto, assets.Direction_Right)
+	sprite := uim.spriteGetter.GetUnitSprite(uim.client.PlayerId(), protoId, assets.Direction_Right)
 	buttonImage := newIconButtonImage(uim, sprite, size, assets.UICornerSize, nil)
 	button := newIconButton(
 		buttonImage,

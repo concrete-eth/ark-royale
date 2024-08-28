@@ -32,7 +32,7 @@ abstract contract Entrypoint is IActions {
             initialize(action);
         } else if (actionId == 0xbe9a6555) {
             start();
-        } else if (actionId == 0x97b1de79) {
+        } else if (actionId == 0x143ca15f) {
             ActionData_CreateUnit memory action = abi.decode(
                 actionData,
                 (ActionData_CreateUnit)
@@ -50,7 +50,7 @@ abstract contract Entrypoint is IActions {
                 (ActionData_PlaceBuilding)
             );
             placeBuilding(action);
-        } else if (actionId == 0xa76b2b54) {
+        } else if (actionId == 0x0f4c47cb) {
             ActionData_AddPlayer memory action = abi.decode(
                 actionData,
                 (ActionData_AddPlayer)

@@ -10,6 +10,7 @@ import (
 	"github.com/concrete-eth/archetype/deploy"
 	"github.com/concrete-eth/archetype/kvstore"
 	"github.com/concrete-eth/archetype/precompile"
+	"github.com/concrete-eth/archetype/rpc"
 	"github.com/concrete-eth/ark-rts/client/core"
 	"github.com/concrete-eth/ark-rts/client/game"
 	game_contract "github.com/concrete-eth/ark-rts/gogen/abigen/game"
@@ -43,19 +44,26 @@ func main() {
 	// Create init data
 	pk, _ := crypto.HexToECDSA(deploy.LocalPrivateKeyHex)
 	address := crypto.PubkeyToAddress(pk.PublicKey)
-	data, err := encodeAddressArray([]common.Address{address, address, {0x01}, {0x02}})
+	data, err := encodeAddressArray([]common.Address{address, address})
 	if err != nil {
 		panic(err)
 	}
 
 	// Create local simulated io
 	io, err := deploy.NewLocalIO(registry, schemas, func(auth *bind.TransactOpts, ethcli bind.ContractBackend) (addr common.Address, tx *types.Transaction, game deploy.InitializableProxyAdmin, err error) {
+		auth.GasLimit = 3_000_000
 		return game_contract.DeployContract(auth, ethcli)
 	}, pcAddr, data, 1000*time.Millisecond)
 	if err != nil {
 		panic(err)
 	}
 	defer io.Stop()
+
+	io.SetTxUpdateHook(func(txUpdate *rpc.ActionTxUpdate) {
+		if txUpdate.Status == rpc.ActionTxStatus_Failed {
+			log.Error("Failed to send transaction", "txHash", txUpdate.TxHash, "err", txUpdate.Err)
+		}
+	})
 
 	// Create and start client
 	kv := kvstore.NewMemoryKeyValueStore()

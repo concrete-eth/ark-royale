@@ -33,6 +33,8 @@ var TableSchemasJson = `{
         "schema": {
             "spawnAreaX": "uint16",
             "spawnAreaY": "uint16",
+            "spawnAreaWidth": "uint8",
+            "spawnAreaHeight": "uint8",
             "workerPortX": "uint16",
             "workerPortY": "uint16",
             "curResource": "uint16",

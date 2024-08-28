@@ -14,10 +14,10 @@ var (
 Table                 KeySize  ValueSize
 Initialize            0        4
 Start                 0        0
-CreateUnit            0        2
+CreateUnit            0        6
 AssignUnit            0        19
 PlaceBuilding         0        6
-AddPlayer             0        8
+AddPlayer             0        10
 AddUnitPrototype      0        13
 AddBuildingPrototype  0        13
 */
@@ -39,8 +39,10 @@ type ActionData_Start struct {
 }
 
 type ActionData_CreateUnit struct {
-	PlayerId uint8 `json:"playerId"`
-	UnitType uint8 `json:"unitType"`
+	PlayerId uint8  `json:"playerId"`
+	UnitType uint8  `json:"unitType"`
+	X        uint16 `json:"x"`
+	Y        uint16 `json:"y"`
 }
 
 func (row *ActionData_CreateUnit) GetPlayerId() uint8 {
@@ -49,6 +51,14 @@ func (row *ActionData_CreateUnit) GetPlayerId() uint8 {
 
 func (row *ActionData_CreateUnit) GetUnitType() uint8 {
 	return row.UnitType
+}
+
+func (row *ActionData_CreateUnit) GetX() uint16 {
+	return row.X
+}
+
+func (row *ActionData_CreateUnit) GetY() uint16 {
+	return row.Y
 }
 
 type ActionData_AssignUnit struct {
@@ -103,10 +113,12 @@ func (row *ActionData_PlaceBuilding) GetY() uint16 {
 }
 
 type ActionData_AddPlayer struct {
-	SpawnAreaX  uint16 `json:"spawnAreaX"`
-	SpawnAreaY  uint16 `json:"spawnAreaY"`
-	WorkerPortX uint16 `json:"workerPortX"`
-	WorkerPortY uint16 `json:"workerPortY"`
+	SpawnAreaX      uint16 `json:"spawnAreaX"`
+	SpawnAreaY      uint16 `json:"spawnAreaY"`
+	SpawnAreaWidth  uint8  `json:"spawnAreaWidth"`
+	SpawnAreaHeight uint8  `json:"spawnAreaHeight"`
+	WorkerPortX     uint16 `json:"workerPortX"`
+	WorkerPortY     uint16 `json:"workerPortY"`
 }
 
 func (row *ActionData_AddPlayer) GetSpawnAreaX() uint16 {
@@ -115,6 +127,14 @@ func (row *ActionData_AddPlayer) GetSpawnAreaX() uint16 {
 
 func (row *ActionData_AddPlayer) GetSpawnAreaY() uint16 {
 	return row.SpawnAreaY
+}
+
+func (row *ActionData_AddPlayer) GetSpawnAreaWidth() uint8 {
+	return row.SpawnAreaWidth
+}
+
+func (row *ActionData_AddPlayer) GetSpawnAreaHeight() uint8 {
+	return row.SpawnAreaHeight
 }
 
 func (row *ActionData_AddPlayer) GetWorkerPortX() uint16 {

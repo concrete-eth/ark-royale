@@ -20,37 +20,35 @@ type Client struct {
 	uim             *UI
 	shownLoseScreen bool // True if the lose screen is shown
 	shownEndScreen  bool // True if the end screen is shown
-	buildingGhost   *core.BuildingGhost
+	unitGhost       *core.UnitGhost
 }
 
 func NewClient(headlessClient core.IHeadlessClient, config core.ClientConfig, active bool) *Client {
 	hudSet := core.NewHudSet()
 	hudSet.AddComponents(
-		core.NewTargetLines(),
-		core.NewPathLines(),
-		core.NewSelectionBox(),
-		core.NewSelectionHighlight(),
-		core.NewRangeHighlights(),
+		// core.NewSelectionBox(),
+		// core.NewSelectionHighlight(),
+		// core.NewRangeHighlights(),
 		core.NewTileDebugInfo(),
 	)
 	var (
-		whl          = &HeadlessClient{headlessClient}
-		coreRenderer = core.NewCoreRenderer(whl, config, assets.DefaultSpriteGetter)
+		whl          = headlessClient
+		coreRenderer = core.NewCoreRenderer(whl, config, SpriteGetter)
 		cli          = core.NewClient(coreRenderer, hudSet, active)
-		uim          = NewUI(cli, assets.DefaultSpriteGetter)
+		uim          = NewUI(cli, SpriteGetter)
 	)
 	c := &Client{
-		Client:        cli,
-		uim:           uim,
-		buildingGhost: core.NewBuildingGhost(),
+		Client:    cli,
+		uim:       uim,
+		unitGhost: core.NewUnitGhost(),
 	}
-	hudSet.AddComponents(c.buildingGhost)
+	hudSet.AddComponents(c.unitGhost)
 
 	cli.SetOnSelectionChange(func() {
-		c.toggleShowBuildableArea(c.IsSelectingBuildingType())
+		c.toggleShowSpawnArea(c.IsSelectingUnitType())
 	})
 	cli.CoreRenderer().SetOnCameraMove(func() {
-		c.setNonBuildableAreaSpritePosition()
+		c.setSpawnAreaSpriteRect()
 	})
 	cli.CoreRenderer().SetOnNewBatch(func() {
 		c.checkGameOver()
@@ -64,43 +62,37 @@ func (c *Client) UI() *UI {
 }
 
 // Toggles the visibility of the buildable area.
-func (c *Client) toggleShowBuildableArea(show bool) {
+func (c *Client) toggleShowSpawnArea(show bool) {
 	hudTerrainLayer := c.CoreRenderer().Layers().Layer(core.LayerName_HudTerrain)
-	spriteObj := hudTerrainLayer.Sprite("buildableTerrain")
+	spriteObj := hudTerrainLayer.Sprite("spawnTerrain")
 	if show && spriteObj.Image() == nil {
-		c.setNonBuildableAreaSprite()
+		c.setSpawnAreaSprite()
 	}
 	spriteObj.SetVisible(show)
 }
 
-func (c *Client) setNonBuildableAreaSprite() {
-	c.setNonBuildableAreaSpriteImage()
-	c.setNonBuildableAreaSpritePosition()
+func (c *Client) setSpawnAreaSprite() {
+	c.setSpawnAreaSpriteImage()
+	c.setSpawnAreaSpriteRect()
 }
 
 // Creates an overlay shadowing out all non-buildable tiles for the client player.
-func (c *Client) setNonBuildableAreaSpriteImage() {
-	nonBuildableRect := c.Game().BoardRect()
-	buildableRect := GetPlayerBuildableArea(c.Game(), c.PlayerId())
-
-	buildableImage := ebiten.NewImage(1, 1)
-	nonBuildableImage := ebiten.NewImage(nonBuildableRect.Dx(), nonBuildableRect.Dy())
-	nonBuildableImage.Fill(assets.DarkShadowColor)
-
-	op := client_utils.NewDrawOptions(buildableRect.Sub(nonBuildableRect.Min), buildableImage.Bounds())
-	op.Blend = ebiten.BlendSourceIn // See: https://ebitengine.org/en/examples/masking.html
-	colorm.DrawImage(nonBuildableImage, buildableImage, colorm.ColorM{}, op)
-
+func (c *Client) setSpawnAreaSpriteImage() {
+	spawnAreaImage := ebiten.NewImage(1, 1)
+	spawnAreaImage.Fill(assets.LightBlueShadowColor)
 	hudTerrainLayer := c.CoreRenderer().Layers().Layer(core.LayerName_HudTerrain)
-	hudTerrainLayer.Sprite("buildableTerrain").SetImage(nonBuildableImage)
+	hudTerrainLayer.Sprite("spawnTerrain").SetImage(spawnAreaImage)
 }
 
-func (c *Client) setNonBuildableAreaSpritePosition() {
-	boardSizePixels := c.Game().BoardSize().Mul(c.CoreRenderer().TileDisplaySize())
+func (c *Client) setSpawnAreaSpriteRect() {
+	spawnArea := c.Game().GetSpawnArea(c.PlayerId())
 	hudTerrainLayer := c.CoreRenderer().Layers().Layer(core.LayerName_HudTerrain)
-	hudTerrainLayer.Sprite("buildableTerrain").
-		SetPosition(c.CoreRenderer().TileCoordToDisplayCoord(image.Point{0, 0})).
-		SetSize(boardSizePixels)
+	hudTerrainLayer.Sprite("spawnTerrain").SetRect(
+		image.Rectangle{
+			Min: c.CoreRenderer().TileCoordToScreenCoord(spawnArea.Min),
+			Max: c.CoreRenderer().TileCoordToScreenCoord(spawnArea.Max),
+		},
+	)
 }
 
 func (c *Client) checkGameOver() {
@@ -150,27 +142,26 @@ func (c *Client) debugChangePlayer() {
 		c.uim = c.uim.Regenerate()
 		c.ClearSelection()
 		c.CoreRenderer().Layers().Layer(core.LayerName_HudLines).Clear()
-		c.setNonBuildableAreaSprite()
+		c.setSpawnAreaSprite()
 		c.uim.DismissWinScreen()
 		log.Debug("Switched player", "from", prevPlayerId, "to", c.PlayerId())
 	}
 }
 
-func (c *Client) setBuildingGhostColor() {
-	if !c.IsSelectingBuildingType() {
+func (c *Client) setUnitGhostColor() {
+	if !c.IsSelectingUnitType() {
 		return
 	}
 	var (
 		cursorScreenPosition = client_utils.CursorPosition()
 		tilePosition         = c.CoreRenderer().ScreenCoordToTileCoord(cursorScreenPosition).Div(2).Mul(2)
-		proto                = c.Game().GetBuildingPrototype(c.SelectedBuildingType())
-		size                 = rts.GetDimensionsAsPoint(proto)
-		buildArea            = image.Rectangle{Min: tilePosition, Max: tilePosition.Add(size)}
+		size                 = image.Point{1, 1}
+		spawnArea            = image.Rectangle{Min: tilePosition, Max: tilePosition.Add(size)}
 	)
-	if IsInPlayerBuildableArea(c.Game(), c.PlayerId(), buildArea) {
-		c.buildingGhost.SetColorMatrix(colorm.ColorM{})
+	if spawnArea.In(c.Game().GetSpawnArea(c.PlayerId())) {
+		c.unitGhost.SetColorMatrix(colorm.ColorM{})
 	} else {
-		c.buildingGhost.SetColorMatrix(assets.NonBuildableColorMatrix)
+		c.unitGhost.SetColorMatrix(assets.NonBuildableColorMatrix)
 	}
 }
 
@@ -182,25 +173,7 @@ func (c *Client) Update() error {
 	}
 	c.uim.Update()
 
-	c.setBuildingGhostColor()
-
-	// Keyboard
-	for ii, protoId := range BuildableBuildingPrototypeIds {
-		if ebiten.IsKeyPressed(ebiten.Key1 + ebiten.Key(ii)) {
-			// This is enforced at the client level instead of the game level as it only serves
-			// to protect users from placing buildings they don't have the resource capacity to pay for,
-			// as placing them would permanently block their building payment queue.
-			resourceCapacity := c.Game().GetPlayer(c.PlayerId()).GetMaxResource()
-			proto := c.Game().GetBuildingPrototype(protoId)
-			insufficientResourceCapacity := proto.GetResourceCost() > resourceCapacity
-			if insufficientResourceCapacity {
-				c.ClearSelection()
-			} else {
-				c.SelectBuildingType(protoId)
-			}
-			break
-		}
-	}
+	c.setUnitGhostColor()
 
 	// Win screen
 	if c.uim.IsShowingWinScreen() {
@@ -214,10 +187,10 @@ func (c *Client) Update() error {
 	uiButtonClick := c.uim.PopButtonPress()
 	if uiButtonClick != nil {
 		switch uiButtonClick.ButtonType {
-		case core.UI_ButtonType_BuildingIcon:
-			c.SelectBuildingType(uint8(uiButtonClick.ButtonId))
+		// case core.UI_ButtonType_BuildingIcon:
+		// 	c.SelectUnitType(uint8(uiButtonClick.ButtonId))
 		case core.UI_ButtonType_UnitIcon:
-			c.CoreRenderer().CreateUnit(uint8(uiButtonClick.ButtonId))
+			c.SelectUnitType(uint8(uiButtonClick.ButtonId))
 		}
 	}
 

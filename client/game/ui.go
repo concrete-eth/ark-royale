@@ -18,17 +18,13 @@ const (
 
 var (
 	UnitPrototypesMetadata = map[uint8]core.PrototypeMetadata{
-		UnitPrototypeId_Worker:  {Name: "Worker"},
 		UnitPrototypeId_AntiAir: {Name: "Anti-Air"},
 		UnitPrototypeId_Air:     {Name: "Air"},
 		UnitPrototypeId_Tank:    {Name: "Tank"},
+		UnitPrototypeId_Turret:  {Name: "Turret"},
 	}
 	BuildingPrototypeNames = map[uint8]core.PrototypeMetadata{
-		BuildingPrototypeId_Main:    {Name: "Command Center"},
-		BuildingPrototypeId_Storage: {Name: "Storage"},
-		BuildingPrototypeId_Lab:     {Name: "Lab"},
-		BuildingPrototypeId_Armory:  {Name: "Armory"},
-		BuildingPrototypeId_Mine:    {Name: "Mineral Mine"},
+		BuildingPrototypeId_Main: {Name: "Command Center"},
 	}
 )
 
@@ -37,12 +33,6 @@ func buildingDescriptionStrings(protoId uint8, proto *datamod.BuildingPrototypes
 	switch protoId {
 	case BuildingPrototypeId_Main:
 		description = "The main building of your base."
-	case BuildingPrototypeId_Storage:
-		description = "Increases your resource capacity."
-	case BuildingPrototypeId_Lab:
-		description = "Increases your compute capacity (cpu)."
-	case BuildingPrototypeId_Armory:
-		description = "Allows you to build advanced units."
 	}
 	return description
 }
@@ -109,20 +99,6 @@ func (m *UI) ShowEndScreen(winnerId uint8, outOfTime bool) {
 
 func (ui *UI) Regenerate() *UI {
 	return NewUI(ui.Client(), ui.SpriteGetter())
-}
-
-func (ui *UI) Update() {
-	ui.UIManager.Update()
-	var (
-		player    = ui.Client().Game().GetPlayer(ui.Client().PlayerId())
-		hasArmory = player.GetCurArmories() > 0
-	)
-	for _, protoId := range UnitPrototypeIds {
-		button := ui.GetButton(core.UI_ButtonType_UnitIcon, int(protoId))
-		missingArmory := !hasArmory && NeedsArmory(protoId)
-		disable := missingArmory
-		button.GetWidget().Disabled = button.GetWidget().Disabled || disable
-	}
 }
 
 func newOverDisplayContainer(ui *UI) *widget.Container {

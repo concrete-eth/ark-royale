@@ -42,12 +42,11 @@ const (
 	IndicatorTileSize = 32
 )
 
-var (
+const (
 	NeutralZoomTileSize = 2 * assets.TileSize
 	MaxTileDisplaySize  = 3 * NeutralZoomTileSize
-	// MaxZoomLevel        = (MaxTileDisplaySize - NeutralZoomTileSize) / assets.TileSize
-	MaxZoomLevel = 1
-	MinZoomLevel = -gen_utils.Min(1, assets.TileSizeLog2)
+	MaxZoomLevel        = 2
+	MinZoomLevel        = -1
 )
 
 type UpdatableWithRenderer interface {
@@ -219,7 +218,10 @@ func NewCoreRenderer(headlessClient IHeadlessClient, config ClientConfig, sprite
 	}
 
 	c.initLayers()
-	c.setCamera(c.Game().GetMainBuildingPosition(c.PlayerId()).Add(image.Point{1, 1}).Mul(InternalTileSize), 0)
+
+	camPos := c.Game().BoardSize().Mul(InternalTileSize).Div(2)
+	camPos.Y += InternalTileSize / 2
+	c.setCamera(camPos, 0)
 
 	c.Game().SetEventHandler(c.onInternalEvent)
 	c.anticipateSubTick()
@@ -693,21 +695,22 @@ func (c *CoreRenderer) initLayers() {
 func (c *CoreRenderer) initTerrainLayer() {
 	boardSizeInTiles := c.Game().BoardSize()
 	terrainLayer := c.worldLayers.Layer(LayerName_Terrain)
-	buildingsLayer := c.worldLayers.Layer(LayerName_Buildings)
+	// buildingsLayer := c.worldLayers.Layer(LayerName_Buildings)
 	initTerrain(terrainLayer, boardSizeInTiles)
 
-	nPlayers := c.Game().GetMeta().GetPlayerCount()
-	for playerId := uint8(1); playerId < nPlayers+1; playerId++ {
-		area := c.Game().GetSpawnArea(playerId)
-		position := area.Min
-		// Crack the terrain under the spawn area
-		c.crackTerrain(area)
-		// Draw the spawn area
-		buildingsLayer.Sprite(playerId, "spawnPoint").
-			SetPosition(position.Mul(assets.TileSize)).
-			SetImage(c.spriteGetter.GetSpawnPointSprite(playerId)).
-			FitToImage()
-	}
+	// nPlayers := c.Game().GetMeta().GetPlayerCount()
+	// for playerId := uint8(1); playerId < nPlayers+1; playerId++ {
+	// 	area := c.Game().GetSpawnArea(playerId)
+	// 	position := area.Min
+	// 	// Crack the terrain under the spawn area
+	// 	c.crackTerrain(area)
+	// 	// Draw the spawn area
+	// 	buildingsLayer.Sprite(playerId, "spawnPoint").
+	// 		SetPosition(position.Mul(assets.TileSize)).
+	// 		SetImage(c.spriteGetter.GetSpawnPointSprite(playerId)).
+	// 		// FitToImage()
+	// 		SetSize(image.Point{area.Dx() * assets.TileSize, area.Dy() * assets.TileSize})
+	// }
 }
 
 // Place crack sprites in the tiles in the given area.
@@ -786,10 +789,10 @@ func (c *CoreRenderer) setBuildingSprite(playerId uint8, buildingId uint8, build
 
 	// Set building sprite properties
 	layerPosition := buildingPosition.Mul(assets.TileSize)
-	spriteOrigin := c.spriteGetter.GetBuildingSpriteOrigin(proto)
+	spriteOrigin := c.spriteGetter.GetBuildingSpriteOrigin(protoId)
 	shiftedLayerPosition := layerPosition.Sub(spriteOrigin)
 
-	spriteImg := c.spriteGetter.GetBuildingSpriteFromPrototype(playerId, buildingId, proto, buildingState)
+	spriteImg := c.spriteGetter.GetBuildingSprite(playerId, protoId, buildingState)
 
 	colorM := colorm.ColorM{}
 	if buildingState == rts.BuildingState_Unpaid {
@@ -942,8 +945,11 @@ func (c *CoreRenderer) setUnitSpriteImage(playerId uint8, unitId uint8, unit *da
 	if dir, ok := c.direction[object]; ok {
 		direction = dir
 	} else {
-		// Use Right as the default direction
-		direction = assets.Direction_Right
+		if playerId == 1 {
+			direction = assets.Direction_Down
+		} else {
+			direction = assets.Direction_Up
+		}
 	}
 
 	var delta image.Point
@@ -963,13 +969,20 @@ func (c *CoreRenderer) setUnitSpriteImage(playerId uint8, unitId uint8, unit *da
 			} else {
 				// If no target is found, use the delta between the unit and its target
 				commandData := rts.FighterCommandData(unit.GetCommand())
-				if commandData.Type().IsTargetingBuilding() {
-					targetPlayerId, targetBuildingId := commandData.TargetBuilding()
-					targetBuildingArea := c.Game().GetBuildingArea(targetPlayerId, targetBuildingId)
-					delta = rts.DeltasToAreaAsPoint(canonicalTilePosition, targetBuildingArea)
-				} else if commandData.Type().IsTargetingPosition() {
+				if commandData.Type().IsTargetingPosition() {
 					targetTilePosition := commandData.TargetPosition()
 					delta = targetTilePosition.Sub(canonicalTilePosition)
+				} else {
+					var targetArea image.Rectangle
+					if commandData.Type().IsTargetingBuilding() {
+						targetPlayerId, targetBuildingId := commandData.TargetBuilding()
+						targetArea = c.Game().GetBuildingArea(targetPlayerId, targetBuildingId)
+					} else {
+						taretPlayerId, targetUnitId := commandData.TargetUnit()
+						targetPos := rts.GetPositionAsPoint(c.Game().GetUnit(taretPlayerId, targetUnitId))
+						targetArea = image.Rectangle{Min: targetPos, Max: targetPos.Add(image.Point{1, 1})}
+					}
+					delta = rts.DeltasToAreaAsPoint(canonicalTilePosition, targetArea)
 				}
 			}
 		}
@@ -979,7 +992,7 @@ func (c *CoreRenderer) setUnitSpriteImage(playerId uint8, unitId uint8, unit *da
 	}
 	c.direction[object] = direction
 
-	spriteImg := c.spriteGetter.GetUnitSpriteFromPrototype(playerId, unitId, proto, direction)
+	spriteImg := c.spriteGetter.GetUnitSprite(playerId, protoId, direction)
 	spriteObj.SetImage(spriteImg).FitToImage()
 	layerId := rts.LayerId(proto.GetLayer())
 
@@ -1057,18 +1070,16 @@ func (c *CoreRenderer) onShotEvent(shot *rts.InternalEvent_Shot) {
 	if targetType == rts.ObjectType_Building {
 		building := c.Game().GetBuilding(targetPlayerId, targetId)
 		protoId := building.GetBuildingType()
-		proto := c.Game().GetBuildingPrototype(protoId)
-		imgOverride = c.spriteGetter.GetBuildingSpriteFromPrototype(targetPlayerId, targetId, proto, rts.BuildingState_Built)
+		imgOverride = c.spriteGetter.GetBuildingSprite(targetPlayerId, protoId, rts.BuildingState_Built)
 		targetSpriteObj = c.getBuildingSpriteObject(targetPlayerId, targetId)
 	} else if targetType == rts.ObjectType_Unit {
 		unit := c.Game().GetUnit(targetPlayerId, targetId)
 		protoId := unit.GetUnitType()
-		proto := c.Game().GetUnitPrototype(protoId)
 		unitDirection := c.direction[shot.Target]
-		imgOverride = c.spriteGetter.GetUnitSpriteFromPrototype(targetPlayerId, targetId, proto, unitDirection)
+		imgOverride = c.spriteGetter.GetUnitSprite(targetPlayerId, protoId, unitDirection)
 		targetSpriteObj = c.getUnitSpriteObject(targetPlayerId, targetId, unit)
 	}
-
+	_ = imgOverride
 	c.animations.RunAnimation(NewFlashAnimation(targetSpriteObj, imgOverride), AnimationConfig{
 		FPS:  8,
 		Mode: AnimationMode_Once,

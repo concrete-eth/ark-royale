@@ -181,6 +181,7 @@ var _ UnitCommandType = FighterCommandType_HoldPosition
 const (
 	FighterCommandType_HoldPosition FighterCommandType = iota
 	FighterCommandType_AttackBuilding
+	FighterCommandType_AttackUnit
 	FighterCommandType_Count
 )
 
@@ -202,6 +203,10 @@ func (c FighterCommandType) IsTargetingPosition() bool {
 
 func (c FighterCommandType) IsTargetingBuilding() bool {
 	return c == FighterCommandType_AttackBuilding
+}
+
+func (c FighterCommandType) IsTargetingUnit() bool {
+	return c == FighterCommandType_AttackUnit
 }
 
 // <unused> uint24, Command uint8, Alpha uint16, Beta uint16
@@ -276,12 +281,26 @@ func (c *FighterCommandData) TargetBuilding() (uint8, uint8) {
 	return c.TargetPlayerId(), c.TargetBuildingId()
 }
 
+func (c *FighterCommandData) TargetUnitId() uint8 {
+	return uint8(c.Beta())
+}
+
+func (c *FighterCommandData) SetTargetUnitId(unitId uint8) {
+	c.SetBeta(uint16(unitId))
+}
+
+func (c FighterCommandData) TargetUnit() (uint8, uint8) {
+	return c.TargetPlayerId(), c.TargetUnitId()
+}
+
 func (c FighterCommandData) String() string {
 	switch c.Type() {
 	case FighterCommandType_HoldPosition:
 		return fmt.Sprintf("HoldPosition [%d, %d]", c.TargetPosition().X, c.TargetPosition().Y)
 	case FighterCommandType_AttackBuilding:
 		return fmt.Sprintf("AttackBuilding [%d, %d]", c.TargetPlayerId(), c.TargetBuildingId())
+	case FighterCommandType_AttackUnit:
+		return fmt.Sprintf("AttackUnit [%d, %d]", c.TargetPlayerId(), c.TargetUnitId())
 	default:
 		return "Unknown"
 	}

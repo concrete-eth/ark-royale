@@ -439,7 +439,10 @@ func (c *Core) GetSpawnArea(playerId uint8) image.Rectangle {
 		int(player.GetSpawnAreaX()),
 		int(player.GetSpawnAreaY()),
 	}
-	size := image.Point{2, 2}
+	size := image.Point{
+		int(player.GetSpawnAreaWidth()),
+		int(player.GetSpawnAreaHeight()),
+	}
 	area := image.Rectangle{
 		Min: position,
 		Max: position.Add(size),
@@ -934,7 +937,12 @@ func (c *Core) placeBuilding(playerId uint8, prototypeId uint8, position image.P
 	return buildingId
 }
 
-func (c *Core) createUnit(playerId uint8, prototypeId uint8) uint8 {
+func (c *Core) createUnit(playerId uint8, prototypeId uint8, position image.Point) uint8 {
+	if !position.In(c.GetSpawnArea(playerId)) {
+		// Position is not in spawn area
+		return NilUnitId
+	}
+
 	var (
 		player       = c.GetPlayer(playerId)
 		nUnits       = player.GetUnitCount()
@@ -943,15 +951,16 @@ func (c *Core) createUnit(playerId uint8, prototypeId uint8) uint8 {
 		layer        = LayerId(proto.GetLayer())
 		maxIntegrity = proto.GetMaxIntegrity()
 		timeNow      = c.AbsSubTickIndex()
+		tile         = c.GetBoardTile(uint16(position.X), uint16(position.Y))
 	)
-
-	position, ok := c.GetSpawnPoint(layer, playerId)
-	if !ok {
-		return NilUnitId
-	}
 
 	if unitId == nUnits {
 		// Unit limit reached
+		return NilUnitId
+	}
+
+	if !IsTileEmptyAllLayers(tile) {
+		// Area is occupied
 		return NilUnitId
 	}
 
@@ -978,7 +987,6 @@ func (c *Core) createUnit(playerId uint8, prototypeId uint8) uint8 {
 		false,
 	)
 
-	tile := c.GetBoardTile(uint16(position.X), uint16(position.Y))
 	SetTileUnit(tile, layer, playerId, unitId)
 
 	return unitId
@@ -1078,7 +1086,7 @@ func (c *Core) moveUnitToTarget(obj UnitObjectWithRow, targetArea image.Rectangl
 		}
 	}
 
-	_, nextPosition, _, _ := c.greedyPathFind(layer, position, targetArea, 1, 0)
+	_, nextPosition, _, _ := c.greedyPathFind(layer, position, targetArea, 2, 0)
 	if nextPosition.Eq(position) {
 		return position
 	}
@@ -1207,6 +1215,14 @@ func (c *Core) shootUnit(attackerObj UnitObjectWithRow, targetObj UnitObjectWith
 		Attacker: attackerObj.Object(),
 		Target:   targetObj.Object(),
 	})
+
+	if target.GetIntegrity() == 0 {
+		// Target is destroyed, hold position
+		attackerPosition := GetPositionAsPoint(attacker)
+		attackerCommand := NewFighterCommandData(FighterCommandType_HoldPosition)
+		attackerCommand.SetTargetPosition(attackerPosition)
+		c.assignUnit(attackerObj, attackerCommand)
+	}
 }
 
 func (c *Core) shootBuilding(attackerObj UnitObjectWithRow, targetObj BuildingObjectWithRow) {
@@ -1419,7 +1435,7 @@ func (c *Core) tickFighterAction(obj UnitObjectWithRow) bool {
 		}
 	}
 
-	if !fighterCommand.Type().IsTargetingBuilding() {
+	if !fighterCommand.Type().IsTargetingBuilding() && !fighterCommand.Type().IsTargetingUnit() {
 		// Nothing to shoot at, move on to the movement phase
 		return true
 	}
@@ -1514,13 +1530,17 @@ func (c *Core) tickFighterMovement(obj UnitObjectWithRow) bool {
 	)
 	var targetArea image.Rectangle
 
-	if fighterCommand.Type().IsTargetingBuilding() {
-		targetPlayerId, targetBuildingId := fighterCommand.TargetBuilding()
-		targetArea = c.GetBuildingArea(targetPlayerId, targetBuildingId)
-	} else {
+	if fighterCommand.Type().IsTargetingPosition() {
 		targetPosition := fighterCommand.TargetPosition()
 		targetSize := image.Point{1, 1}
 		targetArea = image.Rectangle{Min: targetPosition, Max: targetPosition.Add(targetSize)}
+	} else if fighterCommand.Type().IsTargetingBuilding() {
+		targetPlayerId, targetBuildingId := fighterCommand.TargetBuilding()
+		targetArea = c.GetBuildingArea(targetPlayerId, targetBuildingId)
+	} else {
+		taretPlayerId, targetUnitId := fighterCommand.TargetUnit()
+		targetPos := GetPositionAsPoint(c.GetUnit(taretPlayerId, targetUnitId))
+		targetArea = image.Rectangle{Min: targetPos, Max: targetPos.Add(image.Point{1, 1})}
 	}
 
 	if fighterPosition.In(targetArea) {
@@ -1528,7 +1548,7 @@ func (c *Core) tickFighterMovement(obj UnitObjectWithRow) bool {
 		return true
 	}
 
-	if fighterCommand.Type().IsTargetingBuilding() {
+	if fighterCommand.Type().IsTargetingBuilding() || fighterCommand.Type().IsTargetingUnit() {
 		if DistanceToArea(fighterPosition, targetArea) <= int(fighterProto.GetAttackRange()) {
 			// In range, move on to the next phase (do nothing)
 			return true
@@ -1733,6 +1753,8 @@ func (c *Core) AddPlayer(action *PlayerAddition) error {
 	player := c.GetPlayer(playerId)
 	player.SetSpawnAreaX(action.SpawnAreaX)
 	player.SetSpawnAreaY(action.SpawnAreaY)
+	player.SetSpawnAreaWidth(action.SpawnAreaWidth)
+	player.SetSpawnAreaHeight(action.SpawnAreaHeight)
 	player.SetWorkerPortX(action.WorkerPortX)
 	player.SetWorkerPortY(action.WorkerPortY)
 	player.SetBuildingPayQueuePointer(1)
@@ -1758,6 +1780,7 @@ func (c *Core) CreateUnit(action *UnitCreation) error {
 	var (
 		playerId = action.PlayerId
 		protoId  = action.UnitType
+		position = image.Point{int(action.X), int(action.Y)}
 	)
 	if err := c.ValidatePlayerId(playerId); err != nil {
 		return err
@@ -1768,7 +1791,7 @@ func (c *Core) CreateUnit(action *UnitCreation) error {
 	if c.GetMainBuilding(playerId).GetIntegrity() == 0 {
 		return ErrMainBuildingDestroyed
 	}
-	unitId := c.createUnit(playerId, protoId)
+	unitId := c.createUnit(playerId, protoId, position)
 	if unitId == NilUnitId {
 		return ErrUnitLimitReached
 	}
@@ -1864,6 +1887,31 @@ func (c *Core) AssignUnit(action *UnitAssignation) error {
 			if targetBuildingState == BuildingState_Unpaid {
 				return errors.New("target must not be unpaid")
 			}
+		} else if commandType.IsTargetingUnit() {
+			targetPlayerId := command.TargetPlayerId()
+			targetUnitId := command.TargetUnitId()
+			if err := c.ValidatePlayerId(targetPlayerId); err != nil {
+				return err
+			}
+			if err := c.ValidateUnitId(targetPlayerId, targetUnitId); err != nil {
+				return err
+			}
+			if targetPlayerId == playerId {
+				return errors.New("target must be an enemy")
+			}
+			targetUnit := c.GetUnit(targetPlayerId, targetUnitId)
+			targetProtoId := targetUnit.GetUnitType()
+			targetProto := c.GetUnitPrototype(targetProtoId)
+			if targetProto.GetIsWorker() {
+				return errors.New("target must not be a worker")
+			}
+			targetUnitState := UnitState(targetUnit.GetState())
+			if targetUnitState == UnitState_Dead {
+				return errors.New("target must not be dead")
+			}
+			if targetUnitState == UnitState_Unpaid {
+				return errors.New("target must not be unpaid")
+			}
 		} else if commandType.IsTargetingPosition() {
 			targetPosition := command.TargetPosition()
 			if !c.TileIsInBoard(targetPosition) {
@@ -1879,8 +1927,6 @@ func (c *Core) AssignUnit(action *UnitAssignation) error {
 }
 
 func (c *Core) PlaceBuilding(action *BuildingPlacement) error {
-	// fmt.Println("PlaceBuilding!!!")
-
 	if !c.IsInitialized() {
 		return ErrNotInitialized
 	}

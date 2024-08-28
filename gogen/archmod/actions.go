@@ -25,7 +25,9 @@ var ActionSchemasJson = `{
     "createUnit": {
         "schema": {
             "playerId": "uint8",
-            "unitType": "uint8"
+            "unitType": "uint8",
+            "x": "uint16",
+            "y": "uint16"
         }
     },
     "assignUnit": {
@@ -49,6 +51,8 @@ var ActionSchemasJson = `{
         "schema": {
             "spawnAreaX": "uint16",
             "spawnAreaY": "uint16",
+            "spawnAreaWidth": "uint8",
+            "spawnAreaHeight": "uint8",
             "workerPortX": "uint16",
             "workerPortY": "uint16"
         }

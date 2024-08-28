@@ -17,6 +17,8 @@ struct RowData_Meta {
 struct RowData_Players {
     uint16 spawnAreaX;
     uint16 spawnAreaY;
+    uint8 spawnAreaWidth;
+    uint8 spawnAreaHeight;
     uint16 workerPortX;
     uint16 workerPortY;
     uint16 curResource;

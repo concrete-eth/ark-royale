@@ -13,7 +13,7 @@ var (
 /*
 Table               KeySize  ValueSize
 Meta                0        13
-Players             1        20
+Players             1        22
 Board               4        7
 Units               2        30
 Buildings           2        11
@@ -67,6 +67,8 @@ func (row *RowData_Meta) GetCreationBlockNumber() uint32 {
 type RowData_Players struct {
 	SpawnAreaX                uint16 `json:"spawnAreaX"`
 	SpawnAreaY                uint16 `json:"spawnAreaY"`
+	SpawnAreaWidth            uint8  `json:"spawnAreaWidth"`
+	SpawnAreaHeight           uint8  `json:"spawnAreaHeight"`
 	WorkerPortX               uint16 `json:"workerPortX"`
 	WorkerPortY               uint16 `json:"workerPortY"`
 	CurResource               uint16 `json:"curResource"`
@@ -87,6 +89,14 @@ func (row *RowData_Players) GetSpawnAreaX() uint16 {
 
 func (row *RowData_Players) GetSpawnAreaY() uint16 {
 	return row.SpawnAreaY
+}
+
+func (row *RowData_Players) GetSpawnAreaWidth() uint8 {
+	return row.SpawnAreaWidth
+}
+
+func (row *RowData_Players) GetSpawnAreaHeight() uint8 {
+	return row.SpawnAreaHeight
 }
 
 func (row *RowData_Players) GetWorkerPortX() uint16 {

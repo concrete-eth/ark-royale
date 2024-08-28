@@ -111,10 +111,14 @@ type FlashAnimation struct {
 
 var _ Animation = (*FlashAnimation)(nil)
 
+// TODO: fix flash on unit death
+// TODO: fix no loading bar on first hit (?)
+// TODO: fix failing redundant init tx
+
 func NewFlashAnimation(sprite *decren.Sprite, imageOverride *ebiten.Image) *FlashAnimation {
-	if imageOverride != nil {
-		sprite.SetImageOverride(imageOverride)
-	}
+	// if imageOverride != nil {
+	// 	sprite.SetImageOverride(imageOverride)
+	// }
 	return &FlashAnimation{
 		sprite: sprite,
 	}
@@ -131,7 +135,7 @@ func (a *FlashAnimation) Update(c *CoreRenderer, frame uint) {
 		colorM.ChangeHSV(0, 0, 2)
 		a.sprite.SetColorMultiplier(colorM)
 	} else {
-		a.sprite.SetImageOverride(nil)
+		// a.sprite.SetImageOverride(nil)
 		a.sprite.SetColorMultiplier(colorM)
 	}
 }
@@ -162,12 +166,11 @@ func (f *FireAnimation) NFrames() uint {
 }
 
 func (f *FireAnimation) Update(c *CoreRenderer, frame uint) {
-	proto := c.Game().GetUnitPrototype(f.unitType)
 	switch frame {
 	case 0:
-		f.sprite.SetImageOverride(f.spriteGetter.GetUnitFireFrame(f.playerId, 0, proto, f.direction, 0))
+		f.sprite.SetImageOverride(f.spriteGetter.GetUnitFireFrame(f.playerId, f.unitType, f.direction, 0))
 	case 1:
-		f.sprite.SetImageOverride(f.spriteGetter.GetUnitFireFrame(f.playerId, 0, proto, f.direction, 1))
+		f.sprite.SetImageOverride(f.spriteGetter.GetUnitFireFrame(f.playerId, f.unitType, f.direction, 1))
 	case 2:
 		f.sprite.SetImageOverride(nil)
 	}
