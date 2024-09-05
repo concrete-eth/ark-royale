@@ -74,7 +74,7 @@ contract Game is Arch {
                 spawnAreaY: spawnAreaY,
                 spawnAreaWidth: WIDTH,
                 spawnAreaHeight: (HEIGHT / 2) - 2,
-                workerPortX: 128,
+                workerPortX: x,
                 workerPortY: y
             })
         );
@@ -86,6 +86,7 @@ contract Game is Arch {
                 y: y
             })
         );
+
         if (y == 0) {
             y = 2;
         } else {
@@ -107,6 +108,46 @@ contract Game is Arch {
                 y: y
             })
         );
+
+        uint16 mineX = x + 2;
+        uint16 mineY;
+        uint16 workerX = mineX;
+        uint16 workerY;
+        if (playerId == 1) {
+            mineY = 0;
+            workerY = 2;
+        } else {
+            mineY = HEIGHT - 1;
+            workerY = HEIGHT - 3;
+        }
+        ICore(proxy).placeBuilding(
+            ActionData_PlaceBuilding({
+                playerId: 0,
+                buildingType: uint8(BuildingType.Mine),
+                x: mineX,
+                y: mineY
+            })
+        );
+        ICore(proxy).createUnit(
+            ActionData_CreateUnit({
+                playerId: playerId,
+                unitType: uint8(UnitType.Worker),
+                x: workerX,
+                y: workerY
+            })
+        );
+
+        ActionData_AssignUnit memory assignUnitData;
+        assignUnitData.playerId = playerId;
+        assignUnitData.unitId = 3;
+
+        uint64 command = 0;
+        command |= uint64(1) << 16; // Gather
+        command |= uint64(playerId); // Target building
+
+        assignUnitData.command = command;
+
+        ICore(proxy).assignUnit(assignUnitData);
     }
 
     function _addPit() internal {
@@ -231,7 +272,7 @@ contract Game is Arch {
                 continue;
             }
             uint8 unitCount = ITables(proxy).getPlayersRow(playerId).unitCount;
-            for (uint8 unitId = 3; unitId <= unitCount; unitId++) {
+            for (uint8 unitId = 4; unitId <= unitCount; unitId++) {
                 uint64 command = ITables(proxy)
                     .getUnitsRow(playerId, unitId)
                     .command;

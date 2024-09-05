@@ -192,7 +192,7 @@ func (m *UIManager) PopButtonPress() *buttonPress {
 
 // Updates the UI state.
 func (m *UIManager) Update() {
-	// m.setResourceIndicators(m.client.PlayerId())
+	m.setResourceIndicators(m.client.PlayerId())
 	// m.setComputeIndicators(m.client.PlayerId())
 	// m.setWorkerIndicator(m.client.PlayerId())
 	// m.setComputeIndicator(m.client.PlayerId())
@@ -764,7 +764,7 @@ func newLogisticsView(uim *UIManager) *widget.Container {
 	bottomLine.AddChild(newSettingsText(uim, "FPS       : "))
 	bottomLine.AddChild(newSettingsLabel(uim, UI_Label_FPS, "0.0"))
 
-	container.AddChild(statsContainer)
+	// container.AddChild(statsContainer)
 	container.AddChild(bottomLine)
 
 	uim.AddLabel(UI_Label_WorkerCount, workerStatsLabel)

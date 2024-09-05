@@ -8,7 +8,8 @@ enum UnitType {
     Air,
     AntiAir,
     Tank,
-    Turret
+    Turret,
+    Worker
 }
 
 enum LayerId {
@@ -25,11 +26,11 @@ library UnitPrototypeAdder {
             ActionData_AddUnitPrototype({
                 layer: uint8(LayerId.Air),
                 resourceCost: 100,
-                computeCost: 1,
+                computeCost: 0,
                 spawnTime: 2,
                 maxIntegrity: 25,
                 landStrength: 5,
-                hoverStrength: 3,
+                hoverStrength: 0,
                 airStrength: 3,
                 attackCooldown: 2,
                 attackRange: 2,
@@ -43,11 +44,11 @@ library UnitPrototypeAdder {
             ActionData_AddUnitPrototype({
                 layer: uint8(LayerId.Land),
                 resourceCost: 150,
-                computeCost: 1,
+                computeCost: 0,
                 spawnTime: 4,
                 maxIntegrity: 100,
                 landStrength: 5,
-                hoverStrength: 15,
+                hoverStrength: 10,
                 airStrength: 15,
                 attackCooldown: 3,
                 attackRange: 4,
@@ -61,11 +62,11 @@ library UnitPrototypeAdder {
             ActionData_AddUnitPrototype({
                 layer: uint8(LayerId.Land),
                 resourceCost: 300,
-                computeCost: 1,
+                computeCost: 0,
                 spawnTime: 8,
                 maxIntegrity: 150,
                 landStrength: 15,
-                hoverStrength: 3,
+                hoverStrength: 0,
                 airStrength: 5,
                 attackCooldown: 6,
                 attackRange: 3,
@@ -79,16 +80,34 @@ library UnitPrototypeAdder {
             ActionData_AddUnitPrototype({
                 layer: uint8(LayerId.Land),
                 resourceCost: 300,
-                computeCost: 1,
+                computeCost: 0,
                 spawnTime: 8,
                 maxIntegrity: 150,
                 landStrength: 3,
-                hoverStrength: 3,
+                hoverStrength: 0,
                 airStrength: 3,
                 attackCooldown: 1,
                 attackRange: 3,
                 isAssault: false,
                 isWorker: false
+            })
+        );
+
+        // Worker
+        core.addUnitPrototype(
+            ActionData_AddUnitPrototype({
+                layer: uint8(LayerId.Hover),
+                resourceCost: 0,
+                computeCost: 0,
+                spawnTime: 0,
+                maxIntegrity: 1,
+                landStrength: 0,
+                hoverStrength: 0,
+                airStrength: 0,
+                attackCooldown: 0,
+                attackRange: 0,
+                isAssault: false,
+                isWorker: true
             })
         );
     }

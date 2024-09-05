@@ -51,9 +51,9 @@ func main() {
 
 	// Create local simulated io
 	io, err := deploy.NewLocalIO(registry, schemas, func(auth *bind.TransactOpts, ethcli bind.ContractBackend) (addr common.Address, tx *types.Transaction, game deploy.InitializableProxyAdmin, err error) {
-		auth.GasLimit = 3_000_000
+		auth.GasLimit = 3_500_000
 		return game_contract.DeployContract(auth, ethcli)
-	}, pcAddr, data, 1000*time.Millisecond)
+	}, pcAddr, data, 100*time.Millisecond)
 	if err != nil {
 		panic(err)
 	}

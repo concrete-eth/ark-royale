@@ -1413,6 +1413,16 @@ func (c *Core) tickFighterAction(obj UnitObjectWithRow) bool {
 		fighterCommand  = FighterCommandData(fighter.GetCommand())
 	)
 
+	if fighterCommand.Type().IsTargetingUnit() {
+		target := c.GetUnit(fighterCommand.TargetPlayerId(), fighterCommand.TargetUnitId())
+		if target.GetIntegrity() == 0 {
+			// Target is destroyed, hold position
+			attackerCommand := NewFighterCommandData(FighterCommandType_HoldPosition)
+			attackerCommand.SetTargetPosition(fighterPosition)
+			c.assignUnit(obj, attackerCommand)
+		}
+	}
+
 	deltaTime := c.AbsSubTickIndex() - fighter.GetTimestamp()
 	if deltaTime < uint32(fighterProto.GetAttackCooldown()) {
 		// Cooldown has not elapsed, move on to the movement phase
@@ -1808,9 +1818,10 @@ func (c *Core) AssignUnit(action *UnitAssignation) error {
 	if !c.IsInitialized() {
 		return ErrNotInitialized
 	}
-	if !c.HasStarted() {
-		return ErrNotStarted
-	}
+	// TODO: consolidate this
+	// if !c.HasStarted() {
+	// 	return ErrNotStarted
+	// }
 	var (
 		playerId = action.PlayerId
 		unitId   = action.UnitId

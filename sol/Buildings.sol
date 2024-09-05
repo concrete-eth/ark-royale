@@ -6,7 +6,8 @@ import "./solgen/ICore.sol";
 enum BuildingType {
     Nil,
     Main,
-    Pit
+    Pit,
+    Mine
 }
 
 library BuildingPrototypeAdder {
@@ -17,16 +18,17 @@ library BuildingPrototypeAdder {
                 width: 2,
                 height: 2,
                 resourceCost: 0,
-                resourceCapacity: 2000,
-                computeCapacity: 8,
+                resourceCapacity: 300,
+                computeCapacity: 0,
                 resourceMine: 0,
                 mineTime: 0,
-                maxIntegrity: 200,
+                maxIntegrity: 250,
                 buildingTime: 0,
                 isArmory: false,
                 isEnvironment: false
             })
         );
+
         // Pit
         core.addBuildingPrototype(
             ActionData_AddBuildingPrototype({
@@ -36,6 +38,23 @@ library BuildingPrototypeAdder {
                 resourceCapacity: 0,
                 computeCapacity: 0,
                 resourceMine: 0,
+                mineTime: 0,
+                maxIntegrity: 0,
+                buildingTime: 0,
+                isArmory: false,
+                isEnvironment: true
+            })
+        );
+
+        // Mine
+        core.addBuildingPrototype(
+            ActionData_AddBuildingPrototype({
+                width: 1,
+                height: 1,
+                resourceCost: 0,
+                resourceCapacity: 0,
+                computeCapacity: 0,
+                resourceMine: 50,
                 mineTime: 0,
                 maxIntegrity: 0,
                 buildingTime: 0,

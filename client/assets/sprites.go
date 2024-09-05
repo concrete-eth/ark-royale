@@ -135,6 +135,9 @@ func (d *DefaultSpriteGetter) GetSpawnPointSprite(playerId uint8) *ebiten.Image 
 func (d *DefaultSpriteGetter) GetBuildingSprite(playerId uint8, spriteId uint8, buildingState rts.BuildingState) *ebiten.Image {
 	validatePlayerId(playerId)
 	validateBuildingSpriteId(spriteId)
+	if spriteId == BuildingSpriteId_Mine {
+		return MineSprite
+	}
 	return playerBuildingSprites[playerId-1][spriteId][buildingState]
 }
 
