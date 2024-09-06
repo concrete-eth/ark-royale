@@ -20,7 +20,7 @@ type spriteGetter struct {
 var (
 	buildingProtoIdToSpriteId = map[uint8]uint8{
 		BuildingPrototypeId_Main: assets.BuildingSpriteId_Main,
-		BuildingPrototypeId_Mine: assets.BuildingSpriteId_Mine,
+		BuildingPrototypeId_Mine: assets.BuildingSpriteId_SmallMine,
 	}
 	unitProtoIdToSpriteId = map[uint8]uint8{
 		UnitPrototypeId_AntiAir: assets.UnitSpriteId_AntiAir,

@@ -18,6 +18,7 @@ const (
 	BuildingSpriteId_Lab
 	BuildingSpriteId_Armory
 	BuildingSpriteId_Mine
+	BuildingSpriteId_SmallMine
 	BuildingSpriteId_Count
 )
 
@@ -42,9 +43,15 @@ var (
 		2: SubImage(SpriteSheet, NewBounds(224, 16, 16, 16)),
 		3: SubImage(SpriteSheet, NewBounds(192, 32, 16, 16)),
 		4: SubImage(SpriteSheet, NewBounds(208, 32, 16, 16)),
+		5: SubImage(SpriteSheet, NewBounds(240, 0, 16, 16)),
+		6: SubImage(SpriteSheet, NewBounds(240, 16, 16, 16)),
+		7: SubImage(SpriteSheet, NewBounds(240, 32, 16, 16)),
+		8: SubImage(SpriteSheet, NewBounds(192, 0, 16, 16)),
+		9: SubImage(SpriteSheet, NewBounds(208, 0, 16, 16)),
 	}
 
-	MineSprite = SubImage(SpriteSheet, NewBounds(0, 0, 18, 17))
+	MineSprite       = SubImage(SpriteSheet, NewBounds(0, 0, 18, 16))
+	SmallMinesSprite = SubImage(SpriteSheet, NewBounds(0, 32, 16, 16))
 
 	spawnPointSprites = [4]*ebiten.Image{
 		SubImage(SpriteSheet, NewBounds(160, 48, 32, 32)),
@@ -135,15 +142,19 @@ func (d *DefaultSpriteGetter) GetSpawnPointSprite(playerId uint8) *ebiten.Image 
 func (d *DefaultSpriteGetter) GetBuildingSprite(playerId uint8, spriteId uint8, buildingState rts.BuildingState) *ebiten.Image {
 	validatePlayerId(playerId)
 	validateBuildingSpriteId(spriteId)
-	if spriteId == BuildingSpriteId_Mine {
+	switch {
+	case spriteId == BuildingSpriteId_SmallMine:
+		return SmallMinesSprite
+	case spriteId == BuildingSpriteId_Mine:
 		return MineSprite
+	default:
+		return playerBuildingSprites[playerId-1][spriteId][buildingState]
 	}
-	return playerBuildingSprites[playerId-1][spriteId][buildingState]
 }
 
 func (d *DefaultSpriteGetter) GetBuildingSpriteOrigin(spriteId uint8) image.Point {
 	if spriteId == BuildingSpriteId_Mine {
-		return image.Point{1, 2}
+		return image.Point{-1, 0}
 	}
 	return image.Point{0, 0}
 }
