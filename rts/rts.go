@@ -1654,8 +1654,7 @@ func (c *Core) Tick() {
 		playerId := playerIdx + 1
 		nUnits := c.GetPlayer(playerId).GetUnitCount()
 		for unitId := uint8(1); unitId < nUnits+1; unitId++ {
-			ok := c.tickUnitPreliminary(c.GetUnitObject(playerId, unitId))
-			if ok {
+			if ok := c.tickUnitPreliminary(c.GetUnitObject(playerId, unitId)); ok {
 				prePassers[playerIdx] = append(prePassers[playerIdx], unitId)
 			}
 		}
@@ -1672,8 +1671,7 @@ func (c *Core) Tick() {
 			if unitProto.GetIsWorker() {
 				continue
 			}
-			ok := c.tickFighterAction(c.GetUnitObject(playerId, unitId))
-			if ok {
+			if ok := c.tickFighterAction(c.GetUnitObject(playerId, unitId)); ok {
 				passedAct[playerId][unitId] = struct{}{}
 			}
 		}
@@ -1690,8 +1688,7 @@ func (c *Core) Tick() {
 			if !unitProto.GetIsWorker() {
 				continue
 			}
-			ok := c.tickWorkerAction(c.GetUnitObject(playerId, unitId))
-			if ok {
+			if ok := c.tickWorkerAction(c.GetUnitObject(playerId, unitId)); ok {
 				passedAct[playerId][unitId] = struct{}{}
 			}
 		}
@@ -1703,8 +1700,7 @@ func (c *Core) Tick() {
 		playerId := playerIdx + 1
 		nUnits := c.GetPlayer(playerId).GetUnitCount()
 		for unitId := uint8(1); unitId < nUnits+1; unitId++ {
-			ok := c.tickUnitIntermediate(c.GetUnitObject(playerId, unitId))
-			if ok {
+			if ok := c.tickUnitIntermediate(c.GetUnitObject(playerId, unitId)); ok {
 				interPassers[playerIdx] = append(interPassers[playerIdx], unitId)
 			}
 		}
