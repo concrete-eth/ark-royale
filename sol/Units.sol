@@ -67,13 +67,13 @@ library UnitPrototypeAdder {
                 computeCost: 1,
                 spawnTime: 8,
                 maxIntegrity: 150,
-                landStrength: 15,
+                landStrength: 10,
                 hoverStrength: 0,
-                airStrength: 5,
-                attackCooldown: 6,
+                airStrength: 3,
+                attackCooldown: 4,
                 attackRange: 3,
                 isAssault: false,
-                isConfrontational: true,
+                isConfrontational: false,
                 isWorker: false
             })
         );
