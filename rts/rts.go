@@ -1030,6 +1030,9 @@ func (c *Core) setWorkerToBuild(obj UnitObjectWithRow, targetBuildingId uint8) {
 }
 
 func (c *Core) unitCanMoveTo(position image.Point, layer LayerId) bool {
+	if !c.TileIsInBoard(position) {
+		return false
+	}
 	tile := c.GetBoardTile(uint16(position.X), uint16(position.Y))
 	switch layer {
 	case LayerId_Hover:
