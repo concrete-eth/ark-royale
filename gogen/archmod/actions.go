@@ -70,6 +70,7 @@ var ActionSchemasJson = `{
             "attackRange": "uint8",
             "attackCooldown": "uint8",
             "isAssault": "bool",
+            "isConfrontational": "bool",
             "isWorker": "bool"
         }
     },

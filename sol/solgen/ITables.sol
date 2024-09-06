@@ -78,6 +78,7 @@ struct RowData_UnitPrototypes {
     uint8 attackRange;
     uint8 attackCooldown;
     bool isAssault;
+    bool isConfrontational;
     bool isWorker;
 }
 

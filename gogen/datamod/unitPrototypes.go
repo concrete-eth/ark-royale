@@ -30,12 +30,12 @@ type UnitPrototypesRow struct {
 }
 
 func NewUnitPrototypesRow(dsSlot lib.DatastoreSlot) *UnitPrototypesRow {
-	sizes := []int{1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+	sizes := []int{1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
 	return &UnitPrototypesRow{*lib.NewDatastoreStructWithParent(dsSlot, sizes, nil, nil)}
 }
 
 func NewUnitPrototypesRowWithParent(dsSlot lib.DatastoreSlot, parent lib.Parent, rowKey lib.RowKey) *UnitPrototypesRow {
-	sizes := []int{1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+	sizes := []int{1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
 	return &UnitPrototypesRow{*lib.NewDatastoreStructWithParent(dsSlot, sizes, parent, rowKey)}
 }
 
@@ -51,6 +51,7 @@ func (v *UnitPrototypesRow) Get() (
 	attackRange uint8,
 	attackCooldown uint8,
 	isAssault bool,
+	isConfrontational bool,
 	isWorker bool,
 ) {
 	return codec.DecodeUint8(1, v.GetField(0)),
@@ -64,7 +65,8 @@ func (v *UnitPrototypesRow) Get() (
 		codec.DecodeUint8(1, v.GetField(8)),
 		codec.DecodeUint8(1, v.GetField(9)),
 		codec.DecodeBool(1, v.GetField(10)),
-		codec.DecodeBool(1, v.GetField(11))
+		codec.DecodeBool(1, v.GetField(11)),
+		codec.DecodeBool(1, v.GetField(12))
 }
 
 func (v *UnitPrototypesRow) Set(
@@ -79,6 +81,7 @@ func (v *UnitPrototypesRow) Set(
 	attackRange uint8,
 	attackCooldown uint8,
 	isAssault bool,
+	isConfrontational bool,
 	isWorker bool,
 ) {
 	v.SetField(0, codec.EncodeUint8(1, layer))
@@ -92,7 +95,8 @@ func (v *UnitPrototypesRow) Set(
 	v.SetField(8, codec.EncodeUint8(1, attackRange))
 	v.SetField(9, codec.EncodeUint8(1, attackCooldown))
 	v.SetField(10, codec.EncodeBool(1, isAssault))
-	v.SetField(11, codec.EncodeBool(1, isWorker))
+	v.SetField(11, codec.EncodeBool(1, isConfrontational))
+	v.SetField(12, codec.EncodeBool(1, isWorker))
 }
 
 func (v *UnitPrototypesRow) GetLayer() uint8 {
@@ -205,14 +209,24 @@ func (v *UnitPrototypesRow) SetIsAssault(value bool) {
 	v.SetField(10, data)
 }
 
-func (v *UnitPrototypesRow) GetIsWorker() bool {
+func (v *UnitPrototypesRow) GetIsConfrontational() bool {
 	data := v.GetField(11)
+	return codec.DecodeBool(1, data)
+}
+
+func (v *UnitPrototypesRow) SetIsConfrontational(value bool) {
+	data := codec.EncodeBool(1, value)
+	v.SetField(11, data)
+}
+
+func (v *UnitPrototypesRow) GetIsWorker() bool {
+	data := v.GetField(12)
 	return codec.DecodeBool(1, data)
 }
 
 func (v *UnitPrototypesRow) SetIsWorker(value bool) {
 	data := codec.EncodeBool(1, value)
-	v.SetField(11, data)
+	v.SetField(12, data)
 }
 
 type UnitPrototypes struct {

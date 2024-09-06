@@ -56,7 +56,7 @@ abstract contract Entrypoint is IActions {
                 (ActionData_AddPlayer)
             );
             addPlayer(action);
-        } else if (actionId == 0x251eb4c0) {
+        } else if (actionId == 0x7b6add86) {
             ActionData_AddUnitPrototype memory action = abi.decode(
                 actionData,
                 (ActionData_AddUnitPrototype)

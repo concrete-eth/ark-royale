@@ -26,7 +26,7 @@ library UnitPrototypeAdder {
             ActionData_AddUnitPrototype({
                 layer: uint8(LayerId.Air),
                 resourceCost: 100,
-                computeCost: 0,
+                computeCost: 1,
                 spawnTime: 2,
                 maxIntegrity: 25,
                 landStrength: 5,
@@ -35,6 +35,7 @@ library UnitPrototypeAdder {
                 attackCooldown: 2,
                 attackRange: 2,
                 isAssault: true,
+                isConfrontational: true,
                 isWorker: false
             })
         );
@@ -44,7 +45,7 @@ library UnitPrototypeAdder {
             ActionData_AddUnitPrototype({
                 layer: uint8(LayerId.Land),
                 resourceCost: 150,
-                computeCost: 0,
+                computeCost: 1,
                 spawnTime: 4,
                 maxIntegrity: 100,
                 landStrength: 5,
@@ -53,6 +54,7 @@ library UnitPrototypeAdder {
                 attackCooldown: 3,
                 attackRange: 4,
                 isAssault: false,
+                isConfrontational: true,
                 isWorker: false
             })
         );
@@ -62,7 +64,7 @@ library UnitPrototypeAdder {
             ActionData_AddUnitPrototype({
                 layer: uint8(LayerId.Land),
                 resourceCost: 300,
-                computeCost: 0,
+                computeCost: 1,
                 spawnTime: 8,
                 maxIntegrity: 150,
                 landStrength: 15,
@@ -71,6 +73,7 @@ library UnitPrototypeAdder {
                 attackCooldown: 6,
                 attackRange: 3,
                 isAssault: false,
+                isConfrontational: true,
                 isWorker: false
             })
         );
@@ -89,6 +92,7 @@ library UnitPrototypeAdder {
                 attackCooldown: 1,
                 attackRange: 3,
                 isAssault: false,
+                isConfrontational: true,
                 isWorker: false
             })
         );
@@ -107,6 +111,7 @@ library UnitPrototypeAdder {
                 attackCooldown: 0,
                 attackRange: 0,
                 isAssault: false,
+                isConfrontational: true,
                 isWorker: true
             })
         );

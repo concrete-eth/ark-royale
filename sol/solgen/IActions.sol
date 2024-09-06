@@ -51,6 +51,7 @@ struct ActionData_AddUnitPrototype {
     uint8 attackRange;
     uint8 attackCooldown;
     bool isAssault;
+    bool isConfrontational;
     bool isWorker;
 }
 

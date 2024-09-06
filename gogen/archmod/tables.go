@@ -113,6 +113,7 @@ var TableSchemasJson = `{
             "attackRange": "uint8",
             "attackCooldown": "uint8",
             "isAssault": "bool",
+            "isConfrontational": "bool",
             "isWorker": "bool"
         }
     },

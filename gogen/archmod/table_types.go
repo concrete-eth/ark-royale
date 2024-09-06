@@ -17,7 +17,7 @@ Players             1        22
 Board               4        7
 Units               2        30
 Buildings           2        11
-UnitPrototypes      1        13
+UnitPrototypes      1        14
 BuildingPrototypes  1        13
 */
 
@@ -277,18 +277,19 @@ func (row *RowData_Buildings) GetTimestamp() uint32 {
 }
 
 type RowData_UnitPrototypes struct {
-	Layer          uint8  `json:"layer"`
-	ResourceCost   uint16 `json:"resourceCost"`
-	ComputeCost    uint8  `json:"computeCost"`
-	SpawnTime      uint8  `json:"spawnTime"`
-	MaxIntegrity   uint8  `json:"maxIntegrity"`
-	LandStrength   uint8  `json:"landStrength"`
-	HoverStrength  uint8  `json:"hoverStrength"`
-	AirStrength    uint8  `json:"airStrength"`
-	AttackRange    uint8  `json:"attackRange"`
-	AttackCooldown uint8  `json:"attackCooldown"`
-	IsAssault      bool   `json:"isAssault"`
-	IsWorker       bool   `json:"isWorker"`
+	Layer             uint8  `json:"layer"`
+	ResourceCost      uint16 `json:"resourceCost"`
+	ComputeCost       uint8  `json:"computeCost"`
+	SpawnTime         uint8  `json:"spawnTime"`
+	MaxIntegrity      uint8  `json:"maxIntegrity"`
+	LandStrength      uint8  `json:"landStrength"`
+	HoverStrength     uint8  `json:"hoverStrength"`
+	AirStrength       uint8  `json:"airStrength"`
+	AttackRange       uint8  `json:"attackRange"`
+	AttackCooldown    uint8  `json:"attackCooldown"`
+	IsAssault         bool   `json:"isAssault"`
+	IsConfrontational bool   `json:"isConfrontational"`
+	IsWorker          bool   `json:"isWorker"`
 }
 
 func (row *RowData_UnitPrototypes) GetLayer() uint8 {
@@ -333,6 +334,10 @@ func (row *RowData_UnitPrototypes) GetAttackCooldown() uint8 {
 
 func (row *RowData_UnitPrototypes) GetIsAssault() bool {
 	return row.IsAssault
+}
+
+func (row *RowData_UnitPrototypes) GetIsConfrontational() bool {
+	return row.IsConfrontational
 }
 
 func (row *RowData_UnitPrototypes) GetIsWorker() bool {

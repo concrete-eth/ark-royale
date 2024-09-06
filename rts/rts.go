@@ -1240,11 +1240,6 @@ func (c *Core) shootBuilding(attackerObj UnitObjectWithRow, targetObj BuildingOb
 	attacker.SetTimestamp(c.AbsSubTickIndex())
 	if integrity == 0 {
 		c.setBuildingDestroyed(targetObj)
-		// Target is destroyed, hold position
-		attackerPosition := GetPositionAsPoint(attacker)
-		attackerCommand := NewFighterCommandData(FighterCommandType_HoldPosition)
-		attackerCommand.SetTargetPosition(attackerPosition)
-		c.assignUnit(attackerObj, attackerCommand)
 	}
 	c.emitInternalEvent(InternalEventId_Shot, &InternalEvent_Shot{
 		Attacker: attackerObj.Object(),
@@ -1413,8 +1408,17 @@ func (c *Core) tickFighterAction(obj UnitObjectWithRow) bool {
 		fighterCommand  = FighterCommandData(fighter.GetCommand())
 	)
 
+	var target interface {
+		GetIntegrity() uint8
+	}
+
 	if fighterCommand.Type().IsTargetingUnit() {
-		target := c.GetUnit(fighterCommand.TargetPlayerId(), fighterCommand.TargetUnitId())
+		target = c.GetUnit(fighterCommand.TargetPlayerId(), fighterCommand.TargetUnitId())
+	} else if fighterCommand.Type().IsTargetingBuilding() {
+		target = c.GetBuilding(fighterCommand.TargetPlayerId(), fighterCommand.TargetBuildingId())
+	}
+
+	if target != nil {
 		if target.GetIntegrity() == 0 {
 			// Target is destroyed, hold position
 			attackerCommand := NewFighterCommandData(FighterCommandType_HoldPosition)
@@ -1423,22 +1427,29 @@ func (c *Core) tickFighterAction(obj UnitObjectWithRow) bool {
 		}
 	}
 
+	targetMatch := c.GetUnitToFireAt(obj)
+
 	deltaTime := c.AbsSubTickIndex() - fighter.GetTimestamp()
 	if deltaTime < uint32(fighterProto.GetAttackCooldown()) {
-		// Cooldown has not elapsed, move on to the movement phase
-		// Unit will move even if an enemy is in range if the cooldown has not elapsed
-		return true
+		// Cooldown has not elapsed, move on to the movement phase unless the unit is confrontational and
+		// there is a target in range
+		if fighterProto.GetIsConfrontational() && !targetMatch.IsNil() {
+			return false
+		} else {
+			return true
+		}
 	}
 
 	// Shoot an enemy unit, if in range
-	targetMatch := c.GetUnitToFireAt(obj)
 	if !targetMatch.IsNil() {
 		targetUnit := c.GetUnitObject(targetMatch.PlayerId, targetMatch.ObjectId)
 		c.shootUnit(obj, targetUnit)
 
-		if fighterProto.GetIsAssault() {
-			// Assault units can move and attack in the same tick so they move on to
-			// the movement phase
+		if targetUnit.Unit().GetIntegrity() > 0 && fighterProto.GetIsConfrontational() {
+			// Target is still alive and fighter is confrontational, do not move on to the movement phase
+			return false
+		} else if fighterProto.GetIsAssault() {
+			// Assault units can move and attack in the same tick so they move on to the movement phase
 			return true
 		} else {
 			return false
@@ -2008,6 +2019,7 @@ func (c *Core) AddUnitPrototype(action *UnitPrototypeAddition) error {
 		action.AttackRange,
 		action.AttackCooldown,
 		action.IsAssault,
+		action.IsConfrontational,
 		action.IsWorker,
 	)
 	return nil
