@@ -14,7 +14,7 @@ uint256 constant NonZeroBoolean_True = 1;
 uint256 constant NonZeroBoolean_False = 2;
 
 abstract contract Arch is Entrypoint, ArchProxyAdmin, Initializable {
-    uint256 private needsPurge;
+    uint256 internal needsPurge;
 
     function initialize(address _logic, bytes memory data) public initializer {
         address proxyAddress = address(
@@ -31,14 +31,12 @@ abstract contract Arch is Entrypoint, ArchProxyAdmin, Initializable {
 
     function tick() public virtual override {
         require(block.number > lastTickBlockNumber, "already ticked");
-        ICore(proxy).purge();
-        return;
         if (needsPurge == NonZeroBoolean_True) {
             ICore(proxy).purge();
             needsPurge = NonZeroBoolean_False;
             return;
         }
-        (bool success, ) = proxy.call{gas: gasleft() - 50000}(
+        (bool success, ) = proxy.call{gas: gasleft() - 20000}(
             abi.encodeWithSignature("tick()")
         );
         if (success) {
@@ -46,7 +44,7 @@ abstract contract Arch is Entrypoint, ArchProxyAdmin, Initializable {
         }
         // The tick method SHOULD NEVER FAIL for reasons other than out-of-gas, so we can be very
         // aggressive when determining whether the method ran out of gas.
-        if (gasleft() < 50000 + 25000) {
+        if (gasleft() < 20000 + 25000) {
             needsPurge = NonZeroBoolean_True;
         } else {
             revert();
