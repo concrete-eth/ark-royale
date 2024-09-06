@@ -274,12 +274,17 @@ contract Game is Arch {
             }
             uint8 unitCount = ITables(proxy).getPlayersRow(playerId).unitCount;
             for (uint8 unitId = 4; unitId <= unitCount; unitId++) {
-                uint64 command = ITables(proxy)
-                    .getUnitsRow(playerId, unitId)
-                    .command;
-                uint64 commandType = command >> 32;
-                if (commandType == 0) {
-                    command = 0;
+                RowData_Units memory unit = ITables(proxy).getUnitsRow(
+                    playerId,
+                    unitId
+                );
+                if (unit.state != 3) {
+                    // Unit is not active
+                    continue;
+                }
+                uint64 unitCommandType = unit.command >> 32;
+                if (unitCommandType == 0) {
+                    uint64 command = 0;
                     command |= uint64(1) << 32; // Target building
                     command |= uint64(targetPlayerId) << 16; // Target player id
                     command |= uint64(1); // Target main building
