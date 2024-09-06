@@ -24,6 +24,8 @@ abstract contract Entrypoint is IActions {
     function _executeAction(uint32 actionId, bytes memory actionData) private {
         if (actionId == 0x3eaf5d9f) {
             tick();
+        } else if (actionId == 0x70f0c351) {
+            purge();
         } else if (actionId == 0xeaba9837) {
             ActionData_Initialize memory action = abi.decode(
                 actionData,
@@ -73,27 +75,49 @@ abstract contract Entrypoint is IActions {
         }
     }
 
-    function tick() public virtual;
+    function tick() public virtual {
+        revert("not implemented");
+    }
 
-    function initialize(ActionData_Initialize memory action) public virtual;
+    function purge() public virtual {
+        revert("not implemented");
+    }
 
-    function start() public virtual;
+    function initialize(ActionData_Initialize memory action) public virtual {
+        revert("not implemented");
+    }
 
-    function createUnit(ActionData_CreateUnit memory action) public virtual;
+    function start() public virtual {
+        revert("not implemented");
+    }
 
-    function assignUnit(ActionData_AssignUnit memory action) public virtual;
+    function createUnit(ActionData_CreateUnit memory action) public virtual {
+        revert("not implemented");
+    }
+
+    function assignUnit(ActionData_AssignUnit memory action) public virtual {
+        revert("not implemented");
+    }
 
     function placeBuilding(
         ActionData_PlaceBuilding memory action
-    ) public virtual;
+    ) public virtual {
+        revert("not implemented");
+    }
 
-    function addPlayer(ActionData_AddPlayer memory action) public virtual;
+    function addPlayer(ActionData_AddPlayer memory action) public virtual {
+        revert("not implemented");
+    }
 
     function addUnitPrototype(
         ActionData_AddUnitPrototype memory action
-    ) public virtual;
+    ) public virtual {
+        revert("not implemented");
+    }
 
     function addBuildingPrototype(
         ActionData_AddBuildingPrototype memory action
-    ) public virtual;
+    ) public virtual {
+        revert("not implemented");
+    }
 }

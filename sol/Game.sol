@@ -4,7 +4,7 @@ pragma solidity >=0.8.0;
 import "./solgen/IActions.sol";
 import "./solgen/ITables.sol";
 import "./solgen/ICore.sol";
-import {Arch} from "./solgen/Arch.sol";
+import {Arch, NonZeroBoolean_True} from "./solgen/Arch.sol";
 
 import {UnitPrototypeAdder, UnitType} from "./Units.sol";
 import {BuildingPrototypeAdder, BuildingType} from "./Buildings.sol";
@@ -178,10 +178,8 @@ contract Game is Arch {
         }
     }
 
-    function placeBuilding(
-        ActionData_PlaceBuilding memory action
-    ) public virtual override {
-        revert("not allowed");
+    function start() public virtual override {
+        ICore(proxy).start();
     }
 
     function createUnit(
@@ -232,38 +230,11 @@ contract Game is Arch {
         ICore(proxy).assignUnit(assignUnitData);
     }
 
-    function assignUnit(
-        ActionData_AssignUnit memory action
-    ) public virtual override {
-        revert("not allowed");
-    }
-
-    function start() public virtual override {
-        ICore(proxy).start();
-    }
-
-    function initialize(ActionData_Initialize memory action) public override {
-        revert("not allowed");
-    }
-
-    function addPlayer(ActionData_AddPlayer memory action) public override {
-        revert("not allowed");
-    }
-
-    function addUnitPrototype(
-        ActionData_AddUnitPrototype memory action
-    ) public override {
-        revert("not allowed");
-    }
-
-    function addBuildingPrototype(
-        ActionData_AddBuildingPrototype memory action
-    ) public override {
-        revert("not allowed");
-    }
-
     function tick() public override {
-        ICore(proxy).tick();
+        super.tick();
+        if (needsPurge == NonZeroBoolean_True) {
+            return;
+        }
         for (uint8 playerId = 1; playerId <= 2; playerId++) {
             uint8 targetPlayerId = (playerId % 2) + 1;
             uint8 targetMainBuildingIntegrity = ITables(proxy)

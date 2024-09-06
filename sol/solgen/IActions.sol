@@ -74,6 +74,8 @@ interface IActions {
 
     function tick() external;
 
+    function purge() external;
+
     function initialize(ActionData_Initialize memory action) external;
     function start() external;
     function createUnit(ActionData_CreateUnit memory action) external;

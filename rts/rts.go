@@ -638,13 +638,17 @@ func (c *Core) setUnitSpawning(obj UnitObjectWithRow) {
 		player      = c.GetPlayer(obj.PlayerId())
 		unit        = obj.Unit()
 		protoId     = unit.GetUnitType()
+		state       = UnitState(unit.GetState())
 		proto       = c.GetUnitPrototype(protoId)
 		computeCost = proto.GetComputeCost()
 	)
 	payPointer := obj.ObjectId()
 	player.SetUnitPayQueuePointer(utils.SafeAddUint8(payPointer, 1))
 	addComputeDemand(player, computeCost)
-	c.setUnitState(obj, UnitState_Spawning)
+	if state == UnitState_Unpaid {
+		// Unit may have died prematurely due to a purge
+		c.setUnitState(obj, UnitState_Spawning)
+	}
 	unit.SetTimestamp(c.AbsSubTickIndex())
 }
 
@@ -1740,6 +1744,32 @@ func (c *Core) Tick() {
 			}
 			c.tickWorkerMovement(c.GetUnitObject(playerId, unitId))
 		}
+	}
+}
+
+func (c *Core) purgePlayer(playerId uint8) {
+	nUnits := c.GetPlayer(playerId).GetUnitCount()
+	for unitId := uint8(1); unitId < nUnits+1; unitId++ {
+		unitObj := c.GetUnitObject(playerId, unitId)
+		unit := unitObj.Unit()
+		if UnitState(unit.GetState()).IsDeadOrInactive() {
+			continue
+		}
+		c.setUnitDead(unitObj)
+		return
+	}
+}
+
+func (c *Core) Purge() {
+	if !c.IsInitialized() {
+		return
+	}
+	if !c.HasStarted() {
+		return
+	}
+	nPlayers := c.GetMeta().GetPlayerCount()
+	for playerId := uint8(1); playerId < nPlayers+1; playerId++ {
+		c.purgePlayer(playerId)
 	}
 }
 

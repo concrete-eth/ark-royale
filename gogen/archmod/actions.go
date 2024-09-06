@@ -103,7 +103,6 @@ func init() {
 		"AddPlayer":            reflect.TypeOf(ActionData_AddPlayer{}),
 		"AddUnitPrototype":     reflect.TypeOf(ActionData_AddUnitPrototype{}),
 		"AddBuildingPrototype": reflect.TypeOf(ActionData_AddBuildingPrototype{}),
-		// "Tick": reflect.TypeOf(arch.CanonicalTickAction{}),
 	}
 	var err error
 	if ActionSchemas, err = arch.NewActionSchemasFromRaw(ActionsABIJson, ActionSchemasJson, types); err != nil {
@@ -121,4 +120,5 @@ type IActions interface {
 	AddUnitPrototype(action *ActionData_AddUnitPrototype) error
 	AddBuildingPrototype(action *ActionData_AddBuildingPrototype) error
 	Tick()
+	Purge()
 }
