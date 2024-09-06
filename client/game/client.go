@@ -28,7 +28,8 @@ func NewClient(headlessClient core.IHeadlessClient, config core.ClientConfig, ac
 	hudSet.AddComponents(
 		// core.NewSelectionBox(),
 		// core.NewSelectionHighlight(),
-		// core.NewRangeHighlights(),
+		core.NewTargetLines(),
+		core.NewRangeHighlights(),
 		core.NewTileDebugInfo(),
 	)
 	var (
