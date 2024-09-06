@@ -23,9 +23,28 @@ func initTerrain(layer *decren.Layer, sizeInTiles image.Point) {
 
 	bg := ebiten.NewImage(1, 1)
 	bg.Fill(assets.GroundColor)
-	layer.Sprite("ground").
+	bgSizeSize := image.Point{(sizeInTiles.X / 2) * assets.TileSize, sizeInTiles.Y * assets.TileSize}
+	bgBridgeSize := image.Point{assets.TileSize, assets.TileSize}
+
+	layer.Sprite("ground-left").
 		SetImage(bg).
-		SetSize(sizeInTiles.Mul(assets.TileSize))
+		SetSize(bgSizeSize).
+		SetPosition(image.Point{0, 0})
+
+	layer.Sprite("ground-right").
+		SetImage(bg).
+		SetSize(bgSizeSize).
+		SetPosition(image.Point{(sizeInTiles.X/2 + 1) * assets.TileSize, 0})
+
+	layer.Sprite("bridge-top").
+		SetImage(bg).
+		SetSize(bgBridgeSize).
+		SetPosition(image.Point{(sizeInTiles.X / 2) * assets.TileSize, 1 * assets.TileSize})
+
+	layer.Sprite("bridge-bottom").
+		SetImage(bg).
+		SetSize(bgBridgeSize).
+		SetPosition(image.Point{(sizeInTiles.X / 2) * assets.TileSize, (sizeInTiles.Y - 2) * assets.TileSize})
 
 	// pathImg := ebiten.NewImage(assets.TileSize, assets.TileSize)
 	// pathImg.Fill(assets.ChangeHSV(assets.GroundColor, 0, 0.9, 0.75))
@@ -65,9 +84,14 @@ func initTerrain(layer *decren.Layer, sizeInTiles image.Point) {
 		}
 	}
 
-	pitY := sizeInTiles.Y / 2
+	pitX := sizeInTiles.X / 2
 
+	// Set border tiles
 	for x := 0; x < sizeInTiles.X; x++ {
+		if x == pitX {
+			continue
+		}
+
 		var y int
 		var img *ebiten.Image
 
@@ -81,10 +105,6 @@ func initTerrain(layer *decren.Layer, sizeInTiles image.Point) {
 	}
 
 	for y := 0; y < sizeInTiles.Y; y++ {
-		if y == pitY {
-			continue
-		}
-
 		var x int
 		var img *ebiten.Image
 
@@ -106,24 +126,24 @@ func initTerrain(layer *decren.Layer, sizeInTiles image.Point) {
 		}
 	}
 
-	// pitTilePos := image.Point{0, pitY}
-	leftPitOuterEdgePos := image.Point{0, pitY}
-	rightPitOuterEdgePos := image.Point{sizeInTiles.X - 1, pitY}
-	setTerrainTile(layer, leftPitOuterEdgePos, assets.PitTileSet[2])
-	setTerrainTile(layer, rightPitOuterEdgePos, assets.PitTileSet[0])
+	// Set pit tiles
+	topPitOuterEdgePos := image.Point{pitX, 0}
+	bottomPitOuterEdgePos := image.Point{pitX, sizeInTiles.Y - 1}
+	setTerrainTile(layer, topPitOuterEdgePos, assets.PitTileSet[2+5])
+	setTerrainTile(layer, bottomPitOuterEdgePos, assets.PitTileSet[0+5])
 
-	leftPitBorderPos := image.Point{-1, pitY}
-	rightPitBorderPos := image.Point{sizeInTiles.X, pitY}
-	setTerrainTile(layer, leftPitBorderPos, assets.PitTileSet[3])
-	setTerrainTile(layer, rightPitBorderPos, assets.PitTileSet[4])
+	leftPitBorderPos := image.Point{pitX, -1}
+	rightPitBorderPos := image.Point{pitX, sizeInTiles.Y}
+	setTerrainTile(layer, leftPitBorderPos, assets.PitTileSet[3+5])
+	setTerrainTile(layer, rightPitBorderPos, assets.PitTileSet[4+5])
 
-	leftPitInnerEdgePos := image.Point{2, pitY}
-	rightPitInnerEdgePos := image.Point{sizeInTiles.X - 3, pitY}
-	setTerrainTile(layer, leftPitInnerEdgePos, assets.PitTileSet[0])
-	setTerrainTile(layer, rightPitInnerEdgePos, assets.PitTileSet[2])
+	leftPitInnerEdgePos := image.Point{pitX, 2}
+	rightPitInnerEdgePos := image.Point{pitX, sizeInTiles.Y - 3}
+	setTerrainTile(layer, leftPitInnerEdgePos, assets.PitTileSet[0+5])
+	setTerrainTile(layer, rightPitInnerEdgePos, assets.PitTileSet[2+5])
 
-	for pitX := 3; pitX < sizeInTiles.X-3; pitX++ {
+	for pitY := 3; pitY < sizeInTiles.Y-3; pitY++ {
 		pitTilePos := image.Point{pitX, pitY}
-		setTerrainTile(layer, pitTilePos, assets.PitTileSet[1])
+		setTerrainTile(layer, pitTilePos, assets.PitTileSet[1+5])
 	}
 }

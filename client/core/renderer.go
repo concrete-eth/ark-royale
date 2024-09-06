@@ -191,7 +191,7 @@ func NewCoreRenderer(headlessClient IHeadlessClient, config ClientConfig, sprite
 	c := &CoreRenderer{
 		IHeadlessClient: headlessClient,
 		config:          config,
-		settings:        ClientSettings{Interpolate: true, FixedCamera: false},
+		settings:        ClientSettings{Interpolate: true, FixedCamera: true},
 
 		hintNonce: 0,
 
@@ -946,9 +946,9 @@ func (c *CoreRenderer) setUnitSpriteImage(playerId uint8, unitId uint8, unit *da
 		direction = dir
 	} else {
 		if playerId == 1 {
-			direction = assets.Direction_Down
+			direction = assets.Direction_Right
 		} else {
-			direction = assets.Direction_Up
+			direction = assets.Direction_Left
 		}
 	}
 

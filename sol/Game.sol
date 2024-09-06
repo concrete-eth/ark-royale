@@ -9,8 +9,8 @@ import {Arch} from "./solgen/Arch.sol";
 import {UnitPrototypeAdder, UnitType} from "./Units.sol";
 import {BuildingPrototypeAdder, BuildingType} from "./Buildings.sol";
 
-uint8 constant WIDTH = 8;
-uint8 constant HEIGHT = 15;
+uint8 constant WIDTH = 15;
+uint8 constant HEIGHT = 8;
 uint8 constant BUILD_RADIUS = 0;
 
 contract Game is Arch {
@@ -61,23 +61,24 @@ contract Game is Arch {
 
         (uint8 x, uint8 y) = _getMainBuildingPosition(playerId);
 
-        uint16 spawnAreaY;
+        uint16 spawnAreaX;
         if (playerId == 1) {
-            spawnAreaY = 2;
+            spawnAreaX = 2;
         } else {
-            spawnAreaY = (HEIGHT / 2) + 1;
+            spawnAreaX = (WIDTH / 2) + 1;
         }
 
         ICore(proxy).addPlayer(
             ActionData_AddPlayer({
-                spawnAreaX: 0,
-                spawnAreaY: spawnAreaY,
-                spawnAreaWidth: WIDTH,
-                spawnAreaHeight: (HEIGHT / 2) - 2,
+                spawnAreaX: spawnAreaX,
+                spawnAreaY: 0,
+                spawnAreaWidth: (WIDTH / 2) - 2,
+                spawnAreaHeight: HEIGHT,
                 workerPortX: x,
                 workerPortY: y
             })
         );
+
         ICore(proxy).placeBuilding(
             ActionData_PlaceBuilding({
                 playerId: playerId,
@@ -87,38 +88,38 @@ contract Game is Arch {
             })
         );
 
-        if (y == 0) {
-            y = 2;
+        if (x == 0) {
+            x = 2;
         } else {
-            y = HEIGHT - 3;
+            x = WIDTH - 3;
         }
         ICore(proxy).createUnit(
             ActionData_CreateUnit({
                 playerId: playerId,
                 unitType: uint8(UnitType.Turret),
-                x: 1,
-                y: y
+                x: x,
+                y: 1
             })
         );
         ICore(proxy).createUnit(
             ActionData_CreateUnit({
                 playerId: playerId,
                 unitType: uint8(UnitType.Turret),
-                x: WIDTH - 2,
-                y: y
+                x: x,
+                y: HEIGHT - 2
             })
         );
 
-        uint16 mineX = x + 2;
-        uint16 mineY;
-        uint16 workerX = mineX;
-        uint16 workerY;
+        uint16 mineX;
+        uint16 mineY = y - 1;
+        uint16 workerX;
+        uint16 workerY = mineY;
         if (playerId == 1) {
-            mineY = 0;
-            workerY = 2;
+            mineX = 0;
+            workerX = 2;
         } else {
-            mineY = HEIGHT - 1;
-            workerY = HEIGHT - 3;
+            mineX = WIDTH - 1;
+            workerX = WIDTH - 3;
         }
         ICore(proxy).placeBuilding(
             ActionData_PlaceBuilding({
@@ -151,9 +152,9 @@ contract Game is Arch {
     }
 
     function _addPit() internal {
-        uint16 y = HEIGHT / 2;
-        for (uint8 x = 0; x < WIDTH; x++) {
-            if (x == 1 || x == WIDTH - 2) {
+        uint16 x = WIDTH / 2;
+        for (uint8 y = 0; y < HEIGHT; y++) {
+            if (y == 1 || y == HEIGHT - 2) {
                 continue;
             }
             ICore(proxy).placeBuilding(
@@ -171,9 +172,9 @@ contract Game is Arch {
         uint8 playerId
     ) internal pure returns (uint8, uint8) {
         if (playerId == 1) {
-            return (3, 0);
+            return (0, 3);
         } else {
-            return (3, HEIGHT - 2);
+            return (WIDTH - 2, 3);
         }
     }
 
@@ -203,12 +204,12 @@ contract Game is Arch {
         uint8 targetPlayerId = (action.playerId % 2) + 1;
         command |= uint64(targetPlayerId) << 16; // Target player id
 
-        if (action.x >= 3 && action.x <= 4) {
+        if (action.y >= 3 && action.y <= 4) {
             command |= uint64(1) << 32; // Target building
             command |= uint64(1); // Target main building
         } else {
             uint8 targetUnitId;
-            if (action.x < 3) {
+            if (action.y < 3) {
                 targetUnitId = 1;
             } else {
                 targetUnitId = 2;
