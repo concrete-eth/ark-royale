@@ -14,6 +14,7 @@ import (
 	"github.com/ebitenui/ebitenui/widget"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/colorm"
+	"github.com/hajimehoshi/ebiten/v2/text"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -542,8 +543,10 @@ func newUnitMenu(uim *UIManager, unitPrototypeIds []uint8, width int) *widget.Co
 }
 
 func newBuildingIcon(uim *UIManager, protoId uint8, size int) *widget.Button {
+	proto := uim.client.Game().GetBuildingPrototype(protoId)
+	cost := int(proto.GetResourceCost())
 	sprite := uim.spriteGetter.GetBuildingSprite(uim.client.PlayerId(), protoId, rts.BuildingState_Built)
-	buttonImage := newIconButtonImage(uim, sprite, size, assets.UICornerSize*3/2, nil)
+	buttonImage := newIconButtonImage(uim, sprite, size, assets.UICornerSize*3/2, cost, nil)
 	button := newIconButton(
 		buttonImage,
 		uim.newButtonPressHandler(UI_ButtonType_BuildingIcon, int(protoId)),
@@ -554,8 +557,16 @@ func newBuildingIcon(uim *UIManager, protoId uint8, size int) *widget.Button {
 }
 
 func newUnitIcon(uim *UIManager, protoId uint8, size int) *widget.Button {
-	sprite := uim.spriteGetter.GetUnitSprite(uim.client.PlayerId(), protoId, assets.Direction_Right)
-	buttonImage := newIconButtonImage(uim, sprite, size, assets.UICornerSize, nil)
+	var dir assets.Direction
+	if uim.client.PlayerId() == 1 {
+		dir = assets.Direction_Right
+	} else {
+		dir = assets.Direction_Left
+	}
+	proto := uim.client.Game().GetUnitPrototype(protoId)
+	cost := int(proto.GetResourceCost())
+	sprite := uim.spriteGetter.GetUnitSprite(uim.client.PlayerId(), protoId, dir)
+	buttonImage := newIconButtonImage(uim, sprite, size, assets.UICornerSize, cost, nil)
 	button := newIconButton(
 		buttonImage,
 		uim.newButtonPressHandler(UI_ButtonType_UnitIcon, int(protoId)),
@@ -576,7 +587,7 @@ func newIconButton(buttonImage *widget.ButtonImage, handler widget.ButtonPressed
 	return button
 }
 
-func newIconButtonImage(uim *UIManager, sprite *ebiten.Image, size, margin int, alerts []*ebiten.Image) *widget.ButtonImage {
+func newIconButtonImage(uim *UIManager, sprite *ebiten.Image, size, margin, cost int, alerts []*ebiten.Image) *widget.ButtonImage {
 	img := ebiten.NewImage(size, size)
 	imgBounds := img.Bounds()
 
@@ -588,24 +599,26 @@ func newIconButtonImage(uim *UIManager, sprite *ebiten.Image, size, margin int, 
 	op := client_utils.NewDrawOptions(spriteRect, sprite.Bounds())
 	colorm.DrawImage(img, sprite, colorm.ColorM{}, op)
 
-	if len(alerts) > 0 {
-		alertSize := 2 * 8
-		maxAlerts := size / (alertSize + BorderWidth)
-		for i, alert := range alerts {
-			if i >= maxAlerts {
-				break
-			}
-			position := go_image.Point{size - (i+1)*(alertSize+BorderWidth), size - alertSize - BorderWidth}
-			alertRect := go_image.Rectangle{
-				Min: position,
-				Max: position.Add(go_image.Point{alertSize, alertSize}),
-			}
-			op := client_utils.NewDrawOptions(alertRect, alert.Bounds())
-			colorM := colorm.ColorM{}
-			colorM.Scale(1, 1, 1, 0.75)
-			colorm.DrawImage(img, alert, colorM, op)
-		}
-	}
+	// if len(alerts) > 0 {
+	// 	alertSize := 2 * 8
+	// 	maxAlerts := size / (alertSize + BorderWidth)
+	// 	for i, alert := range alerts {
+	// 		if i >= maxAlerts {
+	// 			break
+	// 		}
+	// 		position := go_image.Point{size - (i+1)*(alertSize+BorderWidth), size - alertSize - BorderWidth}
+	// 		alertRect := go_image.Rectangle{
+	// 			Min: position,
+	// 			Max: position.Add(go_image.Point{alertSize, alertSize}),
+	// 		}
+	// 		op := client_utils.NewDrawOptions(alertRect, alert.Bounds())
+	// 		colorM := colorm.ColorM{}
+	// 		colorM.Scale(1, 1, 1, 0.75)
+	// 		colorm.DrawImage(img, alert, colorM, op)
+	// 	}
+	// }
+
+	text.Draw(img, fmt.Sprint(cost), assets.BitmapFont1, margin, margin+8, assets.TextLightColor)
 
 	borderWidthHeight := cornerBounds.X
 	centerWidthHeight := size - borderWidthHeight*2
