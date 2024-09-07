@@ -10,8 +10,8 @@ import {Initializable} from "openzeppelin/proxy/Utils/Initializable.sol";
 import {ArchProxyAdmin} from "arch/ArchProxyAdmin.sol";
 import {ArchProxy} from "arch/ArchProxy.sol";
 
-uint256 constant NonZeroBoolean_True = 1;
-uint256 constant NonZeroBoolean_False = 2;
+uint256 constant NonZeroBoolean_False = 1;
+uint256 constant NonZeroBoolean_True = 2;
 
 abstract contract Arch is Entrypoint, ArchProxyAdmin, Initializable {
     uint256 internal needsPurge;
@@ -36,7 +36,7 @@ abstract contract Arch is Entrypoint, ArchProxyAdmin, Initializable {
             needsPurge = NonZeroBoolean_False;
             return;
         }
-        (bool success, ) = proxy.call{gas: gasleft() - 20000}(
+        (bool success, ) = proxy.call{gas: gasleft() - 10000}(
             abi.encodeWithSignature("tick()")
         );
         if (success) {
@@ -44,7 +44,7 @@ abstract contract Arch is Entrypoint, ArchProxyAdmin, Initializable {
         }
         // The tick method SHOULD NEVER FAIL for reasons other than out-of-gas, so we can be very
         // aggressive when determining whether the method ran out of gas.
-        if (gasleft() < 20000 + 25000) {
+        if (gasleft() < 10000 + 20000) {
             needsPurge = NonZeroBoolean_True;
         } else {
             revert();
