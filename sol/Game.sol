@@ -230,12 +230,22 @@ contract Game is Arch {
         ICore(proxy).assignUnit(assignUnitData);
     }
 
-    function tick() public override {
+    function archTick() public {
         super.tick();
+    }
+
+    function tick() public override {
+        (bool success, ) = address(this).call{gas: gasleft() - 10000}(
+            abi.encodeWithSignature("archTick()")
+        );
+        require(success);
         if (needsPurge == NonZeroBoolean_True) {
             return;
         }
         for (uint8 playerId = 1; playerId <= 2; playerId++) {
+            if (gasleft() < 10000) {
+                return;
+            }
             uint8 targetPlayerId = (playerId % 2) + 1;
             uint8 targetMainBuildingIntegrity = ITables(proxy)
                 .getBuildingsRow(targetPlayerId, 1)
@@ -245,6 +255,9 @@ contract Game is Arch {
             }
             uint8 unitCount = ITables(proxy).getPlayersRow(playerId).unitCount;
             for (uint8 unitId = 4; unitId <= unitCount; unitId++) {
+                if (gasleft() < 10000) {
+                    return;
+                }
                 RowData_Units memory unit = ITables(proxy).getUnitsRow(
                     playerId,
                     unitId
