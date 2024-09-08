@@ -30,12 +30,12 @@ type UnitPrototypesRow struct {
 }
 
 func NewUnitPrototypesRow(dsSlot lib.DatastoreSlot) *UnitPrototypesRow {
-	sizes := []int{1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+	sizes := []int{1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
 	return &UnitPrototypesRow{*lib.NewDatastoreStructWithParent(dsSlot, sizes, nil, nil)}
 }
 
 func NewUnitPrototypesRowWithParent(dsSlot lib.DatastoreSlot, parent lib.Parent, rowKey lib.RowKey) *UnitPrototypesRow {
-	sizes := []int{1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+	sizes := []int{1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
 	return &UnitPrototypesRow{*lib.NewDatastoreStructWithParent(dsSlot, sizes, parent, rowKey)}
 }
 
@@ -53,6 +53,7 @@ func (v *UnitPrototypesRow) Get() (
 	isAssault bool,
 	isConfrontational bool,
 	isWorker bool,
+	isPurgeable bool,
 ) {
 	return codec.DecodeUint8(1, v.GetField(0)),
 		codec.DecodeUint16(2, v.GetField(1)),
@@ -66,7 +67,8 @@ func (v *UnitPrototypesRow) Get() (
 		codec.DecodeUint8(1, v.GetField(9)),
 		codec.DecodeBool(1, v.GetField(10)),
 		codec.DecodeBool(1, v.GetField(11)),
-		codec.DecodeBool(1, v.GetField(12))
+		codec.DecodeBool(1, v.GetField(12)),
+		codec.DecodeBool(1, v.GetField(13))
 }
 
 func (v *UnitPrototypesRow) Set(
@@ -83,6 +85,7 @@ func (v *UnitPrototypesRow) Set(
 	isAssault bool,
 	isConfrontational bool,
 	isWorker bool,
+	isPurgeable bool,
 ) {
 	v.SetField(0, codec.EncodeUint8(1, layer))
 	v.SetField(1, codec.EncodeUint16(2, resourceCost))
@@ -97,6 +100,7 @@ func (v *UnitPrototypesRow) Set(
 	v.SetField(10, codec.EncodeBool(1, isAssault))
 	v.SetField(11, codec.EncodeBool(1, isConfrontational))
 	v.SetField(12, codec.EncodeBool(1, isWorker))
+	v.SetField(13, codec.EncodeBool(1, isPurgeable))
 }
 
 func (v *UnitPrototypesRow) GetLayer() uint8 {
@@ -227,6 +231,16 @@ func (v *UnitPrototypesRow) GetIsWorker() bool {
 func (v *UnitPrototypesRow) SetIsWorker(value bool) {
 	data := codec.EncodeBool(1, value)
 	v.SetField(12, data)
+}
+
+func (v *UnitPrototypesRow) GetIsPurgeable() bool {
+	data := v.GetField(13)
+	return codec.DecodeBool(1, data)
+}
+
+func (v *UnitPrototypesRow) SetIsPurgeable(value bool) {
+	data := codec.EncodeBool(1, value)
+	v.SetField(13, data)
 }
 
 type UnitPrototypes struct {

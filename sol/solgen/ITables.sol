@@ -31,6 +31,7 @@ struct RowData_Players {
     uint8 buildingPayQueuePointer;
     uint8 buildingBuildQueuePointer;
     uint8 unitPayQueuePointer;
+    uint8 unpurgeableUnitCount;
 }
 
 struct RowData_Board {
@@ -80,6 +81,7 @@ struct RowData_UnitPrototypes {
     bool isAssault;
     bool isConfrontational;
     bool isWorker;
+    bool isPurgeable;
 }
 
 struct RowData_BuildingPrototypes {

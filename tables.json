@@ -31,7 +31,8 @@
             "buildingCount": "uint8",
             "buildingPayQueuePointer": "uint8",
             "buildingBuildQueuePointer": "uint8",
-            "unitPayQueuePointer": "uint8"
+            "unitPayQueuePointer": "uint8",
+            "unpurgeableUnitCount": "uint8"
         }
     },
     "board": {
@@ -99,7 +100,8 @@
             "attackCooldown": "uint8",
             "isAssault": "bool",
             "isConfrontational": "bool",
-            "isWorker": "bool"
+            "isWorker": "bool",
+            "isPurgeable": "bool"
         }
     },
     "buildingPrototypes": {

@@ -17,8 +17,8 @@ Start                 0        0
 CreateUnit            0        6
 AssignUnit            0        19
 PlaceBuilding         0        6
-AddPlayer             0        10
-AddUnitPrototype      0        14
+AddPlayer             0        11
+AddUnitPrototype      0        15
 AddBuildingPrototype  0        13
 */
 
@@ -113,12 +113,13 @@ func (row *ActionData_PlaceBuilding) GetY() uint16 {
 }
 
 type ActionData_AddPlayer struct {
-	SpawnAreaX      uint16 `json:"spawnAreaX"`
-	SpawnAreaY      uint16 `json:"spawnAreaY"`
-	SpawnAreaWidth  uint8  `json:"spawnAreaWidth"`
-	SpawnAreaHeight uint8  `json:"spawnAreaHeight"`
-	WorkerPortX     uint16 `json:"workerPortX"`
-	WorkerPortY     uint16 `json:"workerPortY"`
+	SpawnAreaX           uint16 `json:"spawnAreaX"`
+	SpawnAreaY           uint16 `json:"spawnAreaY"`
+	SpawnAreaWidth       uint8  `json:"spawnAreaWidth"`
+	SpawnAreaHeight      uint8  `json:"spawnAreaHeight"`
+	WorkerPortX          uint16 `json:"workerPortX"`
+	WorkerPortY          uint16 `json:"workerPortY"`
+	UnpurgeableUnitCount uint8  `json:"unpurgeableUnitCount"`
 }
 
 func (row *ActionData_AddPlayer) GetSpawnAreaX() uint16 {
@@ -145,6 +146,10 @@ func (row *ActionData_AddPlayer) GetWorkerPortY() uint16 {
 	return row.WorkerPortY
 }
 
+func (row *ActionData_AddPlayer) GetUnpurgeableUnitCount() uint8 {
+	return row.UnpurgeableUnitCount
+}
+
 type ActionData_AddUnitPrototype struct {
 	Layer             uint8  `json:"layer"`
 	ResourceCost      uint16 `json:"resourceCost"`
@@ -159,6 +164,7 @@ type ActionData_AddUnitPrototype struct {
 	IsAssault         bool   `json:"isAssault"`
 	IsConfrontational bool   `json:"isConfrontational"`
 	IsWorker          bool   `json:"isWorker"`
+	IsPurgeable       bool   `json:"isPurgeable"`
 }
 
 func (row *ActionData_AddUnitPrototype) GetLayer() uint8 {
@@ -211,6 +217,10 @@ func (row *ActionData_AddUnitPrototype) GetIsConfrontational() bool {
 
 func (row *ActionData_AddUnitPrototype) GetIsWorker() bool {
 	return row.IsWorker
+}
+
+func (row *ActionData_AddUnitPrototype) GetIsPurgeable() bool {
+	return row.IsPurgeable
 }
 
 type ActionData_AddBuildingPrototype struct {

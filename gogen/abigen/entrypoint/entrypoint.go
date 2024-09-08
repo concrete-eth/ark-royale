@@ -46,12 +46,13 @@ type ActionDataAddBuildingPrototype struct {
 
 // ActionDataAddPlayer is an auto generated low-level Go binding around an user-defined struct.
 type ActionDataAddPlayer struct {
-	SpawnAreaX      uint16
-	SpawnAreaY      uint16
-	SpawnAreaWidth  uint8
-	SpawnAreaHeight uint8
-	WorkerPortX     uint16
-	WorkerPortY     uint16
+	SpawnAreaX           uint16
+	SpawnAreaY           uint16
+	SpawnAreaWidth       uint8
+	SpawnAreaHeight      uint8
+	WorkerPortX          uint16
+	WorkerPortY          uint16
+	UnpurgeableUnitCount uint8
 }
 
 // ActionDataAddUnitPrototype is an auto generated low-level Go binding around an user-defined struct.
@@ -69,6 +70,7 @@ type ActionDataAddUnitPrototype struct {
 	IsAssault         bool
 	IsConfrontational bool
 	IsWorker          bool
+	IsPurgeable       bool
 }
 
 // ActionDataAssignUnit is an auto generated low-level Go binding around an user-defined struct.
@@ -104,7 +106,7 @@ type ActionDataPlaceBuilding struct {
 
 // ContractMetaData contains all meta data concerning the Contract contract.
 var ContractMetaData = &bind.MetaData{
-	ABI: "[{\"type\":\"function\",\"name\":\"addBuildingPrototype\",\"inputs\":[{\"name\":\"action\",\"type\":\"tuple\",\"internalType\":\"structActionData_AddBuildingPrototype\",\"components\":[{\"name\":\"width\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"height\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"resourceCost\",\"type\":\"uint16\",\"internalType\":\"uint16\"},{\"name\":\"resourceCapacity\",\"type\":\"uint16\",\"internalType\":\"uint16\"},{\"name\":\"computeCapacity\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"resourceMine\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"mineTime\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"maxIntegrity\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"buildingTime\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"isArmory\",\"type\":\"bool\",\"internalType\":\"bool\"},{\"name\":\"isEnvironment\",\"type\":\"bool\",\"internalType\":\"bool\"}]}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"addPlayer\",\"inputs\":[{\"name\":\"action\",\"type\":\"tuple\",\"internalType\":\"structActionData_AddPlayer\",\"components\":[{\"name\":\"spawnAreaX\",\"type\":\"uint16\",\"internalType\":\"uint16\"},{\"name\":\"spawnAreaY\",\"type\":\"uint16\",\"internalType\":\"uint16\"},{\"name\":\"spawnAreaWidth\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"spawnAreaHeight\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"workerPortX\",\"type\":\"uint16\",\"internalType\":\"uint16\"},{\"name\":\"workerPortY\",\"type\":\"uint16\",\"internalType\":\"uint16\"}]}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"addUnitPrototype\",\"inputs\":[{\"name\":\"action\",\"type\":\"tuple\",\"internalType\":\"structActionData_AddUnitPrototype\",\"components\":[{\"name\":\"layer\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"resourceCost\",\"type\":\"uint16\",\"internalType\":\"uint16\"},{\"name\":\"computeCost\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"spawnTime\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"maxIntegrity\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"landStrength\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"hoverStrength\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"airStrength\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"attackRange\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"attackCooldown\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"isAssault\",\"type\":\"bool\",\"internalType\":\"bool\"},{\"name\":\"isConfrontational\",\"type\":\"bool\",\"internalType\":\"bool\"},{\"name\":\"isWorker\",\"type\":\"bool\",\"internalType\":\"bool\"}]}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"assignUnit\",\"inputs\":[{\"name\":\"action\",\"type\":\"tuple\",\"internalType\":\"structActionData_AssignUnit\",\"components\":[{\"name\":\"playerId\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"unitId\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"command\",\"type\":\"uint64\",\"internalType\":\"uint64\"},{\"name\":\"commandExtra\",\"type\":\"uint64\",\"internalType\":\"uint64\"},{\"name\":\"commandMeta\",\"type\":\"uint8\",\"internalType\":\"uint8\"}]}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"createUnit\",\"inputs\":[{\"name\":\"action\",\"type\":\"tuple\",\"internalType\":\"structActionData_CreateUnit\",\"components\":[{\"name\":\"playerId\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"unitType\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"x\",\"type\":\"uint16\",\"internalType\":\"uint16\"},{\"name\":\"y\",\"type\":\"uint16\",\"internalType\":\"uint16\"}]}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"executeMultipleActions\",\"inputs\":[{\"name\":\"actionIds\",\"type\":\"uint32[]\",\"internalType\":\"uint32[]\"},{\"name\":\"actionCount\",\"type\":\"uint8[]\",\"internalType\":\"uint8[]\"},{\"name\":\"actionData\",\"type\":\"bytes[]\",\"internalType\":\"bytes[]\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"initialize\",\"inputs\":[{\"name\":\"action\",\"type\":\"tuple\",\"internalType\":\"structActionData_Initialize\",\"components\":[{\"name\":\"width\",\"type\":\"uint16\",\"internalType\":\"uint16\"},{\"name\":\"height\",\"type\":\"uint16\",\"internalType\":\"uint16\"}]}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"placeBuilding\",\"inputs\":[{\"name\":\"action\",\"type\":\"tuple\",\"internalType\":\"structActionData_PlaceBuilding\",\"components\":[{\"name\":\"playerId\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"buildingType\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"x\",\"type\":\"uint16\",\"internalType\":\"uint16\"},{\"name\":\"y\",\"type\":\"uint16\",\"internalType\":\"uint16\"}]}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"purge\",\"inputs\":[],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"start\",\"inputs\":[],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"tick\",\"inputs\":[],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"event\",\"name\":\"ActionExecuted\",\"inputs\":[{\"name\":\"actionId\",\"type\":\"bytes4\",\"indexed\":false,\"internalType\":\"bytes4\"},{\"name\":\"data\",\"type\":\"bytes\",\"indexed\":false,\"internalType\":\"bytes\"}],\"anonymous\":false}]",
+	ABI: "[{\"type\":\"function\",\"name\":\"addBuildingPrototype\",\"inputs\":[{\"name\":\"action\",\"type\":\"tuple\",\"internalType\":\"structActionData_AddBuildingPrototype\",\"components\":[{\"name\":\"width\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"height\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"resourceCost\",\"type\":\"uint16\",\"internalType\":\"uint16\"},{\"name\":\"resourceCapacity\",\"type\":\"uint16\",\"internalType\":\"uint16\"},{\"name\":\"computeCapacity\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"resourceMine\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"mineTime\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"maxIntegrity\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"buildingTime\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"isArmory\",\"type\":\"bool\",\"internalType\":\"bool\"},{\"name\":\"isEnvironment\",\"type\":\"bool\",\"internalType\":\"bool\"}]}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"addPlayer\",\"inputs\":[{\"name\":\"action\",\"type\":\"tuple\",\"internalType\":\"structActionData_AddPlayer\",\"components\":[{\"name\":\"spawnAreaX\",\"type\":\"uint16\",\"internalType\":\"uint16\"},{\"name\":\"spawnAreaY\",\"type\":\"uint16\",\"internalType\":\"uint16\"},{\"name\":\"spawnAreaWidth\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"spawnAreaHeight\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"workerPortX\",\"type\":\"uint16\",\"internalType\":\"uint16\"},{\"name\":\"workerPortY\",\"type\":\"uint16\",\"internalType\":\"uint16\"},{\"name\":\"unpurgeableUnitCount\",\"type\":\"uint8\",\"internalType\":\"uint8\"}]}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"addUnitPrototype\",\"inputs\":[{\"name\":\"action\",\"type\":\"tuple\",\"internalType\":\"structActionData_AddUnitPrototype\",\"components\":[{\"name\":\"layer\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"resourceCost\",\"type\":\"uint16\",\"internalType\":\"uint16\"},{\"name\":\"computeCost\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"spawnTime\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"maxIntegrity\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"landStrength\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"hoverStrength\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"airStrength\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"attackRange\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"attackCooldown\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"isAssault\",\"type\":\"bool\",\"internalType\":\"bool\"},{\"name\":\"isConfrontational\",\"type\":\"bool\",\"internalType\":\"bool\"},{\"name\":\"isWorker\",\"type\":\"bool\",\"internalType\":\"bool\"},{\"name\":\"isPurgeable\",\"type\":\"bool\",\"internalType\":\"bool\"}]}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"assignUnit\",\"inputs\":[{\"name\":\"action\",\"type\":\"tuple\",\"internalType\":\"structActionData_AssignUnit\",\"components\":[{\"name\":\"playerId\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"unitId\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"command\",\"type\":\"uint64\",\"internalType\":\"uint64\"},{\"name\":\"commandExtra\",\"type\":\"uint64\",\"internalType\":\"uint64\"},{\"name\":\"commandMeta\",\"type\":\"uint8\",\"internalType\":\"uint8\"}]}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"createUnit\",\"inputs\":[{\"name\":\"action\",\"type\":\"tuple\",\"internalType\":\"structActionData_CreateUnit\",\"components\":[{\"name\":\"playerId\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"unitType\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"x\",\"type\":\"uint16\",\"internalType\":\"uint16\"},{\"name\":\"y\",\"type\":\"uint16\",\"internalType\":\"uint16\"}]}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"executeMultipleActions\",\"inputs\":[{\"name\":\"actionIds\",\"type\":\"uint32[]\",\"internalType\":\"uint32[]\"},{\"name\":\"actionCount\",\"type\":\"uint8[]\",\"internalType\":\"uint8[]\"},{\"name\":\"actionData\",\"type\":\"bytes[]\",\"internalType\":\"bytes[]\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"initialize\",\"inputs\":[{\"name\":\"action\",\"type\":\"tuple\",\"internalType\":\"structActionData_Initialize\",\"components\":[{\"name\":\"width\",\"type\":\"uint16\",\"internalType\":\"uint16\"},{\"name\":\"height\",\"type\":\"uint16\",\"internalType\":\"uint16\"}]}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"placeBuilding\",\"inputs\":[{\"name\":\"action\",\"type\":\"tuple\",\"internalType\":\"structActionData_PlaceBuilding\",\"components\":[{\"name\":\"playerId\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"buildingType\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"x\",\"type\":\"uint16\",\"internalType\":\"uint16\"},{\"name\":\"y\",\"type\":\"uint16\",\"internalType\":\"uint16\"}]}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"purge\",\"inputs\":[],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"start\",\"inputs\":[],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"tick\",\"inputs\":[],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"event\",\"name\":\"ActionExecuted\",\"inputs\":[{\"name\":\"actionId\",\"type\":\"bytes4\",\"indexed\":false,\"internalType\":\"bytes4\"},{\"name\":\"data\",\"type\":\"bytes\",\"indexed\":false,\"internalType\":\"bytes\"}],\"anonymous\":false}]",
 }
 
 // ContractABI is the input ABI used to generate the binding from.
@@ -274,44 +276,44 @@ func (_Contract *ContractTransactorSession) AddBuildingPrototype(action ActionDa
 	return _Contract.Contract.AddBuildingPrototype(&_Contract.TransactOpts, action)
 }
 
-// AddPlayer is a paid mutator transaction binding the contract method 0x0f4c47cb.
+// AddPlayer is a paid mutator transaction binding the contract method 0xb44ff0c5.
 //
-// Solidity: function addPlayer((uint16,uint16,uint8,uint8,uint16,uint16) action) returns()
+// Solidity: function addPlayer((uint16,uint16,uint8,uint8,uint16,uint16,uint8) action) returns()
 func (_Contract *ContractTransactor) AddPlayer(opts *bind.TransactOpts, action ActionDataAddPlayer) (*types.Transaction, error) {
 	return _Contract.contract.Transact(opts, "addPlayer", action)
 }
 
-// AddPlayer is a paid mutator transaction binding the contract method 0x0f4c47cb.
+// AddPlayer is a paid mutator transaction binding the contract method 0xb44ff0c5.
 //
-// Solidity: function addPlayer((uint16,uint16,uint8,uint8,uint16,uint16) action) returns()
+// Solidity: function addPlayer((uint16,uint16,uint8,uint8,uint16,uint16,uint8) action) returns()
 func (_Contract *ContractSession) AddPlayer(action ActionDataAddPlayer) (*types.Transaction, error) {
 	return _Contract.Contract.AddPlayer(&_Contract.TransactOpts, action)
 }
 
-// AddPlayer is a paid mutator transaction binding the contract method 0x0f4c47cb.
+// AddPlayer is a paid mutator transaction binding the contract method 0xb44ff0c5.
 //
-// Solidity: function addPlayer((uint16,uint16,uint8,uint8,uint16,uint16) action) returns()
+// Solidity: function addPlayer((uint16,uint16,uint8,uint8,uint16,uint16,uint8) action) returns()
 func (_Contract *ContractTransactorSession) AddPlayer(action ActionDataAddPlayer) (*types.Transaction, error) {
 	return _Contract.Contract.AddPlayer(&_Contract.TransactOpts, action)
 }
 
-// AddUnitPrototype is a paid mutator transaction binding the contract method 0x7b6add86.
+// AddUnitPrototype is a paid mutator transaction binding the contract method 0xa5e592f4.
 //
-// Solidity: function addUnitPrototype((uint8,uint16,uint8,uint8,uint8,uint8,uint8,uint8,uint8,uint8,bool,bool,bool) action) returns()
+// Solidity: function addUnitPrototype((uint8,uint16,uint8,uint8,uint8,uint8,uint8,uint8,uint8,uint8,bool,bool,bool,bool) action) returns()
 func (_Contract *ContractTransactor) AddUnitPrototype(opts *bind.TransactOpts, action ActionDataAddUnitPrototype) (*types.Transaction, error) {
 	return _Contract.contract.Transact(opts, "addUnitPrototype", action)
 }
 
-// AddUnitPrototype is a paid mutator transaction binding the contract method 0x7b6add86.
+// AddUnitPrototype is a paid mutator transaction binding the contract method 0xa5e592f4.
 //
-// Solidity: function addUnitPrototype((uint8,uint16,uint8,uint8,uint8,uint8,uint8,uint8,uint8,uint8,bool,bool,bool) action) returns()
+// Solidity: function addUnitPrototype((uint8,uint16,uint8,uint8,uint8,uint8,uint8,uint8,uint8,uint8,bool,bool,bool,bool) action) returns()
 func (_Contract *ContractSession) AddUnitPrototype(action ActionDataAddUnitPrototype) (*types.Transaction, error) {
 	return _Contract.Contract.AddUnitPrototype(&_Contract.TransactOpts, action)
 }
 
-// AddUnitPrototype is a paid mutator transaction binding the contract method 0x7b6add86.
+// AddUnitPrototype is a paid mutator transaction binding the contract method 0xa5e592f4.
 //
-// Solidity: function addUnitPrototype((uint8,uint16,uint8,uint8,uint8,uint8,uint8,uint8,uint8,uint8,bool,bool,bool) action) returns()
+// Solidity: function addUnitPrototype((uint8,uint16,uint8,uint8,uint8,uint8,uint8,uint8,uint8,uint8,bool,bool,bool,bool) action) returns()
 func (_Contract *ContractTransactorSession) AddUnitPrototype(action ActionDataAddUnitPrototype) (*types.Transaction, error) {
 	return _Contract.Contract.AddUnitPrototype(&_Contract.TransactOpts, action)
 }

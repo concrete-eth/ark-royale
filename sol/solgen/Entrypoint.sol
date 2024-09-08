@@ -52,13 +52,13 @@ abstract contract Entrypoint is IActions {
                 (ActionData_PlaceBuilding)
             );
             placeBuilding(action);
-        } else if (actionId == 0x0f4c47cb) {
+        } else if (actionId == 0xb44ff0c5) {
             ActionData_AddPlayer memory action = abi.decode(
                 actionData,
                 (ActionData_AddPlayer)
             );
             addPlayer(action);
-        } else if (actionId == 0x7b6add86) {
+        } else if (actionId == 0xa5e592f4) {
             ActionData_AddUnitPrototype memory action = abi.decode(
                 actionData,
                 (ActionData_AddUnitPrototype)

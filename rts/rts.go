@@ -1748,10 +1748,22 @@ func (c *Core) Tick() {
 }
 
 func (c *Core) purgePlayer(playerId uint8) {
-	nUnits := c.GetPlayer(playerId).GetUnitCount()
-	for unitId := uint8(1); unitId < nUnits+1; unitId++ {
-		unitObj := c.GetUnitObject(playerId, unitId)
-		unit := unitObj.Unit()
+	var (
+		player            = c.GetPlayer(playerId)
+		nUnits            = player.GetUnitCount()
+		nUnpurgeableUnits = player.GetUnpurgeableUnitCount()
+		startingUnitId    = nUnpurgeableUnits + 1
+	)
+	for unitId := startingUnitId; unitId < nUnits+1; unitId++ {
+		var (
+			unitObj = c.GetUnitObject(playerId, unitId)
+			unit    = unitObj.Unit()
+			protoId = unit.GetUnitType()
+			proto   = c.GetUnitPrototype(protoId)
+		)
+		if !proto.GetIsPurgeable() {
+			continue
+		}
 		if UnitState(unit.GetState()).IsDeadOrInactive() {
 			continue
 		}
@@ -1807,6 +1819,7 @@ func (c *Core) AddPlayer(action *PlayerAddition) error {
 	player.SetSpawnAreaHeight(action.SpawnAreaHeight)
 	player.SetWorkerPortX(action.WorkerPortX)
 	player.SetWorkerPortY(action.WorkerPortY)
+	player.SetUnpurgeableUnitCount(action.UnpurgeableUnitCount)
 	player.SetBuildingPayQueuePointer(1)
 	player.SetBuildingBuildQueuePointer(1)
 	player.SetUnitPayQueuePointer(1)
@@ -2050,6 +2063,7 @@ func (c *Core) AddUnitPrototype(action *UnitPrototypeAddition) error {
 		action.IsAssault,
 		action.IsConfrontational,
 		action.IsWorker,
+		action.IsPurgeable,
 	)
 	return nil
 }

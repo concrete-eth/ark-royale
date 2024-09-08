@@ -36,7 +36,8 @@ library UnitPrototypeAdder {
                 attackRange: 2,
                 isAssault: true,
                 isConfrontational: true,
-                isWorker: false
+                isWorker: false,
+                isPurgeable: true
             })
         );
 
@@ -55,7 +56,8 @@ library UnitPrototypeAdder {
                 attackRange: 4,
                 isAssault: false,
                 isConfrontational: true,
-                isWorker: false
+                isWorker: false,
+                isPurgeable: true
             })
         );
 
@@ -74,7 +76,8 @@ library UnitPrototypeAdder {
                 attackRange: 3,
                 isAssault: false,
                 isConfrontational: false,
-                isWorker: false
+                isWorker: false,
+                isPurgeable: true
             })
         );
 
@@ -93,7 +96,8 @@ library UnitPrototypeAdder {
                 attackRange: 3,
                 isAssault: false,
                 isConfrontational: true,
-                isWorker: false
+                isWorker: false,
+                isPurgeable: true
             })
         );
 
@@ -112,7 +116,8 @@ library UnitPrototypeAdder {
                 attackRange: 0,
                 isAssault: false,
                 isConfrontational: true,
-                isWorker: true
+                isWorker: true,
+                isPurgeable: true
             })
         );
     }

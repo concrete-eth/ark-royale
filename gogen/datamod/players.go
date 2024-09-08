@@ -30,12 +30,12 @@ type PlayersRow struct {
 }
 
 func NewPlayersRow(dsSlot lib.DatastoreSlot) *PlayersRow {
-	sizes := []int{2, 2, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1}
+	sizes := []int{2, 2, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1}
 	return &PlayersRow{*lib.NewDatastoreStructWithParent(dsSlot, sizes, nil, nil)}
 }
 
 func NewPlayersRowWithParent(dsSlot lib.DatastoreSlot, parent lib.Parent, rowKey lib.RowKey) *PlayersRow {
-	sizes := []int{2, 2, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1}
+	sizes := []int{2, 2, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1}
 	return &PlayersRow{*lib.NewDatastoreStructWithParent(dsSlot, sizes, parent, rowKey)}
 }
 
@@ -56,6 +56,7 @@ func (v *PlayersRow) Get() (
 	buildingPayQueuePointer uint8,
 	buildingBuildQueuePointer uint8,
 	unitPayQueuePointer uint8,
+	unpurgeableUnitCount uint8,
 ) {
 	return codec.DecodeUint16(2, v.GetField(0)),
 		codec.DecodeUint16(2, v.GetField(1)),
@@ -72,7 +73,8 @@ func (v *PlayersRow) Get() (
 		codec.DecodeUint8(1, v.GetField(12)),
 		codec.DecodeUint8(1, v.GetField(13)),
 		codec.DecodeUint8(1, v.GetField(14)),
-		codec.DecodeUint8(1, v.GetField(15))
+		codec.DecodeUint8(1, v.GetField(15)),
+		codec.DecodeUint8(1, v.GetField(16))
 }
 
 func (v *PlayersRow) Set(
@@ -92,6 +94,7 @@ func (v *PlayersRow) Set(
 	buildingPayQueuePointer uint8,
 	buildingBuildQueuePointer uint8,
 	unitPayQueuePointer uint8,
+	unpurgeableUnitCount uint8,
 ) {
 	v.SetField(0, codec.EncodeUint16(2, spawnAreaX))
 	v.SetField(1, codec.EncodeUint16(2, spawnAreaY))
@@ -109,6 +112,7 @@ func (v *PlayersRow) Set(
 	v.SetField(13, codec.EncodeUint8(1, buildingPayQueuePointer))
 	v.SetField(14, codec.EncodeUint8(1, buildingBuildQueuePointer))
 	v.SetField(15, codec.EncodeUint8(1, unitPayQueuePointer))
+	v.SetField(16, codec.EncodeUint8(1, unpurgeableUnitCount))
 }
 
 func (v *PlayersRow) GetSpawnAreaX() uint16 {
@@ -269,6 +273,16 @@ func (v *PlayersRow) GetUnitPayQueuePointer() uint8 {
 func (v *PlayersRow) SetUnitPayQueuePointer(value uint8) {
 	data := codec.EncodeUint8(1, value)
 	v.SetField(15, data)
+}
+
+func (v *PlayersRow) GetUnpurgeableUnitCount() uint8 {
+	data := v.GetField(16)
+	return codec.DecodeUint8(1, data)
+}
+
+func (v *PlayersRow) SetUnpurgeableUnitCount(value uint8) {
+	data := codec.EncodeUint8(1, value)
+	v.SetField(16, data)
 }
 
 type Players struct {

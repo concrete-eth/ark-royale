@@ -37,6 +37,7 @@ struct ActionData_AddPlayer {
     uint8 spawnAreaHeight;
     uint16 workerPortX;
     uint16 workerPortY;
+    uint8 unpurgeableUnitCount;
 }
 
 struct ActionData_AddUnitPrototype {
@@ -53,6 +54,7 @@ struct ActionData_AddUnitPrototype {
     bool isAssault;
     bool isConfrontational;
     bool isWorker;
+    bool isPurgeable;
 }
 
 struct ActionData_AddBuildingPrototype {

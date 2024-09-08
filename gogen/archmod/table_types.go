@@ -13,11 +13,11 @@ var (
 /*
 Table               KeySize  ValueSize
 Meta                0        13
-Players             1        22
+Players             1        23
 Board               4        7
 Units               2        30
 Buildings           2        11
-UnitPrototypes      1        14
+UnitPrototypes      1        15
 BuildingPrototypes  1        13
 */
 
@@ -81,6 +81,7 @@ type RowData_Players struct {
 	BuildingPayQueuePointer   uint8  `json:"buildingPayQueuePointer"`
 	BuildingBuildQueuePointer uint8  `json:"buildingBuildQueuePointer"`
 	UnitPayQueuePointer       uint8  `json:"unitPayQueuePointer"`
+	UnpurgeableUnitCount      uint8  `json:"unpurgeableUnitCount"`
 }
 
 func (row *RowData_Players) GetSpawnAreaX() uint16 {
@@ -145,6 +146,10 @@ func (row *RowData_Players) GetBuildingBuildQueuePointer() uint8 {
 
 func (row *RowData_Players) GetUnitPayQueuePointer() uint8 {
 	return row.UnitPayQueuePointer
+}
+
+func (row *RowData_Players) GetUnpurgeableUnitCount() uint8 {
+	return row.UnpurgeableUnitCount
 }
 
 type RowData_Board struct {
@@ -290,6 +295,7 @@ type RowData_UnitPrototypes struct {
 	IsAssault         bool   `json:"isAssault"`
 	IsConfrontational bool   `json:"isConfrontational"`
 	IsWorker          bool   `json:"isWorker"`
+	IsPurgeable       bool   `json:"isPurgeable"`
 }
 
 func (row *RowData_UnitPrototypes) GetLayer() uint8 {
@@ -342,6 +348,10 @@ func (row *RowData_UnitPrototypes) GetIsConfrontational() bool {
 
 func (row *RowData_UnitPrototypes) GetIsWorker() bool {
 	return row.IsWorker
+}
+
+func (row *RowData_UnitPrototypes) GetIsPurgeable() bool {
+	return row.IsPurgeable
 }
 
 type RowData_BuildingPrototypes struct {

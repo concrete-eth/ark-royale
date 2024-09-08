@@ -46,7 +46,8 @@ var TableSchemasJson = `{
             "buildingCount": "uint8",
             "buildingPayQueuePointer": "uint8",
             "buildingBuildQueuePointer": "uint8",
-            "unitPayQueuePointer": "uint8"
+            "unitPayQueuePointer": "uint8",
+            "unpurgeableUnitCount": "uint8"
         }
     },
     "board": {
@@ -114,7 +115,8 @@ var TableSchemasJson = `{
             "attackCooldown": "uint8",
             "isAssault": "bool",
             "isConfrontational": "bool",
-            "isWorker": "bool"
+            "isWorker": "bool",
+            "isPurgeable": "bool"
         }
     },
     "buildingPrototypes": {

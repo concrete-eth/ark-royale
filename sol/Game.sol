@@ -75,7 +75,8 @@ contract Game is Arch {
                 spawnAreaWidth: (WIDTH / 2) - 2,
                 spawnAreaHeight: HEIGHT,
                 workerPortX: x,
-                workerPortY: y
+                workerPortY: y,
+                unpurgeableUnitCount: 3
             })
         );
 

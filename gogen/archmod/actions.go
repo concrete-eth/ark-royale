@@ -54,7 +54,8 @@ var ActionSchemasJson = `{
             "spawnAreaWidth": "uint8",
             "spawnAreaHeight": "uint8",
             "workerPortX": "uint16",
-            "workerPortY": "uint16"
+            "workerPortY": "uint16",
+            "unpurgeableUnitCount": "uint8"
         }
     },
     "addUnitPrototype": {
@@ -71,7 +72,8 @@ var ActionSchemasJson = `{
             "attackCooldown": "uint8",
             "isAssault": "bool",
             "isConfrontational": "bool",
-            "isWorker": "bool"
+            "isWorker": "bool",
+            "isPurgeable": "bool"
         }
     },
     "addBuildingPrototype": {
