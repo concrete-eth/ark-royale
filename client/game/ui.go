@@ -5,7 +5,6 @@ import (
 
 	"github.com/concrete-eth/ark-rts/client/assets"
 	"github.com/concrete-eth/ark-rts/client/core"
-	"github.com/concrete-eth/ark-rts/gogen/datamod"
 	"github.com/concrete-eth/ark-rts/rts"
 	"github.com/ebitenui/ebitenui/image"
 	"github.com/ebitenui/ebitenui/widget"
@@ -16,51 +15,17 @@ const (
 	UI_Container_WinScreen
 )
 
-var (
-	UnitPrototypesMetadata = map[uint8]core.PrototypeMetadata{
-		UnitPrototypeId_AntiAir: {Name: "Anti-Air"},
-		UnitPrototypeId_Air:     {Name: "Air"},
-		UnitPrototypeId_Tank:    {Name: "Tank"},
-		UnitPrototypeId_Turret:  {Name: "Turret"},
-	}
-	BuildingPrototypeNames = map[uint8]core.PrototypeMetadata{
-		BuildingPrototypeId_Main: {Name: "Command Center"},
-	}
-)
-
-func buildingDescriptionStrings(protoId uint8, proto *datamod.BuildingPrototypesRow) string {
-	description := ""
-	switch protoId {
-	case BuildingPrototypeId_Main:
-		description = "The main building of your base."
-	}
-	return description
-}
-
 type UI struct {
 	*core.UIManager
 }
 
 func NewUI(cli *core.Client, spriteGetter assets.SpriteGetter) *UI {
-	buildingPrototypesMetadata := make(map[uint8]core.PrototypeMetadata, len(BuildingPrototypeNames))
-	for id, meta := range BuildingPrototypeNames {
-		proto := cli.Game().GetBuildingPrototype(id)
-		meta.Description = buildingDescriptionStrings(id, proto)
-		buildingPrototypesMetadata[id] = meta
-	}
 	ui := &UI{
-		UIManager: core.NewUI(
-			cli,
-			UnitPrototypeIds,
-			UnitPrototypesMetadata,
-			BuildableBuildingPrototypeIds,
-			buildingPrototypesMetadata,
-			spriteGetter,
-		),
+		UIManager: core.NewUI(cli, UnitPrototypeIds, spriteGetter),
 	}
 
 	winScreenContainer := newOverDisplayContainer(ui)
-	overDisplayContainer := ui.GetContainer(core.UI_Container_OverDisplay)
+	overDisplayContainer := ui.UI().Container
 	overDisplayContainer.AddChild(winScreenContainer)
 
 	return ui
@@ -136,7 +101,7 @@ func newOverDisplayContainer(ui *UI) *widget.Container {
 				VerticalPosition:   widget.AnchorLayoutPositionCenter,
 			}),
 		),
-		widget.ContainerOpts.BackgroundImage(image.NewNineSliceSimple(assets.UIPanel_Dark, assets.UICornerSize, assets.UICornerSize)),
+		widget.ContainerOpts.BackgroundImage(image.NewNineSliceSimple(assets.UIPanel_Dark_3x, assets.UICornerSize_3x, assets.UICornerSize_3x)),
 		widget.ContainerOpts.Layout(widget.NewRowLayout(
 			widget.RowLayoutOpts.Direction(widget.DirectionVertical),
 			widget.RowLayoutOpts.Padding(widget.Insets{
@@ -145,7 +110,7 @@ func newOverDisplayContainer(ui *UI) *widget.Container {
 				Right:  36,
 				Bottom: 24,
 			}),
-			widget.RowLayoutOpts.Spacing(4*core.BorderWidth),
+			widget.RowLayoutOpts.Spacing(4*core.StandardSpacing),
 		)),
 	)
 

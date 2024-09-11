@@ -214,7 +214,8 @@ func NewCoreRenderer(headlessClient IHeadlessClient, config ClientConfig, sprite
 
 	c.boardDisplayRect = image.Rectangle{
 		Min: image.Point{0, 0},
-		Max: image.Point{c.config.ScreenSize.X - 254, c.config.ScreenSize.Y},
+		Max: image.Point{c.config.ScreenSize.X, c.config.ScreenSize.Y},
+		// Max: image.Point{c.config.ScreenSize.X - 254, c.config.ScreenSize.Y},
 	}
 
 	c.initLayers()

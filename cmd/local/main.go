@@ -74,7 +74,7 @@ func main() {
 	hl.Start()
 
 	c := game.NewClient(hl, core.ClientConfig{
-		ScreenSize: image.Point{1280, 720},
+		ScreenSize: image.Point{700, 500},
 	}, true)
 	w, h := c.Layout(-1, -1)
 	ebiten.SetWindowSize(w, h)
