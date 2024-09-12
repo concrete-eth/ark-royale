@@ -144,7 +144,7 @@ func (c *Client) debugChangePlayer() {
 		c.ClearSelection()
 		c.CoreRenderer().Layers().Layer(core.LayerName_HudLines).Clear()
 		c.setSpawnAreaSprite()
-		c.uim.DismissWinScreen()
+		c.uim.DismissEndScreen()
 		log.Debug("Switched player", "from", prevPlayerId, "to", c.PlayerId())
 	}
 }
@@ -177,9 +177,9 @@ func (c *Client) Update() error {
 	c.setUnitGhostColor()
 
 	// Win screen
-	if c.uim.IsShowingWinScreen() {
+	if c.uim.IsShowingEndScreen() {
 		if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
-			c.uim.DismissWinScreen()
+			c.uim.DismissEndScreen()
 		}
 		return nil
 	}

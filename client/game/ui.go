@@ -11,8 +11,9 @@ import (
 )
 
 const (
-	UI_Label_WinScreen = iota
-	UI_Container_WinScreen
+	UI_Label_WinScreen = iota + core.UI_Id_Count
+	UI_Container_EndScreen
+	UI_Id_Count
 )
 
 type UI struct {
@@ -24,32 +25,32 @@ func NewUI(cli *core.Client, spriteGetter assets.SpriteGetter) *UI {
 		UIManager: core.NewUI(cli, UnitPrototypeIds, spriteGetter),
 	}
 
-	winScreenContainer := newOverDisplayContainer(ui)
-	overDisplayContainer := ui.UI().Container
-	overDisplayContainer.AddChild(winScreenContainer)
+	endScreenContainer := newEndScreenContainer(ui)
+	rootContainer := ui.UI().Container
+	rootContainer.AddChild(endScreenContainer)
 
 	return ui
 }
 
-func (m *UI) IsShowingWinScreen() bool {
-	container := m.GetContainer(UI_Container_WinScreen)
+func (m *UI) IsShowingEndScreen() bool {
+	container := m.GetContainer(UI_Container_EndScreen)
 	return container.GetWidget().Visibility == widget.Visibility_Show
 }
 
-func (m *UI) DismissWinScreen() {
-	container := m.GetContainer(UI_Container_WinScreen)
+func (m *UI) DismissEndScreen() {
+	container := m.GetContainer(UI_Container_EndScreen)
 	container.GetWidget().Visibility = widget.Visibility_Hide
 }
 
 func (m *UI) ShowLoseScreen() {
-	container := m.GetContainer(UI_Container_WinScreen)
+	container := m.GetContainer(UI_Container_EndScreen)
 	label := m.GetLabel(UI_Label_WinScreen)
 	label.Label = "You Lose!"
 	container.GetWidget().Visibility = widget.Visibility_Show
 }
 
 func (m *UI) ShowEndScreen(winnerId uint8, outOfTime bool) {
-	container := m.GetContainer(UI_Container_WinScreen)
+	container := m.GetContainer(UI_Container_EndScreen)
 	label := m.GetLabel(UI_Label_WinScreen)
 
 	if outOfTime {
@@ -66,42 +67,20 @@ func (ui *UI) Regenerate() *UI {
 	return NewUI(ui.Client(), ui.SpriteGetter())
 }
 
-func newOverDisplayContainer(ui *UI) *widget.Container {
-	rect := ui.Client().CoreRenderer().BoardDisplayRect()
-	// subContainer covers the area over the game display
+func newEndScreenContainer(ui *UI) *widget.Container {
 	container := widget.NewContainer(
-		widget.ContainerOpts.Layout(widget.NewAnchorLayout()),
-	)
-	subContainer := widget.NewContainer(
-		widget.ContainerOpts.WidgetOpts(
-			widget.WidgetOpts.LayoutData(widget.AnchorLayoutData{
-				StretchHorizontal: true,
-				StretchVertical:   true,
-			}),
-			widget.WidgetOpts.MinSize(rect.Dx(), rect.Dy()),
-		),
-		widget.ContainerOpts.Layout(widget.NewAnchorLayout()),
-	)
-
-	winScreenContainer := widget.NewContainer(
-		widget.ContainerOpts.WidgetOpts(
-			widget.WidgetOpts.LayoutData(widget.AnchorLayoutData{
-				StretchHorizontal: true,
-				StretchVertical:   true,
-			}),
-		),
-		widget.ContainerOpts.BackgroundImage(image.NewNineSliceColor(assets.DarkBlueShadowColor)),
+		widget.ContainerOpts.BackgroundImage(image.NewNineSliceColor(assets.UIFogColor)),
 		widget.ContainerOpts.Layout((widget.NewAnchorLayout())),
 	)
 
-	winLabelContainer := widget.NewContainer(
+	boxContainer := widget.NewContainer(
+		widget.ContainerOpts.BackgroundImage(image.NewNineSliceSimple(assets.UIBox_Big, assets.UICornerSize_Big, 2)),
 		widget.ContainerOpts.WidgetOpts(
 			widget.WidgetOpts.LayoutData(widget.AnchorLayoutData{
 				HorizontalPosition: widget.AnchorLayoutPositionCenter,
 				VerticalPosition:   widget.AnchorLayoutPositionCenter,
 			}),
 		),
-		widget.ContainerOpts.BackgroundImage(image.NewNineSliceSimple(assets.UIBox_Big, assets.UICornerSize_Big, 2)),
 		widget.ContainerOpts.Layout(widget.NewRowLayout(
 			widget.RowLayoutOpts.Direction(widget.DirectionVertical),
 			widget.RowLayoutOpts.Padding(widget.Insets{
@@ -122,21 +101,19 @@ func newOverDisplayContainer(ui *UI) *widget.Container {
 		})),
 	)
 	dismissLabel := widget.NewText(
-		widget.TextOpts.Text("Click to Dismiss", assets.GetFontFace(assets.Font_PressStart, 8), assets.BoxTextDarkColor),
+		widget.TextOpts.Text("Click to Dismiss", assets.GetFontFace(assets.Font_PressStart, 8), assets.TextDarkColor),
 		widget.TextOpts.Position(widget.TextPositionCenter, widget.TextPositionCenter),
 		widget.TextOpts.WidgetOpts(widget.WidgetOpts.LayoutData(widget.RowLayoutData{
 			Position: widget.RowLayoutPositionCenter,
 		})),
 	)
 
-	winLabelContainer.AddChild(winLabel)
-	winLabelContainer.AddChild(dismissLabel)
-	winScreenContainer.AddChild(winLabelContainer)
-	subContainer.AddChild(winScreenContainer)
-	container.AddChild(subContainer)
+	boxContainer.AddChild(winLabel)
+	boxContainer.AddChild(dismissLabel)
+	container.AddChild(boxContainer)
 
-	winScreenContainer.GetWidget().Visibility = widget.Visibility_Hide
-	ui.AddContainer(UI_Container_WinScreen, winScreenContainer)
+	container.GetWidget().Visibility = widget.Visibility_Hide
+	ui.AddContainer(UI_Container_EndScreen, container)
 	ui.AddLabel(UI_Label_WinScreen, winLabel)
 
 	return container

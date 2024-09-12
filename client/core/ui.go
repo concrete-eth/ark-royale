@@ -27,8 +27,7 @@ const (
 const (
 	UI_ButtonType_UnitIcon = iota
 	UI_ProgressBar_Resource
-	UI_Label_Compute
-	UI_Container_OverDisplay
+	UI_Id_Count
 )
 
 // Holds a button click event and the clicked button's type and id.
@@ -75,8 +74,6 @@ func NewUI(
 	)
 	menuContainer := newMenuContainer(uim)
 	rootContainer.AddChild(menuContainer)
-	overDisplayContainer := newOverDisplayContainer(uim)
-	rootContainer.AddChild(overDisplayContainer)
 
 	uim.eui = &ebitenui.UI{Container: rootContainer}
 
@@ -214,23 +211,6 @@ func (m *UIManager) newButtonPressHandler(buttonType int, buttonId int) widget.B
 	}
 }
 
-// TODO: move
-func newOverDisplayContainer(uim *UIManager) *widget.Container {
-	// rect := uim.client.coreRenderer.BoardDisplayRect()
-	container := widget.NewContainer(
-	// widget.ContainerOpts.Layout(
-	// 	widget.NewAnchorLayout(
-	// 		widget.AnchorLayoutOpts.Padding(widget.Insets{Top: rect.Min.Y, Left: rect.Min.X}),
-	// 	),
-	// ),
-	// widget.ContainerOpts.WidgetOpts(
-	// 	widget.WidgetOpts.MinSize(rect.Dx(), rect.Dy()),
-	// ),
-	)
-	uim.AddContainer(UI_Container_OverDisplay, container)
-	return container
-}
-
 func newMenuContainer(uim *UIManager) *widget.Container {
 	container := widget.NewContainer(
 		widget.ContainerOpts.Layout(widget.NewAnchorLayout(
@@ -243,7 +223,6 @@ func newMenuContainer(uim *UIManager) *widget.Container {
 
 func newCenterMenu(uim *UIManager) *widget.Container {
 	container := widget.NewContainer(
-		// TODO: rename colors
 		widget.ContainerOpts.WidgetOpts(
 			widget.WidgetOpts.LayoutData(widget.AnchorLayoutData{
 				HorizontalPosition: widget.AnchorLayoutPositionCenter,
@@ -303,11 +282,11 @@ func newUnitIcon(uim *UIManager, protoId uint8, size int) *widget.Button {
 
 func newIconButton(buttonImage *widget.ButtonImage, handler widget.ButtonPressedHandlerFunc, size int) *widget.Button {
 	button := widget.NewButton(
+		widget.ButtonOpts.Image(buttonImage),
+		widget.ButtonOpts.PressedHandler(handler),
 		widget.ButtonOpts.WidgetOpts(
 			widget.WidgetOpts.MinSize(size, size),
 		),
-		widget.ButtonOpts.Image(buttonImage),
-		widget.ButtonOpts.PressedHandler(handler),
 	)
 	return button
 }
@@ -344,13 +323,13 @@ func newIconButtonImage(uim *UIManager, sprite *ebiten.Image, size, margin, cost
 
 func newResourceDisplay(uim *UIManager, _ int) *widget.Container {
 	container := widget.NewContainer(
+		widget.ContainerOpts.WidgetOpts(
+			widget.WidgetOpts.LayoutData(widget.RowLayoutData{Stretch: true}),
+		),
 		widget.ContainerOpts.Layout(widget.NewRowLayout(
 			widget.RowLayoutOpts.Direction(widget.DirectionVertical),
 			widget.RowLayoutOpts.Spacing(StandardSpacing),
 		)),
-		widget.ContainerOpts.WidgetOpts(
-			widget.WidgetOpts.LayoutData(widget.RowLayoutData{Stretch: true}),
-		),
 	)
 	container.AddChild(newProgressBar(uim, UI_ProgressBar_Resource, "minerals", assets.UIProgressBar_Mineral, -1))
 	return container
@@ -358,10 +337,10 @@ func newResourceDisplay(uim *UIManager, _ int) *widget.Container {
 
 func newProgressBar(uim *UIManager, id int, name string, sprite *ebiten.Image, _ int) *widget.Container {
 	container := widget.NewContainer(
-		widget.ContainerOpts.Layout(widget.NewStackedLayout()),
 		widget.ContainerOpts.WidgetOpts(
 			widget.WidgetOpts.LayoutData(widget.RowLayoutData{Stretch: true}),
 		),
+		widget.ContainerOpts.Layout(widget.NewStackedLayout()),
 	)
 	resourceBar := widget.NewProgressBar(
 		widget.ProgressBarOpts.Images(
