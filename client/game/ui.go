@@ -101,7 +101,7 @@ func newOverDisplayContainer(ui *UI) *widget.Container {
 				VerticalPosition:   widget.AnchorLayoutPositionCenter,
 			}),
 		),
-		widget.ContainerOpts.BackgroundImage(image.NewNineSliceSimple(assets.UIPanel_Dark_3x, assets.UICornerSize_3x, assets.UICornerSize_3x)),
+		widget.ContainerOpts.BackgroundImage(image.NewNineSliceSimple(assets.UIBox_Big, assets.UICornerSize_Big, 2)),
 		widget.ContainerOpts.Layout(widget.NewRowLayout(
 			widget.RowLayoutOpts.Direction(widget.DirectionVertical),
 			widget.RowLayoutOpts.Padding(widget.Insets{

@@ -265,11 +265,10 @@ func newCenterMenu(uim *UIManager) *widget.Container {
 
 func newUnitMenu(uim *UIManager, unitPrototypeIds []uint8, _ int) *widget.Container {
 	container := widget.NewContainer(
-		widget.ContainerOpts.BackgroundImage(image.NewNineSliceColor(assets.UIBackgroundColor)),
+		widget.ContainerOpts.BackgroundImage(image.NewNineSliceSimple(assets.UIBox_Small, assets.UICornerSize_Small, assets.UICornerSize_Small)),
 		widget.ContainerOpts.Layout(widget.NewRowLayout(
 			widget.RowLayoutOpts.Direction(widget.DirectionHorizontal),
-			widget.RowLayoutOpts.Spacing(StandardSpacing),
-			widget.RowLayoutOpts.Padding(widget.NewInsetsSimple(StandardSpacing)),
+			widget.RowLayoutOpts.Padding(widget.NewInsetsSimple(assets.UICornerSize_Small)),
 		)),
 	)
 	if len(unitPrototypeIds) == 0 {
@@ -292,7 +291,7 @@ func newUnitIcon(uim *UIManager, protoId uint8, size int) *widget.Button {
 	proto := uim.client.Game().GetUnitPrototype(protoId)
 	cost := int(proto.GetResourceCost())
 	sprite := uim.spriteGetter.GetUnitSprite(uim.client.PlayerId(), protoId, dir)
-	buttonImage := newIconButtonImage(uim, sprite, size, assets.UICornerSize_2x, cost, nil)
+	buttonImage := newIconButtonImage(uim, sprite, size, assets.UICornerSize_Small*2, cost, nil)
 	button := newIconButton(
 		buttonImage,
 		uim.newButtonPressHandler(UI_ButtonType_UnitIcon, int(protoId)),
@@ -317,7 +316,7 @@ func newIconButtonImage(uim *UIManager, sprite *ebiten.Image, size, margin, cost
 	img := ebiten.NewImage(size, size)
 	imgBounds := img.Bounds()
 
-	bgNineSlice := image.NewNineSliceSimple(assets.UIBox_LightConvex_2x, assets.UICornerSize_2x, assets.UICornerSize_2x)
+	bgNineSlice := image.NewNineSliceSimple(assets.UIPanel_Convex, assets.UICornerSize_Small, assets.UICornerSize_Small)
 	bgNineSlice.Draw(img, size, size, nil)
 
 	cornerBounds := go_image.Point{margin, margin}
@@ -353,11 +352,11 @@ func newResourceDisplay(uim *UIManager, _ int) *widget.Container {
 			widget.WidgetOpts.LayoutData(widget.RowLayoutData{Stretch: true}),
 		),
 	)
-	container.AddChild(newProgressBar(uim, UI_ProgressBar_Resource, "minerals", assets.UIProgressBarRed_2x, -1))
+	container.AddChild(newProgressBar(uim, UI_ProgressBar_Resource, "minerals", assets.UIProgressBar_Mineral, -1))
 	return container
 }
 
-func newProgressBar(uim *UIManager, id int, name string, sprite *ebiten.Image, width int) *widget.Container {
+func newProgressBar(uim *UIManager, id int, name string, sprite *ebiten.Image, _ int) *widget.Container {
 	container := widget.NewContainer(
 		widget.ContainerOpts.Layout(widget.NewStackedLayout()),
 		widget.ContainerOpts.WidgetOpts(
@@ -367,10 +366,10 @@ func newProgressBar(uim *UIManager, id int, name string, sprite *ebiten.Image, w
 	resourceBar := widget.NewProgressBar(
 		widget.ProgressBarOpts.Images(
 			&widget.ProgressBarImage{
-				Idle: image.NewNineSliceSimple(assets.UIBox_LightConcave_2x, assets.UICornerSize_2x, assets.UICornerSize_2x),
+				Idle: image.NewNineSliceSimple(assets.UIProgressBar_Track, assets.UICornerSize_Small, assets.UICornerSize_Small),
 			},
 			&widget.ProgressBarImage{
-				Idle: image.NewNineSliceSimple(sprite, assets.UICornerSize_2x, assets.UICornerSize_2x),
+				Idle: image.NewNineSliceSimple(sprite, assets.UICornerSize_Small, assets.UICornerSize_Small),
 			},
 		),
 		widget.ProgressBarOpts.Values(0, 1000, 0),
@@ -378,12 +377,12 @@ func newProgressBar(uim *UIManager, id int, name string, sprite *ebiten.Image, w
 	nameText := widget.NewText(
 		widget.TextOpts.Text(name, assets.BitmapFont1, assets.LightGray),
 		widget.TextOpts.Position(widget.TextPositionStart, widget.TextPositionCenter),
-		widget.TextOpts.Insets(widget.Insets{Left: 4, Right: 4}),
+		widget.TextOpts.Insets(widget.Insets{Left: 2 + assets.UICornerSize_Small, Right: 2}),
 	)
 	barText := widget.NewText(
 		widget.TextOpts.Text("", assets.BitmapFont1, assets.LightGray),
 		widget.TextOpts.Position(widget.TextPositionCenter, widget.TextPositionCenter),
-		widget.TextOpts.Insets(widget.Insets{Left: 4, Right: 4}),
+		widget.TextOpts.Insets(widget.Insets{Left: 2, Right: 2}),
 	)
 
 	container.AddChild(resourceBar)

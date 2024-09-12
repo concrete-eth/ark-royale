@@ -34,24 +34,24 @@ const (
 var (
 	spriteSheet = LoadImage("sprite_sheet.png")
 
-	BorderTileSet   = loadConvexTileSet(SubImage(spriteSheet, NewBounds(144, 0, 48, 48)), TileSize)
-	CrackTileSprite = SubImage(spriteSheet, NewBounds(288, 0, 16, 16))
-	BrickTileSprite = SubImage(spriteSheet, NewBounds(272, 0, 16, 16))
+	BorderTileSet   = loadConvexTileSet(SubImage(spriteSheet, NewBounds(48, 0, 48, 48)), TileSize)
+	CrackTileSprite = SubImage(spriteSheet, NewBounds(32, 16, 16, 16))
+	BrickTileSprite = SubImage(spriteSheet, NewBounds(32, 0, 16, 16))
 	PitTileSet      = map[uint8]*ebiten.Image{
-		0: SubImage(spriteSheet, NewBounds(192, 16, 16, 16)),
-		1: SubImage(spriteSheet, NewBounds(208, 16, 16, 16)),
-		2: SubImage(spriteSheet, NewBounds(224, 16, 16, 16)),
-		3: SubImage(spriteSheet, NewBounds(192, 32, 16, 16)),
-		4: SubImage(spriteSheet, NewBounds(208, 32, 16, 16)),
-		5: SubImage(spriteSheet, NewBounds(240, 0, 16, 16)),
-		6: SubImage(spriteSheet, NewBounds(240, 16, 16, 16)),
-		7: SubImage(spriteSheet, NewBounds(240, 32, 16, 16)),
-		8: SubImage(spriteSheet, NewBounds(192, 0, 16, 16)),
-		9: SubImage(spriteSheet, NewBounds(208, 0, 16, 16)),
+		0: SubImage(spriteSheet, NewBounds(96, 16, 16, 16)),
+		1: SubImage(spriteSheet, NewBounds(112, 16, 16, 16)),
+		2: SubImage(spriteSheet, NewBounds(128, 16, 16, 16)),
+		3: SubImage(spriteSheet, NewBounds(96, 32, 16, 16)),
+		4: SubImage(spriteSheet, NewBounds(112, 32, 16, 16)),
+		5: SubImage(spriteSheet, NewBounds(144, 0, 16, 16)),
+		6: SubImage(spriteSheet, NewBounds(144, 16, 16, 16)),
+		7: SubImage(spriteSheet, NewBounds(144, 32, 16, 16)),
+		8: SubImage(spriteSheet, NewBounds(96, 0, 16, 16)),
+		9: SubImage(spriteSheet, NewBounds(112, 0, 16, 16)),
 	}
 
 	MineSprite       = SubImage(spriteSheet, NewBounds(0, 0, 18, 16))
-	SmallMinesSprite = SubImage(spriteSheet, NewBounds(0, 32, 16, 16))
+	SmallMinesSprite = SubImage(spriteSheet, NewBounds(0, 16, 16, 16))
 
 	spawnPointSprites = [4]*ebiten.Image{
 		SubImage(spriteSheet, NewBounds(160, 48, 32, 32)),
@@ -76,38 +76,21 @@ var (
 		loadPlayerUnitSprites(SubImage(spriteSheet, NewBounds(3*192, 112, 192, 312))),
 	}
 
-	SelectionSprite = SubImage(spriteSheet, NewBounds(368, 32, 16, 16))
+	SelectionSprite = SubImage(spriteSheet, NewBounds(16, 16, 16, 16))
 )
 
 var (
-	uiSpriteSheet = SubImage(spriteSheet, NewBounds(352, 0, 12, 24))
+	uiSpriteSheet = SubImage(spriteSheet, NewBounds(160, 0, 12, 30))
 
-	UICornerSize    = 2
-	UICornerSize_2x = UICornerSize * 2
-	UICornerSize_3x = UICornerSize * 3
+	UICornerSize_Small = 2
+	UICornerSize_Big   = 5
 
-	UIBox_LightConvex     = SubImage(uiSpriteSheet, NewBounds(0, 0, 6, 6))
-	UIBox_LightConcave    = SubImage(uiSpriteSheet, NewBounds(6, 0, 6, 6))
-	UIPanel_Dark          = SubImage(uiSpriteSheet, NewBounds(0, 12, 6, 6))
-	UIPanel_Light         = SubImage(uiSpriteSheet, NewBounds(6, 12, 6, 6))
-	UIBox_LightConvex_2x  = ScaleImage(UIBox_LightConvex, 2, 2)
-	UIBox_LightConcave_2x = ScaleImage(UIBox_LightConcave, 2, 2)
-	UIPanel_Dark_2x       = ScaleImage(UIPanel_Dark, 2, 2)
-	UIPanel_Light_2x      = ScaleImage(UIPanel_Light, 2, 2)
-	UIBox_LightConvex_3x  = ScaleImage(UIBox_LightConvex, 3, 3)
-	UIBox_LightConcave_3x = ScaleImage(UIBox_LightConcave, 3, 3)
-	UIPanel_Dark_3x       = ScaleImage(UIPanel_Dark, 3, 3)
-	UIPanel_Light_3x      = ScaleImage(UIPanel_Light, 3, 3)
-	// UIBox_DarkConvex   = ScaleImage(SubImage(uiSpriteSheet, NewBounds(0, 6, 6, 6)), uiSpriteScale, uiSpriteScale)
-	// UIBox_DarkConcave  = ScaleImage(SubImage(uiSpriteSheet, NewBounds(6, 6, 6, 6)), uiSpriteScale, uiSpriteScale)
-
-	UIProgressBarRed      = SubImage(uiSpriteSheet, NewBounds(0, 18, 6, 6))
-	UIProgressBarGreen    = SubImage(uiSpriteSheet, NewBounds(6, 18, 6, 6))
-	UIProgressBarRed_2x   = ScaleImage(UIProgressBarRed, 2, 2)
-	UIProgressBarGreen_2x = ScaleImage(UIProgressBarGreen, 2, 2)
-
-	// UINoEnoughComputeIcon   = SubImage(SpriteSheet, NewBounds(368, 24, 8, 8))
-	// UINoEnoughResourcesIcon = SubImage(SpriteSheet, NewBounds(376, 24, 8, 8))
+	UIBox_Small           = SubImage(uiSpriteSheet, NewBounds(0, 0, 6, 6))
+	UIBox_Big             = SubImage(uiSpriteSheet, NewBounds(0, 6, 12, 12))
+	UIPanel_Convex        = SubImage(uiSpriteSheet, NewBounds(6, 0, 6, 6))
+	UIProgressBar_Track   = SubImage(uiSpriteSheet, NewBounds(0, 18, 6, 6))
+	UIProgressBar_Mineral = SubImage(uiSpriteSheet, NewBounds(0, 24, 6, 6))
+	UIProgressBar_Compute = SubImage(uiSpriteSheet, NewBounds(6, 24, 6, 6))
 )
 
 func validatePlayerId(playerId uint8) {
