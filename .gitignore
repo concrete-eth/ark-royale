@@ -24,3 +24,6 @@ bin/
 
 # Devnet
 .devnet/
+
+# Tiled
+*.tiled-session

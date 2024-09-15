@@ -313,8 +313,6 @@ func (c *CoreRenderer) handleInternalEvent(eventId uint8, data interface{}) {
 		c.onKilledEvent(data.(*rts.InternalEvent_Killed))
 	} else if eventId == rts.InternalEventId_Built {
 		c.onBuiltEvent(data.(*rts.InternalEvent_Built))
-	} else if eventId == rts.InternalEventId_Destroyed {
-		c.onDestroyedEvent(data.(*rts.InternalEvent_Destroyed))
 	}
 }
 
@@ -696,35 +694,7 @@ func (c *CoreRenderer) initLayers() {
 func (c *CoreRenderer) initTerrainLayer() {
 	boardSizeInTiles := c.Game().BoardSize()
 	terrainLayer := c.worldLayers.Layer(LayerName_Terrain)
-	// buildingsLayer := c.worldLayers.Layer(LayerName_Buildings)
 	initTerrain(terrainLayer, boardSizeInTiles)
-
-	// nPlayers := c.Game().GetMeta().GetPlayerCount()
-	// for playerId := uint8(1); playerId < nPlayers+1; playerId++ {
-	// 	area := c.Game().GetSpawnArea(playerId)
-	// 	position := area.Min
-	// 	// Crack the terrain under the spawn area
-	// 	c.crackTerrain(area)
-	// 	// Draw the spawn area
-	// 	buildingsLayer.Sprite(playerId, "spawnPoint").
-	// 		SetPosition(position.Mul(assets.TileSize)).
-	// 		SetImage(c.spriteGetter.GetSpawnPointSprite(playerId)).
-	// 		// FitToImage()
-	// 		SetSize(image.Point{area.Dx() * assets.TileSize, area.Dy() * assets.TileSize})
-	// }
-}
-
-// Place crack sprites in the tiles in the given area.
-func (c *CoreRenderer) crackTerrain(area image.Rectangle) {
-	terrainLayer := c.worldLayers.Layer(LayerName_Terrain)
-	for x := area.Min.X; x < area.Max.X; x++ {
-		for y := area.Min.Y; y < area.Max.Y; y++ {
-			terrainLayer.Sprite(x, y).
-				SetPosition(image.Point{x, y}.Mul(assets.TileSize)).
-				SetImage(assets.CrackTileSprite).
-				FitToImage()
-		}
-	}
 }
 
 // Initialize the sprite layers and set the tile display size.
@@ -1126,11 +1096,6 @@ func (c *CoreRenderer) onBuiltEvent(built *rts.InternalEvent_Built) {
 			buildBarSpriteObj.SetImageOverride(nil)
 		},
 	})
-}
-
-func (c *CoreRenderer) onDestroyedEvent(destroyed *rts.InternalEvent_Destroyed) {
-	buildingArea := c.Game().GetBuildingArea(destroyed.Building.PlayerId, destroyed.Building.ObjectId)
-	c.crackTerrain(buildingArea)
 }
 
 // Returns the movement speed of units in internal pixels per second.

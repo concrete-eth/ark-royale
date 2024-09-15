@@ -9,7 +9,9 @@ import (
 )
 
 const (
-	TileSize = 16
+	TileSize     = 16
+	BuildingSize = 32
+	UnitSize     = 24
 )
 
 const (
@@ -33,22 +35,6 @@ const (
 
 var (
 	spriteSheet = LoadImage("sprite_sheet.png")
-
-	BorderTileSet   = loadConvexTileSet(SubImage(spriteSheet, NewBounds(48, 0, 48, 48)), TileSize)
-	CrackTileSprite = SubImage(spriteSheet, NewBounds(32, 16, 16, 16))
-	BrickTileSprite = SubImage(spriteSheet, NewBounds(32, 0, 16, 16))
-	PitTileSet      = map[uint8]*ebiten.Image{
-		0: SubImage(spriteSheet, NewBounds(96, 16, 16, 16)),
-		1: SubImage(spriteSheet, NewBounds(112, 16, 16, 16)),
-		2: SubImage(spriteSheet, NewBounds(128, 16, 16, 16)),
-		3: SubImage(spriteSheet, NewBounds(96, 32, 16, 16)),
-		4: SubImage(spriteSheet, NewBounds(112, 32, 16, 16)),
-		5: SubImage(spriteSheet, NewBounds(144, 0, 16, 16)),
-		6: SubImage(spriteSheet, NewBounds(144, 16, 16, 16)),
-		7: SubImage(spriteSheet, NewBounds(144, 32, 16, 16)),
-		8: SubImage(spriteSheet, NewBounds(96, 0, 16, 16)),
-		9: SubImage(spriteSheet, NewBounds(112, 0, 16, 16)),
-	}
 
 	MineSprite       = SubImage(spriteSheet, NewBounds(0, 0, 18, 16))
 	SmallMinesSprite = SubImage(spriteSheet, NewBounds(0, 16, 16, 16))
@@ -80,7 +66,7 @@ var (
 )
 
 var (
-	uiSpriteSheet = SubImage(spriteSheet, NewBounds(160, 0, 12, 30))
+	uiSpriteSheet = SubImage(spriteSheet, NewBounds(32, 0, 12, 30))
 
 	UICornerSize_Small = 2
 	UICornerSize_Big   = 5
@@ -170,26 +156,7 @@ func (d *DefaultSpriteGetter) GetUnitFireFrame(playerId uint8, spriteId uint8, d
 	return unitSprites[playerId-1][spriteId][direction][frame+1]
 }
 
-func loadConvexTileSet(spriteSheet *ebiten.Image, tileSize int) map[Direction]*ebiten.Image {
-	tileMap := make(map[Direction]*ebiten.Image, 8)
-	for x := -1; x <= 1; x++ {
-		for y := -1; y <= 1; y++ {
-			if x == 0 && y == 0 {
-				continue
-			}
-			dir := DirectionFromDelta(image.Point{x, y})
-			bounds := image.Rectangle{
-				Min: image.Point{tileSize * (x + 1), tileSize * (y + 1)},
-				Max: image.Point{tileSize * (x + 2), tileSize * (y + 2)},
-			}
-			tileMap[dir] = SubImage(spriteSheet, bounds)
-		}
-	}
-	return tileMap
-}
-
 func loadPlayerBuildingSprites(spriteSheet *ebiten.Image) [BuildingSpriteId_Count][rts.BuildingState_Count]*ebiten.Image {
-	size := 32
 	sprites := [BuildingSpriteId_Count][rts.BuildingState_Count]*ebiten.Image{}
 	for ii, buildingType := range []int{
 		BuildingSpriteId_Main,
@@ -197,21 +164,19 @@ func loadPlayerBuildingSprites(spriteSheet *ebiten.Image) [BuildingSpriteId_Coun
 		BuildingSpriteId_Armory,
 		BuildingSpriteId_Storage,
 	} {
-		sprites[buildingType] = loadBuildingStateSprites(SubImage(spriteSheet, NewBounds(ii*size, 0, size, 2*size)))
+		sprites[buildingType] = loadBuildingStateSprites(SubImage(spriteSheet, NewBounds(ii*BuildingSize, 0, BuildingSize, 2*BuildingSize)))
 	}
 	return sprites
 }
 
 func loadBuildingStateSprites(spriteSheet *ebiten.Image) [rts.BuildingState_Count]*ebiten.Image {
-	size := 32
 	sprites := [rts.BuildingState_Count]*ebiten.Image{}
-	sprites[rts.BuildingState_Built] = SubImage(spriteSheet, NewBounds(0, 0, size, size))
-	sprites[rts.BuildingState_Building] = SubImage(spriteSheet, NewBounds(0, size, size, size))
+	sprites[rts.BuildingState_Built] = SubImage(spriteSheet, NewBounds(0, 0, BuildingSize, BuildingSize))
+	sprites[rts.BuildingState_Building] = SubImage(spriteSheet, NewBounds(0, BuildingSize, BuildingSize, BuildingSize))
 	return sprites
 }
 
 func loadPlayerUnitSprites(spriteSheet *ebiten.Image) [UnitSpriteId_Count][8][3]*ebiten.Image {
-	size := 24
 	sprites := [UnitSpriteId_Count][8][3]*ebiten.Image{}
 	for ii, unitType := range []int{
 		UnitSpriteId_AntiAir,
@@ -220,13 +185,12 @@ func loadPlayerUnitSprites(spriteSheet *ebiten.Image) [UnitSpriteId_Count][8][3]
 		UnitSpriteId_Turret,
 		UnitSpriteId_Worker,
 	} {
-		sprites[unitType] = loadUnitDirectionSpriteSets(SubImage(spriteSheet, NewBounds(0, 3*ii*size, 8*size, 3*size)))
+		sprites[unitType] = loadUnitDirectionSpriteSets(SubImage(spriteSheet, NewBounds(0, 3*ii*UnitSize, 8*UnitSize, 3*UnitSize)))
 	}
 	return sprites
 }
 
 func loadUnitDirectionSpriteSets(spriteSheet *ebiten.Image) [8][3]*ebiten.Image {
-	size := 24
 	sprites := [8][3]*ebiten.Image{}
 	for ii, direction := range []Direction{
 		Direction_Left,
@@ -238,17 +202,16 @@ func loadUnitDirectionSpriteSets(spriteSheet *ebiten.Image) [8][3]*ebiten.Image 
 		Direction_Down,
 		Direction_DownLeft,
 	} {
-		sprites[direction] = loadUnitDirectionSprites(SubImage(spriteSheet, NewBounds(ii*size, 0, size, 3*size)))
+		sprites[direction] = loadUnitDirectionSprites(SubImage(spriteSheet, NewBounds(ii*UnitSize, 0, UnitSize, 3*UnitSize)))
 	}
 	return sprites
 }
 
 func loadUnitDirectionSprites(spriteSheet *ebiten.Image) [3]*ebiten.Image {
-	size := 24
 	sprites := [3]*ebiten.Image{}
-	sprites[0] = SubImage(spriteSheet, NewBounds(0, 0, size, size))
-	sprites[1] = SubImage(spriteSheet, NewBounds(0, size, size, size))
-	sprites[2] = SubImage(spriteSheet, NewBounds(0, 2*size, size, size))
+	sprites[0] = SubImage(spriteSheet, NewBounds(0, 0, UnitSize, UnitSize))
+	sprites[1] = SubImage(spriteSheet, NewBounds(0, UnitSize, UnitSize, UnitSize))
+	sprites[2] = SubImage(spriteSheet, NewBounds(0, 2*UnitSize, UnitSize, UnitSize))
 	return sprites
 }
 
