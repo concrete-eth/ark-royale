@@ -97,7 +97,7 @@ func (m *UIManager) Regenerate() *UIManager {
 }
 
 // Adds a progress bar widget to the UI.
-func (m *UIManager) AddProgressBar(id int, bar *widget.ProgressBar) {
+func (m *UIManager) RegisterProgressBar(id int, bar *widget.ProgressBar) {
 	m.progressBars[id] = bar
 }
 
@@ -107,7 +107,7 @@ func (m *UIManager) GetProgressBar(id int) *widget.ProgressBar {
 }
 
 // Adds a label widget to the UI.
-func (m *UIManager) AddButton(buttonType, buttonId int, button *widget.Button) {
+func (m *UIManager) RegisterButton(buttonType, buttonId int, button *widget.Button) {
 	if _, ok := m.buttons[buttonType]; !ok {
 		m.buttons[buttonType] = make(map[int]*widget.Button)
 	}
@@ -123,7 +123,7 @@ func (m *UIManager) GetButton(gid, id int) *widget.Button {
 }
 
 // Adds a label widget to the UI.
-func (m *UIManager) AddLabel(id int, label *widget.Text) {
+func (m *UIManager) RegisterLabel(id int, label *widget.Text) {
 	m.labels[id] = label
 }
 
@@ -133,7 +133,7 @@ func (m *UIManager) GetLabel(id int) *widget.Text {
 }
 
 // Adds a container widget to the UI.
-func (m *UIManager) AddContainer(id int, container *widget.Container) {
+func (m *UIManager) RegisterContainer(id int, container *widget.Container) {
 	m.containers[id] = container
 }
 
@@ -234,15 +234,14 @@ func newCenterMenu(uim *UIManager) *widget.Container {
 			widget.RowLayoutOpts.Spacing(StandardSpacing),
 		)),
 	)
-	// width := IconSize*len(uim.menuUnitPrototypeIds) + StandardSpacing*(len(uim.menuUnitPrototypeIds)-1) + 2*StandardSpacing
-	resourceInfo := newResourceDisplay(uim, -1)
-	unitMenu := newUnitMenu(uim, uim.menuUnitPrototypeIds, -1)
+	resourceInfo := newResourceDisplay(uim)
+	unitMenu := newUnitMenu(uim, uim.menuUnitPrototypeIds)
 	container.AddChild(resourceInfo)
 	container.AddChild(unitMenu)
 	return container
 }
 
-func newUnitMenu(uim *UIManager, unitPrototypeIds []uint8, _ int) *widget.Container {
+func newUnitMenu(uim *UIManager, unitPrototypeIds []uint8) *widget.Container {
 	container := widget.NewContainer(
 		widget.ContainerOpts.BackgroundImage(image.NewNineSliceSimple(assets.UIBox_Small, assets.UICornerSize_Small, assets.UICornerSize_Small)),
 		widget.ContainerOpts.Layout(widget.NewRowLayout(
@@ -259,7 +258,6 @@ func newUnitMenu(uim *UIManager, unitPrototypeIds []uint8, _ int) *widget.Contai
 	return container
 }
 
-// TODO: make this a method?
 func newUnitIcon(uim *UIManager, protoId uint8, size int) *widget.Button {
 	var dir assets.Direction
 	if uim.client.PlayerId() == 1 {
@@ -270,13 +268,13 @@ func newUnitIcon(uim *UIManager, protoId uint8, size int) *widget.Button {
 	proto := uim.client.Game().GetUnitPrototype(protoId)
 	cost := int(proto.GetResourceCost())
 	sprite := uim.spriteGetter.GetUnitSprite(uim.client.PlayerId(), protoId, dir)
-	buttonImage := newIconButtonImage(uim, sprite, size, assets.UICornerSize_Small*2, cost, nil)
+	buttonImage := newIconButtonImage(sprite, size, assets.UICornerSize_Small*2, cost)
 	button := newIconButton(
 		buttonImage,
 		uim.newButtonPressHandler(UI_ButtonType_UnitIcon, int(protoId)),
 		size,
 	)
-	uim.AddButton(UI_ButtonType_UnitIcon, int(protoId), button)
+	uim.RegisterButton(UI_ButtonType_UnitIcon, int(protoId), button)
 	return button
 }
 
@@ -291,7 +289,7 @@ func newIconButton(buttonImage *widget.ButtonImage, handler widget.ButtonPressed
 	return button
 }
 
-func newIconButtonImage(uim *UIManager, sprite *ebiten.Image, size, margin, cost int, alerts []*ebiten.Image) *widget.ButtonImage {
+func newIconButtonImage(sprite *ebiten.Image, size, margin, cost int) *widget.ButtonImage {
 	img := ebiten.NewImage(size, size)
 	imgBounds := img.Bounds()
 
@@ -321,7 +319,7 @@ func newIconButtonImage(uim *UIManager, sprite *ebiten.Image, size, margin, cost
 	}
 }
 
-func newResourceDisplay(uim *UIManager, _ int) *widget.Container {
+func newResourceDisplay(uim *UIManager) *widget.Container {
 	container := widget.NewContainer(
 		widget.ContainerOpts.WidgetOpts(
 			widget.WidgetOpts.LayoutData(widget.RowLayoutData{Stretch: true}),
@@ -331,11 +329,11 @@ func newResourceDisplay(uim *UIManager, _ int) *widget.Container {
 			widget.RowLayoutOpts.Spacing(StandardSpacing),
 		)),
 	)
-	container.AddChild(newProgressBar(uim, UI_ProgressBar_Resource, "minerals", assets.UIProgressBar_Mineral, -1))
+	container.AddChild(newProgressBar(uim, UI_ProgressBar_Resource, "minerals", assets.UIProgressBar_Mineral))
 	return container
 }
 
-func newProgressBar(uim *UIManager, id int, name string, sprite *ebiten.Image, _ int) *widget.Container {
+func newProgressBar(uim *UIManager, id int, name string, sprite *ebiten.Image) *widget.Container {
 	container := widget.NewContainer(
 		widget.ContainerOpts.WidgetOpts(
 			widget.WidgetOpts.LayoutData(widget.RowLayoutData{Stretch: true}),
@@ -368,8 +366,8 @@ func newProgressBar(uim *UIManager, id int, name string, sprite *ebiten.Image, _
 	container.AddChild(nameText)
 	container.AddChild(barText)
 
-	uim.AddProgressBar(id, resourceBar)
-	uim.AddLabel(id, barText)
+	uim.RegisterProgressBar(id, resourceBar)
+	uim.RegisterLabel(id, barText)
 
 	return container
 }

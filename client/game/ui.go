@@ -113,8 +113,8 @@ func newEndScreenContainer(ui *UI) *widget.Container {
 	container.AddChild(boxContainer)
 
 	container.GetWidget().Visibility = widget.Visibility_Hide
-	ui.AddContainer(UI_Container_EndScreen, container)
-	ui.AddLabel(UI_Label_WinScreen, winLabel)
+	ui.RegisterContainer(UI_Container_EndScreen, container)
+	ui.RegisterLabel(UI_Label_WinScreen, winLabel)
 
 	return container
 }
