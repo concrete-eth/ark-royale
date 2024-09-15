@@ -70,7 +70,6 @@ func (k KeyMap) IsPressedWithShift(f KeyFunction) bool {
 }
 
 var DefaultKeyMap = KeyMap{
-	// KeyFunction_Quit:              {ebiten.KeyEscape},
 	KeyFunction_SetPath:           {ebiten.KeyShift},
 	KeyFunction_Up:                {ebiten.KeyW, ebiten.KeyUp},
 	KeyFunction_Down:              {ebiten.KeyS, ebiten.KeyDown},
@@ -98,8 +97,8 @@ func (s *Selection) Clear() {
 // Main game client object run by ebiten.RunGame.
 type Client struct {
 	coreRenderer      *CoreRenderer
-	keyMap            KeyMap    // Key map
 	hud               *HudSet   // HUD component set
+	keyMap            KeyMap    // Key map
 	selected          Selection // Current selection
 	onSelectionChange func()    // On selection change callback
 	active            bool      // Actively update state

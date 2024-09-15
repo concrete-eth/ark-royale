@@ -1867,6 +1867,8 @@ func (c *Core) CreateUnit(action *UnitCreation) error {
 	return nil
 }
 
+// TODO: clean terrain, rts, sol, web, libs vs game
+
 func (c *Core) AssignUnit(action *UnitAssignation) error {
 	if !c.IsInitialized() {
 		return ErrNotInitialized
