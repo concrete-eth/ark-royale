@@ -692,9 +692,9 @@ func (c *CoreRenderer) initLayers() {
 
 // Add decorative cracks to terrain and the spawn points sprites.
 func (c *CoreRenderer) initTerrainLayer() {
-	boardSizeInTiles := c.Game().BoardSize()
 	terrainLayer := c.worldLayers.Layer(LayerName_Terrain)
-	initTerrain(terrainLayer, boardSizeInTiles)
+	initTerrain(terrainLayer, assets.MapTilesetId_Royale)
+	// TODO: verify vs map?
 }
 
 // Initialize the sprite layers and set the tile display size.

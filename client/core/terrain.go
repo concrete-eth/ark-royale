@@ -8,8 +8,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-func renderMap() *ebiten.Image {
-	m := assets.LoadMap(assets.MapTilesetId_Royale)
+func renderMap(mapId int) *ebiten.Image {
+	m := assets.LoadMap(mapId)
 	renderer, err := assets.NewMapRenderer(m)
 	if err != nil {
 		panic(err)
@@ -24,10 +24,10 @@ func renderMap() *ebiten.Image {
 }
 
 // Initializes the terrain sprite layer by setting the background, borders, and decorative cracks.
-func initTerrain(layer *decren.Layer, sizeInTiles image.Point) {
+func initTerrain(layer *decren.Layer, mapId int) {
 	layer.SetBackgroundColor(assets.TerrainBackgroundColor)
-	terrainImg := renderMap()
-	terrainOrigin := image.Point{1, 0}
+	terrainImg := renderMap(mapId)
+	terrainOrigin := image.Point{1, 0} // TODO: get from map data
 	layer.Sprite("terrain").
 		SetImage(terrainImg).
 		FitToImage().
