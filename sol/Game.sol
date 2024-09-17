@@ -8,10 +8,10 @@ import {Arch, NonZeroBoolean_True} from "./solgen/Arch.sol";
 
 import {UnitPrototypeAdder, UnitType} from "./Units.sol";
 import {BuildingPrototypeAdder, BuildingType} from "./Buildings.sol";
+import {LibCommand, WorkerCommandType, FighterCommandType} from "./LibCommand.sol";
 
 uint8 constant WIDTH = 15;
 uint8 constant HEIGHT = 8;
-uint8 constant BUILD_RADIUS = 0;
 
 contract Game is Arch {
     address[2] internal players;
@@ -142,12 +142,7 @@ contract Game is Arch {
         ActionData_AssignUnit memory assignUnitData;
         assignUnitData.playerId = playerId;
         assignUnitData.unitId = 3;
-
-        uint64 command = 0;
-        command |= uint64(1) << 16; // Gather
-        command |= uint64(playerId); // Target building
-
-        assignUnitData.command = command;
+        assignUnitData.command = LibCommand.assignWorkerToGather(playerId);
 
         ICore(proxy).assignUnit(assignUnitData);
     }
@@ -198,14 +193,14 @@ contract Game is Arch {
             .getPlayersRow(assignUnitData.playerId)
             .unitCount;
 
-        uint64 command = 0;
-
         uint8 targetPlayerId = (action.playerId % 2) + 1;
-        command |= uint64(targetPlayerId) << 16; // Target player id
+        uint64 command;
 
         if (action.y >= 3 && action.y <= 4) {
-            command |= uint64(1) << 32; // Target building
-            command |= uint64(1); // Target main building
+            command = LibCommand.assignFighterToAttackBuilding(
+                targetPlayerId,
+                1
+            );
         } else {
             uint8 targetUnitId;
             if (action.y < 3) {
@@ -217,12 +212,15 @@ contract Game is Arch {
                 .getUnitsRow(targetPlayerId, targetUnitId)
                 .state;
             if (targetUnitState == 5) {
-                // Unit is dead
-                command |= uint64(1) << 32; // Target building
-                command |= uint64(1); // Target main building
+                command = LibCommand.assignFighterToAttackBuilding(
+                    targetPlayerId,
+                    1
+                );
             } else {
-                command |= uint64(2) << 32; // Target unit
-                command |= uint64(targetUnitId); // Target left unit
+                command = LibCommand.assignFighterToAttackUnit(
+                    targetPlayerId,
+                    targetUnitId
+                );
             }
         }
 
@@ -235,6 +233,7 @@ contract Game is Arch {
         super.tick();
     }
 
+    // TODO: what prevents the player form creating a worker?
     function tick() public override {
         (bool success, ) = address(this).call{gas: gasleft() - 10000}(
             abi.encodeWithSignature("archTick()")
@@ -267,16 +266,15 @@ contract Game is Arch {
                     // Unit is not active
                     continue;
                 }
-                uint64 unitCommandType = unit.command >> 32;
-                if (unitCommandType == 0) {
-                    uint64 command = 0;
-                    command |= uint64(1) << 32; // Target building
-                    command |= uint64(targetPlayerId) << 16; // Target player id
-                    command |= uint64(1); // Target main building
+                (FighterCommandType unitCommandType, , ) = LibCommand
+                    .parseFighterCommand(unit.command);
+                if (unitCommandType == FighterCommandType.HoldPosition) {
                     ActionData_AssignUnit memory assignUnitData;
                     assignUnitData.playerId = playerId;
                     assignUnitData.unitId = unitId;
-                    assignUnitData.command = command;
+                    assignUnitData.command = LibCommand
+                        .assignFighterToAttackBuilding(targetPlayerId, 1);
+
                     ICore(proxy).assignUnit(assignUnitData);
                 }
             }

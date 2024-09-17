@@ -209,7 +209,7 @@ func (c FighterCommandType) IsTargetingUnit() bool {
 	return c == FighterCommandType_AttackUnit
 }
 
-// <unused> uint24, Command uint8, Alpha uint16, Beta uint16
+// <unused> uint24, CommandType uint8, Alpha uint16, Beta uint16
 type FighterCommandData uint64
 
 var _ UnitCommandData = FighterCommandData(FighterCommandType_HoldPosition)

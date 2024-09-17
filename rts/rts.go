@@ -76,7 +76,7 @@ type BuildingObjectWithRow struct {
 
 func (o BuildingObjectWithRow) Building() *datamod.BuildingsRow {
 	if o._o.Type != ObjectType_Building {
-		return nil
+		panic("invalid object type")
 	}
 	return o._r.(*datamod.BuildingsRow)
 }
@@ -87,7 +87,7 @@ type UnitObjectWithRow struct {
 
 func (o UnitObjectWithRow) Unit() *datamod.UnitsRow {
 	if o._o.Type != ObjectType_Unit {
-		return nil
+		panic("invalid object type")
 	}
 	return o._r.(*datamod.UnitsRow)
 }
@@ -207,6 +207,10 @@ func (c *Core) TicksPerBlock() uint64 {
 	return 1
 }
 
+func (c *Core) AbsSubTickIndex() uint32 {
+	return uint32(c.BlockNumber()*c.TicksPerBlock() + c.InBlockTickIndex())
+}
+
 func (c *Core) SetEventHandler(handler InternalEventHandler) {
 	c.eventHandler = handler
 }
@@ -286,10 +290,6 @@ func (c *Core) GetUnitPrototype(unitTypeId uint8) *datamod.UnitPrototypesRow {
 
 func (c *Core) GetBuildingPrototype(prototypeId uint8) *datamod.BuildingPrototypesRow {
 	return datamod.NewBuildingPrototypesWithParent(c.Datastore(), c, TableId_BuildingPrototypes).Get(prototypeId)
-}
-
-func (c *Core) AbsSubTickIndex() uint32 {
-	return uint32(c.BlockNumber()*c.TicksPerBlock() + c.InBlockTickIndex())
 }
 
 type (
@@ -408,11 +408,13 @@ func (c *Core) GetWorkerPortArea(playerId uint8) image.Rectangle {
 }
 
 func (c *Core) GetBuildingArea(playerId uint8, buildingId uint8) image.Rectangle {
-	building := c.GetBuilding(playerId, buildingId)
-	position := GetPositionAsPoint(building)
-	protoId := building.GetBuildingType()
-	proto := c.GetBuildingPrototype(protoId)
-	size := GetDimensionsAsPoint(proto)
+	var (
+		building = c.GetBuilding(playerId, buildingId)
+		position = GetPositionAsPoint(building)
+		protoId  = building.GetBuildingType()
+		proto    = c.GetBuildingPrototype(protoId)
+		size     = GetDimensionsAsPoint(proto)
+	)
 	return image.Rectangle{
 		Min: position,
 		Max: position.Add(size),
@@ -1867,16 +1869,12 @@ func (c *Core) CreateUnit(action *UnitCreation) error {
 	return nil
 }
 
-// TODO: clean terrain, rts, sol, web, libs vs game
+// TODO: sol, web, libs vs game
 
 func (c *Core) AssignUnit(action *UnitAssignation) error {
 	if !c.IsInitialized() {
 		return ErrNotInitialized
 	}
-	// TODO: consolidate this
-	// if !c.HasStarted() {
-	// 	return ErrNotStarted
-	// }
 	var (
 		playerId = action.PlayerId
 		unitId   = action.UnitId
