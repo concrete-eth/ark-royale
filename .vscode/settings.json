@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "*.tmx": "plaintext",
+        "*.tsx": "typescriptreact"
+    }
+}

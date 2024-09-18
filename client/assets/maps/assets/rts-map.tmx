@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.10" tiledversion="1.11.0" orientation="orthogonal" renderorder="right-down" width="26" height="27" tilewidth="16" tileheight="16" infinite="0" nextlayerid="4" nextobjectid="1">
  <tileset firstgid="1" source="ark.tsx"/>
+ <tileset firstgid="81" source="buildings.tsx"/>
  <layer id="1" name="Terrain" width="26" height="27">
   <data encoding="csv">
 49,2,2,2,2,2,2,2,2,2,50,0,0,0,0,49,2,2,2,2,2,2,2,2,2,50,

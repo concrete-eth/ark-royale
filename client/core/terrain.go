@@ -2,10 +2,12 @@ package core
 
 import (
 	"image"
+	"strings"
 
 	"github.com/concrete-eth/ark-rts/client/assets"
 	"github.com/concrete-eth/ark-rts/client/decren"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/lafriks/go-tiled"
 )
 
 func renderMap(mapId int) *ebiten.Image {
@@ -14,12 +16,31 @@ func renderMap(mapId int) *ebiten.Image {
 	if err != nil {
 		panic(err)
 	}
-	if err := renderer.RenderVisibleLayers(); err != nil {
-		panic(err)
+
+	var terrainLayer *tiled.Layer
+
+	for id, layer := range m.Layers {
+		namePrefix := strings.ToLower(strings.Split(layer.Name, "_")[0])
+		switch namePrefix {
+		case "deco", "terrain", "side":
+			if err := renderer.RenderLayer(id); err != nil {
+				panic(err)
+			}
+			if namePrefix == "terrain" {
+				terrainLayer = layer
+			}
+		default:
+		}
 	}
+
+	if terrainLayer == nil {
+		panic("terrain layer not found")
+	}
+
 	img := renderer.Result
 	renderer.Clear()
 	eimg := ebiten.NewImageFromImage(img)
+
 	return eimg
 }
 

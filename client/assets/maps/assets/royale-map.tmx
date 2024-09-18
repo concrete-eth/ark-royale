@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.0" orientation="orthogonal" renderorder="right-down" width="17" height="9" tilewidth="16" tileheight="16" infinite="0" backgroundcolor="#261b23" nextlayerid="7" nextobjectid="1">
+<map version="1.10" tiledversion="1.11.0" orientation="orthogonal" renderorder="right-down" width="17" height="9" tilewidth="16" tileheight="16" infinite="0" backgroundcolor="#261b23" nextlayerid="13" nextobjectid="31">
  <tileset firstgid="1" source="ark.tsx"/>
+ <tileset firstgid="81" source="buildings.tsx"/>
+ <tileset firstgid="106" source="units.tsx"/>
  <layer id="4" name="Side" width="17" height="9">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -27,7 +29,7 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
- <layer id="2" name="Deco" width="17" height="9">
+ <layer id="2" name="Deco" width="17" height="9" visible="0" locked="1">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,31,42,42,52,42,52,57,52,42,52,42,42,33,0,0,
@@ -40,4 +42,34 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
+ <layer id="10" name="Buildings" width="17" height="9" visible="0">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,81,0,0,0,0,0,0,0,0,0,0,0,0,0,81,0,
+0,86,0,0,0,0,0,0,0,0,0,0,0,0,91,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <layer id="11" name="Units" width="17" height="9" visible="0">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,2147483770,0,0,0,0,0,0,0,0,0,123,0,0,0,
+0,0,0,2147483766,0,0,0,0,0,0,0,0,0,119,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,2147483770,0,0,0,0,0,0,0,0,0,123,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <objectgroup id="12" name="SpawAreas" visible="0" locked="1">
+  <object id="28" x="144" y="0" width="80" height="128"/>
+  <object id="30" x="48" y="0" width="80" height="128"/>
+ </objectgroup>
 </map>
