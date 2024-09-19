@@ -3,7 +3,7 @@ module github.com/concrete-eth/ark-royale
 go 1.21.5
 
 require (
-	github.com/concrete-eth/archetype v0.0.0-20240807124748-94712b83b269
+	github.com/concrete-eth/archetype v0.0.0-20240919163336-41826147060d
 	github.com/ebitenui/ebitenui v0.5.6
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/fogleman/gg v1.3.0
