@@ -6,7 +6,7 @@ import (
 	"image/color"
 	"sort"
 
-	client_utils "github.com/concrete-eth/ark-rts/client/utils"
+	client_utils "github.com/concrete-eth/ark-royale/client/utils"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/colorm"
 )

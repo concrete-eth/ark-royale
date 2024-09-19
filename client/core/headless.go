@@ -7,7 +7,7 @@ import (
 	"github.com/concrete-eth/archetype/arch"
 	arch_client "github.com/concrete-eth/archetype/client"
 	"github.com/concrete-eth/archetype/rpc"
-	"github.com/concrete-eth/ark-rts/rts"
+	"github.com/concrete-eth/ark-royale/rts"
 	"github.com/ethereum/go-ethereum/concrete/lib"
 )
 

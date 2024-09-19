@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/concrete-eth/archetype/codegen"
-	"github.com/concrete-eth/ark-rts/rts"
+	"github.com/concrete-eth/ark-royale/rts"
 	"github.com/lafriks/go-tiled"
 	"github.com/spf13/cobra"
 )

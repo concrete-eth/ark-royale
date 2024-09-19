@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"image"
 
-	"github.com/concrete-eth/ark-rts/gogen/datamod"
+	"github.com/concrete-eth/ark-royale/gogen/datamod"
 )
 
 func GetAttackStrength(proto *datamod.UnitPrototypesRow, layerId LayerId) uint8 {

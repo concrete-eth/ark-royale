@@ -5,9 +5,9 @@ import (
 	go_image "image"
 
 	gen_utils "github.com/concrete-eth/archetype/utils"
-	"github.com/concrete-eth/ark-rts/client/assets"
-	client_utils "github.com/concrete-eth/ark-rts/client/utils"
-	"github.com/concrete-eth/ark-rts/rts"
+	"github.com/concrete-eth/ark-royale/client/assets"
+	client_utils "github.com/concrete-eth/ark-royale/client/utils"
+	"github.com/concrete-eth/ark-royale/rts"
 	"github.com/ebitenui/ebitenui"
 	"github.com/ebitenui/ebitenui/image"
 	"github.com/ebitenui/ebitenui/widget"

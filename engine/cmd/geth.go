@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/concrete-eth/ark-rts/engine"
+	"github.com/concrete-eth/ark-royale/engine"
 )
 
 func main() {

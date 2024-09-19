@@ -4,8 +4,8 @@ import (
 	"image"
 
 	gen_utils "github.com/concrete-eth/archetype/utils"
-	"github.com/concrete-eth/ark-rts/client/assets"
-	"github.com/concrete-eth/ark-rts/rts"
+	"github.com/concrete-eth/ark-royale/client/assets"
+	"github.com/concrete-eth/ark-royale/rts"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )

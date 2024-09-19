@@ -3,12 +3,12 @@ package game
 import (
 	"image"
 
-	client_utils "github.com/concrete-eth/ark-rts/client/utils"
+	client_utils "github.com/concrete-eth/ark-royale/client/utils"
 
-	"github.com/concrete-eth/ark-rts/client/assets"
-	"github.com/concrete-eth/ark-rts/client/core"
-	"github.com/concrete-eth/ark-rts/gogen/datamod"
-	"github.com/concrete-eth/ark-rts/rts"
+	"github.com/concrete-eth/ark-royale/client/assets"
+	"github.com/concrete-eth/ark-royale/client/core"
+	"github.com/concrete-eth/ark-royale/gogen/datamod"
+	"github.com/concrete-eth/ark-royale/rts"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/colorm"

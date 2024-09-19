@@ -3,7 +3,7 @@ package rts
 import (
 	"fmt"
 
-	"github.com/concrete-eth/ark-rts/gogen/datamod"
+	"github.com/concrete-eth/ark-royale/gogen/datamod"
 )
 
 func SetTileLandObject(tile *datamod.BoardRow, objectType ObjectType, playerId uint8, objectId uint8) {

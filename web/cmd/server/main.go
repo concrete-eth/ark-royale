@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
-	"github.com/concrete-eth/ark-rts/web/cmd"
-	"github.com/concrete-eth/ark-rts/web/server"
+	"github.com/concrete-eth/ark-royale/web/cmd"
+	"github.com/concrete-eth/ark-royale/web/server"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/log"
 )

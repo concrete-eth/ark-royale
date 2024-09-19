@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"image"
 
-	"github.com/concrete-eth/ark-rts/rts"
+	"github.com/concrete-eth/ark-royale/rts"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 

@@ -5,8 +5,8 @@ import (
 	"math"
 	"strings"
 
-	"github.com/concrete-eth/ark-rts/client/assets"
-	"github.com/concrete-eth/ark-rts/client/decren"
+	"github.com/concrete-eth/ark-royale/client/assets"
+	"github.com/concrete-eth/ark-royale/client/decren"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/lafriks/go-tiled"
 )

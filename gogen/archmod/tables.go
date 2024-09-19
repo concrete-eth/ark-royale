@@ -7,8 +7,8 @@ import (
 
 	"github.com/concrete-eth/archetype/arch"
 
-	contract "github.com/concrete-eth/ark-rts/gogen/abigen/tables"
-	"github.com/concrete-eth/ark-rts/gogen/datamod"
+	contract "github.com/concrete-eth/ark-royale/gogen/abigen/tables"
+	"github.com/concrete-eth/ark-royale/gogen/datamod"
 )
 
 var TablesABIJson = contract.ContractABI

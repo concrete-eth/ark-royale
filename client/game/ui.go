@@ -3,9 +3,9 @@ package game
 import (
 	"fmt"
 
-	"github.com/concrete-eth/ark-rts/client/assets"
-	"github.com/concrete-eth/ark-rts/client/core"
-	"github.com/concrete-eth/ark-rts/rts"
+	"github.com/concrete-eth/ark-royale/client/assets"
+	"github.com/concrete-eth/ark-royale/client/core"
+	"github.com/concrete-eth/ark-royale/rts"
 	"github.com/ebitenui/ebitenui/image"
 	"github.com/ebitenui/ebitenui/widget"
 )

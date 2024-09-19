@@ -2,7 +2,7 @@ package rts
 
 import (
 	"github.com/concrete-eth/archetype/utils"
-	"github.com/concrete-eth/ark-rts/gogen/datamod"
+	"github.com/concrete-eth/ark-royale/gogen/datamod"
 )
 
 func addStorage(player *datamod.PlayersRow, resource uint16) {

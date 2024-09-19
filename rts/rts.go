@@ -7,8 +7,8 @@ import (
 
 	"github.com/concrete-eth/archetype/arch"
 	"github.com/concrete-eth/archetype/utils"
-	"github.com/concrete-eth/ark-rts/gogen/archmod"
-	"github.com/concrete-eth/ark-rts/gogen/datamod"
+	"github.com/concrete-eth/ark-royale/gogen/archmod"
+	"github.com/concrete-eth/ark-royale/gogen/datamod"
 	"github.com/ethereum/go-ethereum/concrete/lib"
 )
 

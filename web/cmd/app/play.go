@@ -30,14 +30,14 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 
 	"github.com/concrete-eth/archetype/kvstore"
-	"github.com/concrete-eth/ark-rts/client/core"
-	"github.com/concrete-eth/ark-rts/client/game"
-	tables_contract "github.com/concrete-eth/ark-rts/gogen/abigen/tables"
-	"github.com/concrete-eth/ark-rts/gogen/archmod"
+	"github.com/concrete-eth/ark-royale/client/core"
+	"github.com/concrete-eth/ark-royale/client/game"
+	tables_contract "github.com/concrete-eth/ark-royale/gogen/abigen/tables"
+	"github.com/concrete-eth/ark-royale/gogen/archmod"
 	"github.com/hajimehoshi/ebiten/v2"
 
 	snapshot_types "github.com/concrete-eth/archetype/snapshot/types"
-	game_contract "github.com/concrete-eth/ark-rts/gogen/abigen/game"
+	game_contract "github.com/concrete-eth/ark-royale/gogen/abigen/game"
 )
 
 var (

@@ -9,12 +9,12 @@ import (
 
 	"github.com/posthog/posthog-go"
 
-	game_contract "github.com/concrete-eth/ark-rts/gogen/abigen/game"
-	tables_contract "github.com/concrete-eth/ark-rts/gogen/abigen/tables"
+	game_contract "github.com/concrete-eth/ark-royale/gogen/abigen/game"
+	tables_contract "github.com/concrete-eth/ark-royale/gogen/abigen/tables"
 
 	snapshot_types "github.com/concrete-eth/archetype/snapshot/types"
 
-	factory_contract "github.com/concrete-eth/ark-rts/gogen/abigen/game_factory"
+	factory_contract "github.com/concrete-eth/ark-royale/gogen/abigen/game_factory"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/log"

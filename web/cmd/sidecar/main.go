@@ -4,8 +4,8 @@ import (
 	"context"
 	"os"
 
-	"github.com/concrete-eth/ark-rts/web/cmd"
-	"github.com/concrete-eth/ark-rts/web/sidecar"
+	"github.com/concrete-eth/ark-royale/web/cmd"
+	"github.com/concrete-eth/ark-royale/web/sidecar"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/log"
