@@ -4,7 +4,9 @@
 		"prettier-plugin-solidity": "^1.4.1"
 	},
 	"scripts": {
-		"codegen": "pnpm run forge:build && pnpm run archetype:codegen && pnpm run game:abigen && pnpm run factory:abigen",
+		"codegen": "pnpm run archetype:codegen && pnpm run libgen && pnpm run forge:build && pnpm run abigen",
+		"abigen": "pnpm run game:abigen && pnpm run factory:abigen",
+		"libgen": "go run codegen/cmd/main.go board -m client/assets/maps/assets/royale-map.tmx -o ./sol/solgen/BoardLib.sol",
 		"forge:build": "forge build --extra-output-files bin abi",
 		"archetype:codegen": "archetype codegen",
 		"game:abigen": "abigen --bin ./out/PermissionedGame.sol/PermissionedGame.bin --abi ./out/PermissionedGame.sol/PermissionedGame.abi.json --pkg contract --out ./gogen/abigen/game/game.go",

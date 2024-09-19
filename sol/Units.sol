@@ -5,11 +5,11 @@ import "./solgen/ICore.sol";
 
 enum UnitType {
     Nil,
-    Air,
     AntiAir,
+    Air,
     Tank,
-    Turret,
-    Worker
+    Worker,
+    Turret
 }
 
 enum LayerId {
@@ -21,26 +21,6 @@ enum LayerId {
 
 library UnitPrototypeAdder {
     function addUnitPrototypes(ICore core) internal {
-        // Air
-        core.addUnitPrototype(
-            ActionData_AddUnitPrototype({
-                layer: uint8(LayerId.Air),
-                resourceCost: 100,
-                computeCost: 1,
-                spawnTime: 2,
-                maxIntegrity: 25,
-                landStrength: 5,
-                hoverStrength: 0,
-                airStrength: 3,
-                attackCooldown: 2,
-                attackRange: 2,
-                isAssault: true,
-                isConfrontational: true,
-                isWorker: false,
-                isPurgeable: true
-            })
-        );
-
         // AntiAir
         core.addUnitPrototype(
             ActionData_AddUnitPrototype({
@@ -55,6 +35,26 @@ library UnitPrototypeAdder {
                 attackCooldown: 3,
                 attackRange: 4,
                 isAssault: false,
+                isConfrontational: true,
+                isWorker: false,
+                isPurgeable: true
+            })
+        );
+
+        // Air
+        core.addUnitPrototype(
+            ActionData_AddUnitPrototype({
+                layer: uint8(LayerId.Air),
+                resourceCost: 100,
+                computeCost: 1,
+                spawnTime: 2,
+                maxIntegrity: 25,
+                landStrength: 5,
+                hoverStrength: 0,
+                airStrength: 3,
+                attackCooldown: 2,
+                attackRange: 2,
+                isAssault: true,
                 isConfrontational: true,
                 isWorker: false,
                 isPurgeable: true
@@ -81,26 +81,6 @@ library UnitPrototypeAdder {
             })
         );
 
-        // Turret
-        core.addUnitPrototype(
-            ActionData_AddUnitPrototype({
-                layer: uint8(LayerId.Land),
-                resourceCost: 300,
-                computeCost: 0,
-                spawnTime: 8,
-                maxIntegrity: 150,
-                landStrength: 3,
-                hoverStrength: 0,
-                airStrength: 3,
-                attackCooldown: 1,
-                attackRange: 3,
-                isAssault: false,
-                isConfrontational: true,
-                isWorker: false,
-                isPurgeable: true
-            })
-        );
-
         // Worker
         core.addUnitPrototype(
             ActionData_AddUnitPrototype({
@@ -117,6 +97,26 @@ library UnitPrototypeAdder {
                 isAssault: false,
                 isConfrontational: true,
                 isWorker: true,
+                isPurgeable: true
+            })
+        );
+
+        // Turret
+        core.addUnitPrototype(
+            ActionData_AddUnitPrototype({
+                layer: uint8(LayerId.Land),
+                resourceCost: 300,
+                computeCost: 0,
+                spawnTime: 8,
+                maxIntegrity: 150,
+                landStrength: 3,
+                hoverStrength: 0,
+                airStrength: 3,
+                attackCooldown: 1,
+                attackRange: 3,
+                isAssault: false,
+                isConfrontational: true,
+                isWorker: false,
                 isPurgeable: true
             })
         );

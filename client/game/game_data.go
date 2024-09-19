@@ -7,11 +7,11 @@ const (
 )
 
 const (
-	UnitPrototypeId_Air uint8 = iota + 1
-	UnitPrototypeId_AntiAir
+	UnitPrototypeId_AntiAir uint8 = iota + 1
+	UnitPrototypeId_Air
 	UnitPrototypeId_Tank
-	UnitPrototypeId_Turret
 	UnitPrototypeId_Worker
+	UnitPrototypeId_Turret
 )
 
 var (

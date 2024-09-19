@@ -2,6 +2,7 @@ package rts
 
 import (
 	"errors"
+	"fmt"
 	"image"
 
 	"github.com/concrete-eth/archetype/arch"
@@ -561,6 +562,7 @@ func (c *Core) IsBuildableArea(area image.Rectangle) bool {
 	nPlayers := c.GetMeta().GetPlayerCount()
 	for playerId := uint8(1); playerId < nPlayers+1; playerId++ {
 		if area.Overlaps(c.GetSpawnArea(playerId)) {
+			fmt.Println("Area overlaps spawn area")
 			return false
 		}
 	}
@@ -568,6 +570,7 @@ func (c *Core) IsBuildableArea(area image.Rectangle) bool {
 		for y := uint16(area.Min.Y); y < uint16(area.Max.Y); y++ {
 			tile := c.GetBoardTile(x, y)
 			if !IsTileEmpty(tile, LayerId_Land) {
+				fmt.Println("Area overlaps non-empty tile")
 				return false
 			}
 		}
@@ -1800,7 +1803,12 @@ func (c *Core) Initialize(action *Initialization) error {
 		return ErrAlreadyInitialized
 	}
 	bn := c.BlockNumber()
-	c.GetMeta().Set(action.Width, action.Height, 0, 0, 0, true, false, uint32(bn))
+	meta := c.GetMeta()
+	meta.SetBoardWidth(action.Width)
+	meta.SetBoardHeight(action.Height)
+	meta.SetIsInitialized(true)
+	meta.SetHasStarted(false)
+	meta.SetCreationBlockNumber(uint32(bn))
 	return nil
 }
 
@@ -2023,6 +2031,7 @@ func (c *Core) PlaceBuilding(action *BuildingPlacement) error {
 	}
 	buildArea := image.Rectangle{Min: position, Max: position.Add(size)}
 	if !c.IsBuildableArea(buildArea) {
+		fmt.Println("Build area is not buildable", buildArea, protoId)
 		return ErrAreaNotBuildable
 	}
 	buildingId := c.placeBuilding(playerId, protoId, position)
@@ -2039,9 +2048,9 @@ func (c *Core) PlaceBuilding(action *BuildingPlacement) error {
 }
 
 func (c *Core) AddUnitPrototype(action *UnitPrototypeAddition) error {
-	if !c.IsInitialized() {
-		return ErrNotInitialized
-	}
+	// if !c.IsInitialized() {
+	// 	return ErrNotInitialized
+	// }
 	nUnitPrototypes := c.GetMeta().GetUnitPrototypeCount()
 	protoId := utils.SafeAddUint8(nUnitPrototypes, 1)
 	if protoId == nUnitPrototypes {
@@ -2069,9 +2078,9 @@ func (c *Core) AddUnitPrototype(action *UnitPrototypeAddition) error {
 }
 
 func (c *Core) AddBuildingPrototype(action *BuildingPrototypeAddition) error {
-	if !c.IsInitialized() {
-		return ErrNotInitialized
-	}
+	// if !c.IsInitialized() {
+	// 	return ErrNotInitialized
+	// }
 	nBuildingPrototypes := c.GetMeta().GetBuildingPrototypeCount()
 	protoId := utils.SafeAddUint8(nBuildingPrototypes, 1)
 	if protoId == nBuildingPrototypes {
