@@ -78,7 +78,7 @@ func main() {
 	}, true)
 	w, h := c.Layout(-1, -1)
 	ebiten.SetWindowSize(w, h)
-	ebiten.SetWindowTitle("Ark RTS")
+	ebiten.SetWindowTitle("Ark Royale")
 	ebiten.SetTPS(60)
 	if err := ebiten.RunGame(c); err != nil {
 		panic(err)
