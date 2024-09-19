@@ -694,7 +694,6 @@ func (c *CoreRenderer) initLayers() {
 func (c *CoreRenderer) initTerrainLayer() {
 	terrainLayer := c.worldLayers.Layer(LayerName_Terrain)
 	initTerrain(terrainLayer, assets.MapTilesetId_Royale)
-	// TODO: verify vs map?
 }
 
 // Initialize the sprite layers and set the tile display size.

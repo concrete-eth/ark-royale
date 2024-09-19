@@ -1877,7 +1877,7 @@ func (c *Core) CreateUnit(action *UnitCreation) error {
 	return nil
 }
 
-// TODO: sol, web, libs vs game
+// TODO: libs vs game, web
 
 func (c *Core) AssignUnit(action *UnitAssignation) error {
 	if !c.IsInitialized() {

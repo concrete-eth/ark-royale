@@ -2,6 +2,7 @@ package core
 
 import (
 	"image"
+	"math"
 	"strings"
 
 	"github.com/concrete-eth/ark-rts/client/assets"
@@ -10,7 +11,7 @@ import (
 	"github.com/lafriks/go-tiled"
 )
 
-func renderMap(mapId int) *ebiten.Image {
+func renderTerrain(mapId int) (*ebiten.Image, image.Point) {
 	m := assets.LoadMap(mapId)
 	renderer, err := assets.NewMapRenderer(m)
 	if err != nil {
@@ -41,14 +42,28 @@ func renderMap(mapId int) *ebiten.Image {
 	renderer.Clear()
 	eimg := ebiten.NewImageFromImage(img)
 
-	return eimg
+	origin := image.Point{math.MaxInt16, math.MaxInt16}
+	for x := 0; x < m.Width; x++ {
+		for y := 0; y < m.Height; y++ {
+			tile := terrainLayer.Tiles[x+y*m.Width]
+			if !tile.IsNil() {
+				if x < origin.X {
+					origin.X = x
+				}
+				if y < origin.Y {
+					origin.Y = y
+				}
+			}
+		}
+	}
+
+	return eimg, origin
 }
 
 // Initializes the terrain sprite layer by setting the background, borders, and decorative cracks.
 func initTerrain(layer *decren.Layer, mapId int) {
 	layer.SetBackgroundColor(assets.TerrainBackgroundColor)
-	terrainImg := renderMap(mapId)
-	terrainOrigin := image.Point{1, 0} // TODO: get from map data
+	terrainImg, terrainOrigin := renderTerrain(mapId)
 	layer.Sprite("terrain").
 		SetImage(terrainImg).
 		FitToImage().

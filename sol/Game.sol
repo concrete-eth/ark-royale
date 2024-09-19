@@ -37,12 +37,6 @@ contract Game is Arch {
         BoardLib.initialize(ICore(proxy));
 
         address[] memory _players = abi.decode(data, (address[]));
-        _addPlayers(_players);
-
-        ICore(proxy).start();
-    }
-
-    function _addPlayers(address[] memory _players) internal {
         if (players.length != 2) {
             revert("Game: must have exactly 2 players");
         }
@@ -50,6 +44,8 @@ contract Game is Arch {
             BoardLib.initPlayer(ICore(proxy), i + 1, 3);
             players[i] = _players[i];
         }
+
+        ICore(proxy).start();
     }
 
     function start() public virtual override {
@@ -59,9 +55,9 @@ contract Game is Arch {
     function createUnit(
         ActionData_CreateUnit memory action
     ) public virtual override {
-        // if (action.unitType == uint8(UnitType.Worker)) {
-        //     revert("Game: only fighters can be created");
-        // }
+        if (action.unitType == uint8(UnitType.Worker)) {
+            revert("Game: only fighters can be created");
+        }
         ICore(proxy).createUnit(action);
 
         ActionData_AssignUnit memory assignUnitData;
@@ -111,7 +107,6 @@ contract Game is Arch {
         super.tick();
     }
 
-    // TODO: what prevents the player form creating a worker?
     function tick() public override {
         (bool success, ) = address(this).call{gas: gasleft() - 10000}(
             abi.encodeWithSignature("archTick()")
