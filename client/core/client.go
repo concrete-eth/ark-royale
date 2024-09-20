@@ -182,6 +182,12 @@ func (c *Client) IsSelectingUnitType() bool {
 	return c.selected.UnitType != 0
 }
 
+func (c *Client) CreateUnit(unitType uint8, position image.Point) {
+	queue := c.coreRenderer.internalEventQueue
+	c.Headless().CreateUnit(unitType, position)
+	c.coreRenderer.internalEventQueue = queue
+}
+
 func (c *Client) handleInput() {
 	if c.keyMap.IsJustPressed(KeyFunction_Deselect) {
 		c.ClearSelection()
@@ -214,7 +220,7 @@ func (c *Client) handleInput() {
 		return
 	}
 
-	c.Headless().CreateUnit(c.SelectedUnitType(), tilePosition)
+	c.CreateUnit(c.SelectedUnitType(), tilePosition)
 	c.ClearSelection()
 }
 

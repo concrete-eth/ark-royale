@@ -148,6 +148,7 @@ type CoreRenderer struct {
 	tableUpdatedObjects map[rts.Object]struct{}         // Objects whose table has been updated and need to be reset
 	direction           map[rts.Object]assets.Direction // Current direction of objects
 	anticipating        bool                            // True when actions and ticks are being anticipated
+	simulating          bool                            // True when simulating sub-ticks or actions
 
 	lastSubTickTime       time.Time // Last tick time
 	lastInterpolationTime time.Time // Last sub-tick time
@@ -234,6 +235,12 @@ func NewCoreRenderer(headlessClient IHeadlessClient, config ClientConfig, sprite
 	return c
 }
 
+func (c *CoreRenderer) Simulate(f func(_core arch.Core)) {
+	c.simulating = true
+	c.IHeadlessClient.Simulate(f)
+	c.simulating = false
+}
+
 func (c *CoreRenderer) Config() ClientConfig {
 	return c.config
 }
@@ -290,6 +297,9 @@ func (c *CoreRenderer) setAllUnitSprites() {
 
 // Called when an internal event is emitted by the rts.
 func (c *CoreRenderer) onInternalEvent(eventId uint8, data interface{}) {
+	if c.simulating {
+		return
+	}
 	event := InternalEvent{
 		Id:   eventId,
 		Data: data,
@@ -462,7 +472,6 @@ func (c *CoreRenderer) interpolateUnitPosition(playerId uint8, unitId uint8, uni
 
 // Pre-runs the next tick and sets the next tile position of every unit.
 func (c *CoreRenderer) anticipateSubTick() {
-	// c.anticipating = true
 	c.Simulate(func(_core arch.Core) {
 		core := _core.(*rts.Core)
 		arch.RunSingleTick(core)
@@ -472,7 +481,6 @@ func (c *CoreRenderer) anticipateSubTick() {
 			})
 		})
 	})
-	// c.anticipating = false
 }
 
 func (c *CoreRenderer) anticipateUnitSubTick(playerId uint8, unitId uint8, unit *datamod.UnitsRow) {
@@ -1173,14 +1181,16 @@ func (c *CoreRenderer) Update() error {
 		return err
 	}
 
-	c.anticipateActions()
-	c.handleInternalEvents()
 	if newBatch || subTicked {
 		c.lastSubTickTime = time.Now()
 		c.anticipateSubTick()
+		c.handleInternalEvents()
 		c.setAllBuildingSprites()
 		c.setAllUnitSprites()
 	}
+
+	c.anticipateActions()
+
 	if newBatch {
 		if c.onNewBatch != nil {
 			c.onNewBatch()
