@@ -230,6 +230,10 @@ func (c *Core) SetSetFieldHandler(handler SetFieldHandler) {
 	c.setFieldHandler = handler
 }
 
+func (c *Core) SetFieldHandler() SetFieldHandler {
+	return c.setFieldHandler
+}
+
 func (c *Core) SetFieldCallback(tableId lib.TableId, rowKey lib.RowKey, columnIndex int, value []byte) {
 	if c.setFieldHandler == nil {
 		return

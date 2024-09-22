@@ -148,7 +148,7 @@ type CoreRenderer struct {
 	tableUpdatedObjects map[rts.Object]struct{}         // Objects whose table has been updated and need to be reset
 	direction           map[rts.Object]assets.Direction // Current direction of objects
 	anticipating        bool                            // True when actions and ticks are being anticipated
-	simulating          bool                            // True when simulating sub-ticks or actions
+	// simulating          bool                            // True when simulating sub-ticks or actions
 
 	lastSubTickTime       time.Time // Last tick time
 	lastInterpolationTime time.Time // Last sub-tick time
@@ -236,9 +236,15 @@ func NewCoreRenderer(headlessClient IHeadlessClient, config ClientConfig, sprite
 }
 
 func (c *CoreRenderer) Simulate(f func(_core arch.Core)) {
-	c.simulating = true
+	// c.simulating = true
+	eh := c.Game().EventHandler()
+	c.Game().SetEventHandler(nil)
+	sh := c.Game().SetFieldHandler()
+	c.Game().SetSetFieldHandler(nil)
 	c.IHeadlessClient.Simulate(f)
-	c.simulating = false
+	c.Game().SetEventHandler(eh)
+	c.Game().SetSetFieldHandler(sh)
+	// c.simulating = false
 }
 
 func (c *CoreRenderer) Config() ClientConfig {
@@ -297,9 +303,9 @@ func (c *CoreRenderer) setAllUnitSprites() {
 
 // Called when an internal event is emitted by the rts.
 func (c *CoreRenderer) onInternalEvent(eventId uint8, data interface{}) {
-	if c.simulating {
-		return
-	}
+	// if c.simulating {
+	// 	return
+	// }
 	event := InternalEvent{
 		Id:   eventId,
 		Data: data,
@@ -477,21 +483,17 @@ func (c *CoreRenderer) anticipateSubTick() {
 		arch.RunSingleTick(core)
 		core.ForEachPlayer(func(playerId uint8, player *datamod.PlayersRow) {
 			core.ForEachUnit(playerId, func(unitId uint8, unit *datamod.UnitsRow) {
-				c.anticipateUnitSubTick(playerId, unitId, unit)
+				object := rts.Object{
+					Type:     rts.ObjectType_Unit,
+					PlayerId: playerId,
+					ObjectId: unitId,
+				}
+				tilePosition := rts.GetPositionAsPoint(unit)
+				// Set the next tile position
+				c.nextTilePosition[object] = tilePosition
 			})
 		})
 	})
-}
-
-func (c *CoreRenderer) anticipateUnitSubTick(playerId uint8, unitId uint8, unit *datamod.UnitsRow) {
-	object := rts.Object{
-		Type:     rts.ObjectType_Unit,
-		PlayerId: playerId,
-		ObjectId: unitId,
-	}
-	tilePosition := rts.GetPositionAsPoint(unit)
-	// Set the next tile position
-	c.nextTilePosition[object] = tilePosition
 }
 
 // Pre-runs any hinted actions and updates the sprites of the affected objects.
@@ -559,6 +561,8 @@ func (c *CoreRenderer) anticipateActions() {
 				}
 			}
 		}
+
+		c.Game().SetSetFieldHandler(nil)
 
 		// Anticipate objects
 		c.anticipating = true
@@ -746,9 +750,15 @@ func (c *CoreRenderer) setBuildingSprite(playerId uint8, buildingId uint8, build
 
 	if buildingState.IsNil() || buildingState == rts.BuildingState_Destroyed {
 		// Remove the sprites if the building is nil, cancelled or destroyed
-		spriteObj.Delete()
-		healthBarSpriteObj.Delete()
-		buildBarSpriteObj.Delete()
+		flashDuration := time.Second / time.Duration(8)
+		c.tasks.AddTask(&ScheduledTask{
+			Time: time.Now().Add(flashDuration),
+			Func: func() {
+				spriteObj.Delete()
+				healthBarSpriteObj.Delete()
+				buildBarSpriteObj.Delete()
+			},
+		})
 		return
 	}
 
@@ -834,8 +844,6 @@ func (c *CoreRenderer) setUnitSprite(playerId uint8, unitId uint8, unit *datamod
 
 	if unitState.IsNil() || unitState == rts.UnitState_Dead {
 		// Remove the sprites if the unit is nil or dead
-		c.deletePosition(object)
-		healthBarSpriteObj.Delete()
 		// if c.anticipating {
 		// 	// If the unit does not exist in the game state, try to delete
 		// 	// the sprite from all unit layers as it may be in either of them.
@@ -843,7 +851,15 @@ func (c *CoreRenderer) setUnitSprite(playerId uint8, unitId uint8, unit *datamod
 		// } else {
 		// 	spriteObj.Delete()
 		// }
-		spriteObj.Delete()
+		flashDuration := time.Second / time.Duration(8)
+		c.tasks.AddTask(&ScheduledTask{
+			Time: time.Now().Add(flashDuration),
+			Func: func() {
+				c.deletePosition(object)
+				healthBarSpriteObj.Delete()
+				spriteObj.Delete()
+			},
+		})
 		return
 	} else if unitState == rts.UnitState_Inactive {
 		c.resetUnitPosition(playerId, unitId, unit)
@@ -1057,7 +1073,6 @@ func (c *CoreRenderer) onShotEvent(shot *rts.InternalEvent_Shot) {
 		imgOverride = c.spriteGetter.GetUnitSprite(targetPlayerId, protoId, unitDirection)
 		targetSpriteObj = c.getUnitSpriteObject(targetPlayerId, targetId, unit)
 	}
-	_ = imgOverride
 	c.animations.RunAnimation(NewFlashAnimation(targetSpriteObj, imgOverride), AnimationConfig{
 		FPS:  8,
 		Mode: AnimationMode_Once,

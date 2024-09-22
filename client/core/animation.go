@@ -111,8 +111,6 @@ type FlashAnimation struct {
 
 var _ Animation = (*FlashAnimation)(nil)
 
-// TODO: fix flash on unit death
-// TODO: fix no loading bar on first hit (?)
 // TODO: fix failing redundant init tx
 
 func NewFlashAnimation(sprite *decren.Sprite, imageOverride *ebiten.Image) *FlashAnimation {
