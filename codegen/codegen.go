@@ -57,6 +57,22 @@ type Player struct {
 	WorkerPort image.Point
 }
 
+func sortFunc(iProtoId uint8, iX, iY int, jProtoId uint8, jX, jY int) bool {
+	if iProtoId < jProtoId {
+		return true
+	}
+	if iProtoId > jProtoId {
+		return false
+	}
+	if iY < jY {
+		return true
+	}
+	if iY > jY {
+		return false
+	}
+	return iX < jX
+}
+
 func getLayerByPrefix(m *tiled.Map, prefix string) *tiled.Layer {
 	prefix = strings.ToLower(prefix)
 	for _, layer := range m.Layers {
@@ -348,10 +364,12 @@ func runBoardLibGen(cmd *cobra.Command, args []string) {
 
 	for _, player := range players {
 		sort.Slice(player.Buildings, func(i, j int) bool {
-			return player.Buildings[i].PrototypeId < player.Buildings[j].PrototypeId
+			ib, jb := player.Buildings[i], player.Buildings[j]
+			return sortFunc(ib.PrototypeId, ib.Position.X, ib.Position.Y, jb.PrototypeId, jb.Position.X, jb.Position.Y)
 		})
 		sort.Slice(player.Units, func(i, j int) bool {
-			return player.Units[i].PrototypeId < player.Units[j].PrototypeId
+			iu, ju := player.Units[i], player.Units[j]
+			return sortFunc(iu.PrototypeId, iu.Position.X, iu.Position.Y, ju.PrototypeId, ju.Position.X, ju.Position.Y)
 		})
 	}
 
