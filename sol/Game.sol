@@ -63,7 +63,6 @@ contract Game is Arch {
         BuildingPrototypeAdder.addBuildingPrototypes(ICore(proxy));
         BoardLib.initialize(ICore(proxy));
         addPlayers(data);
-        ICore(proxy).start();
     }
 
     function start() public virtual override {
