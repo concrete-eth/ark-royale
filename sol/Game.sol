@@ -95,9 +95,9 @@ contract Game is Arch {
         } else {
             uint8 targetUnitId;
             if (action.y < TopLane_Y) {
-                targetUnitId = TopLane_Y;
+                targetUnitId = TopLaneBuildingId;
             } else {
-                targetUnitId = BottomLane_Y;
+                targetUnitId = BottomLaneBuildingId;
             }
             uint8 targetUnitState = ITables(proxy)
                 .getUnitsRow(targetPlayerId, targetUnitId)
