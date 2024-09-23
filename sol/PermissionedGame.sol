@@ -24,16 +24,4 @@ contract PermissionedGame is Game {
     ) public override onlyPlayer(action.playerId) {
         super.createUnit(action);
     }
-
-    function assignUnit(
-        ActionData_AssignUnit memory action
-    ) public override onlyPlayer(action.playerId) {
-        super.assignUnit(action);
-    }
-
-    function placeBuilding(
-        ActionData_PlaceBuilding memory action
-    ) public override onlyPlayer(action.playerId) {
-        super.placeBuilding(action);
-    }
 }
