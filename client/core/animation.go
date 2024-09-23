@@ -111,8 +111,6 @@ type FlashAnimation struct {
 
 var _ Animation = (*FlashAnimation)(nil)
 
-// TODO: fix failing redundant init tx
-
 func NewFlashAnimation(sprite *decren.Sprite, imageOverride *ebiten.Image) *FlashAnimation {
 	// if imageOverride != nil {
 	// 	sprite.SetImageOverride(imageOverride)
