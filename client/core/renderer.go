@@ -842,7 +842,12 @@ func (c *CoreRenderer) setUnitSprite(playerId uint8, unitId uint8, unit *datamod
 	spriteObj := c.getUnitSpriteObject(playerId, unitId, unit)
 	healthBarSpriteObj := c.getHealthBarSpriteObject(object)
 
-	if unitState.IsNil() || unitState == rts.UnitState_Dead {
+	if unitState.IsNil() {
+		c.deletePosition(object)
+		healthBarSpriteObj.Delete()
+		spriteObj.Delete()
+		return
+	} else if unitState == rts.UnitState_Dead {
 		// Remove the sprites if the unit is nil or dead
 		// if c.anticipating {
 		// 	// If the unit does not exist in the game state, try to delete
