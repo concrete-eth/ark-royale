@@ -7,7 +7,7 @@ import {TickMaster} from "./TickMaster.sol";
 import {Clones} from "openzeppelin/proxy/Clones.sol";
 
 uint256 constant tickAllocGasPerPlayer = 500_000;
-uint256 constant tickAllocBlocks = 1800;
+uint256 constant tickAllocBlocks = 600;
 
 contract GameFactory is TickMaster {
     address public immutable gameImplementation;

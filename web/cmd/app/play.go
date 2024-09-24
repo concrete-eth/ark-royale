@@ -377,7 +377,7 @@ func runGameClient(clientConfig core.ClientConfig, params URLParams, privateKeyH
 		logCrit(fmt.Errorf("Failed to get head block number: %v", err))
 	}
 	var (
-		maxBlockToSyncTo = uint64(metaRow.CreationBlockNumber) + 1800 // TODO: Parameterize this
+		maxBlockToSyncTo = uint64(metaRow.CreationBlockNumber) + 600 // TODO: Parameterize this
 		blockToSyncTo    = utils.Min(headBlockNumber, maxBlockToSyncTo)
 		syncToHead       = blockToSyncTo == headBlockNumber
 		// clientCanSend    = playerId != 0 && syncToHead
