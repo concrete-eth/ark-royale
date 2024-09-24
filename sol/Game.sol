@@ -4,8 +4,9 @@ pragma solidity >=0.8.0;
 import "./solgen/IActions.sol";
 import "./solgen/ITables.sol";
 import "./solgen/ICore.sol";
-import {Arch, NonZeroBoolean_True} from "./solgen/Arch.sol";
 import {BoardLib} from "./solgen/BoardLib.sol";
+
+import {ArchBase, NonZeroBoolean_True} from "arch/ArchBase.sol";
 
 import {UnitPrototypeAdder, UnitType} from "./Units.sol";
 import {BuildingPrototypeAdder, BuildingType} from "./Buildings.sol";
@@ -27,7 +28,7 @@ enum UnitState {
     Dead
 }
 
-contract Game is Arch {
+contract Game is ArchBase {
     address[2] internal players;
 
     function getPlayerAddress(uint8 playerId) public view returns (address) {
@@ -65,13 +66,11 @@ contract Game is Arch {
         addPlayers(data);
     }
 
-    function start() public virtual override {
+    function start() public virtual {
         ICore(proxy).start();
     }
 
-    function createUnit(
-        ActionData_CreateUnit memory action
-    ) public virtual override {
+    function createUnit(ActionData_CreateUnit memory action) public virtual {
         if (action.unitType == uint8(UnitType.Worker)) {
             revert("Game: only fighters can be created");
         }
