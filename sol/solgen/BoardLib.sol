@@ -50,6 +50,10 @@ library BoardLib {
             addPlayerData.spawnAreaY = 0;
             addPlayerData.spawnAreaWidth = 5;
             addPlayerData.spawnAreaHeight = 8;
+            addPlayerData.buildAreaX = 0;
+            addPlayerData.buildAreaY = 3;
+            addPlayerData.buildAreaWidth = 2;
+            addPlayerData.buildAreaHeight = 2;
             addPlayerData.workerPortX = 0;
             addPlayerData.workerPortY = 3;
             proxy.addPlayer(addPlayerData);
@@ -65,6 +69,10 @@ library BoardLib {
             addPlayerData.spawnAreaY = 0;
             addPlayerData.spawnAreaWidth = 5;
             addPlayerData.spawnAreaHeight = 8;
+            addPlayerData.buildAreaX = 13;
+            addPlayerData.buildAreaY = 3;
+            addPlayerData.buildAreaWidth = 2;
+            addPlayerData.buildAreaHeight = 2;
             addPlayerData.workerPortX = 14;
             addPlayerData.workerPortY = 3;
             proxy.addPlayer(addPlayerData);

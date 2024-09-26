@@ -51,7 +51,7 @@ abstract contract Entrypoint is ArchBase {
                 (ActionData_PlaceBuilding)
             );
             placeBuilding(action);
-        } else if (actionId == 0xb44ff0c5) {
+        } else if (actionId == 0x5076c06b) {
             ActionData_AddPlayer memory action = abi.decode(
                 actionData,
                 (ActionData_AddPlayer)

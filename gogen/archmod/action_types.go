@@ -17,7 +17,7 @@ Start                 0        0
 CreateUnit            0        6
 AssignUnit            0        19
 PlaceBuilding         0        6
-AddPlayer             0        11
+AddPlayer             0        17
 AddUnitPrototype      0        15
 AddBuildingPrototype  0        13
 */
@@ -117,6 +117,10 @@ type ActionData_AddPlayer struct {
 	SpawnAreaY           uint16 `json:"spawnAreaY"`
 	SpawnAreaWidth       uint8  `json:"spawnAreaWidth"`
 	SpawnAreaHeight      uint8  `json:"spawnAreaHeight"`
+	BuildAreaX           uint16 `json:"buildAreaX"`
+	BuildAreaY           uint16 `json:"buildAreaY"`
+	BuildAreaWidth       uint8  `json:"buildAreaWidth"`
+	BuildAreaHeight      uint8  `json:"buildAreaHeight"`
 	WorkerPortX          uint16 `json:"workerPortX"`
 	WorkerPortY          uint16 `json:"workerPortY"`
 	UnpurgeableUnitCount uint8  `json:"unpurgeableUnitCount"`
@@ -136,6 +140,22 @@ func (row *ActionData_AddPlayer) GetSpawnAreaWidth() uint8 {
 
 func (row *ActionData_AddPlayer) GetSpawnAreaHeight() uint8 {
 	return row.SpawnAreaHeight
+}
+
+func (row *ActionData_AddPlayer) GetBuildAreaX() uint16 {
+	return row.BuildAreaX
+}
+
+func (row *ActionData_AddPlayer) GetBuildAreaY() uint16 {
+	return row.BuildAreaY
+}
+
+func (row *ActionData_AddPlayer) GetBuildAreaWidth() uint8 {
+	return row.BuildAreaWidth
+}
+
+func (row *ActionData_AddPlayer) GetBuildAreaHeight() uint8 {
+	return row.BuildAreaHeight
 }
 
 func (row *ActionData_AddPlayer) GetWorkerPortX() uint16 {

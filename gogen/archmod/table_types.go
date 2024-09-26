@@ -13,7 +13,7 @@ var (
 /*
 Table               KeySize  ValueSize
 Meta                0        13
-Players             1        23
+Players             1        29
 Board               4        7
 Units               2        30
 Buildings           2        11
@@ -69,6 +69,10 @@ type RowData_Players struct {
 	SpawnAreaY                uint16 `json:"spawnAreaY"`
 	SpawnAreaWidth            uint8  `json:"spawnAreaWidth"`
 	SpawnAreaHeight           uint8  `json:"spawnAreaHeight"`
+	BuildAreaX                uint16 `json:"buildAreaX"`
+	BuildAreaY                uint16 `json:"buildAreaY"`
+	BuildAreaWidth            uint8  `json:"buildAreaWidth"`
+	BuildAreaHeight           uint8  `json:"buildAreaHeight"`
 	WorkerPortX               uint16 `json:"workerPortX"`
 	WorkerPortY               uint16 `json:"workerPortY"`
 	CurResource               uint16 `json:"curResource"`
@@ -98,6 +102,22 @@ func (row *RowData_Players) GetSpawnAreaWidth() uint8 {
 
 func (row *RowData_Players) GetSpawnAreaHeight() uint8 {
 	return row.SpawnAreaHeight
+}
+
+func (row *RowData_Players) GetBuildAreaX() uint16 {
+	return row.BuildAreaX
+}
+
+func (row *RowData_Players) GetBuildAreaY() uint16 {
+	return row.BuildAreaY
+}
+
+func (row *RowData_Players) GetBuildAreaWidth() uint8 {
+	return row.BuildAreaWidth
+}
+
+func (row *RowData_Players) GetBuildAreaHeight() uint8 {
+	return row.BuildAreaHeight
 }
 
 func (row *RowData_Players) GetWorkerPortX() uint16 {

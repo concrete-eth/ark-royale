@@ -54,6 +54,7 @@ type Player struct {
 	Buildings  []*Building
 	Units      []*Unit
 	SpawnArea  image.Rectangle
+	BuildArea  image.Rectangle
 	WorkerPort image.Point
 }
 
@@ -115,10 +116,14 @@ func runBoardLibGen(cmd *cobra.Command, args []string) {
 	if terrainLayer == nil {
 		panic("terrain layer not found")
 	}
-	buildingLayer := getLayerByPrefix(m, "Buildings")
-	unitLayer := getLayerByPrefix(m, "Units")
-	spawnAreasGroup := getObjGroupByPrefix(m, "SpawnAreas")
-	workerPortsGroup := getObjGroupByPrefix(m, "WorkerPorts")
+
+	var (
+		buildingLayer    = getLayerByPrefix(m, "Buildings")
+		unitLayer        = getLayerByPrefix(m, "Units")
+		spawnAreasGroup  = getObjGroupByPrefix(m, "SpawnAreas")
+		buildAreasGroup  = getObjGroupByPrefix(m, "BuildAreas")
+		workerPortsGroup = getObjGroupByPrefix(m, "WorkerPorts")
+	)
 
 	minX, minY := m.Width, m.Height
 	maxX, maxY := 0, 0
@@ -321,6 +326,32 @@ func runBoardLibGen(cmd *cobra.Command, args []string) {
 			w := int(obj.Width) / m.TileWidth
 			h := int(obj.Height) / m.TileHeight
 			player.SpawnArea = image.Rectangle{
+				Min: image.Point{X: x - minX, Y: y - minY},
+				Max: image.Point{X: x - minX + w, Y: y - minY + h},
+			}
+		}
+	}
+
+	if buildAreasGroup != nil {
+		for _, obj := range buildAreasGroup.Objects {
+			playerId := uint8(obj.Properties.GetInt("PlayerId"))
+			if playerId == 0 {
+				panic("PlayerId is required for BuildAreas")
+			}
+			player, ok := players[playerId]
+			if !ok {
+				player = &Player{
+					Id:        playerId,
+					Buildings: []*Building{},
+					Units:     []*Unit{},
+				}
+				players[playerId] = player
+			}
+			x := int(obj.X) / m.TileWidth
+			y := int(obj.Y) / m.TileHeight
+			w := int(obj.Width) / m.TileWidth
+			h := int(obj.Height) / m.TileHeight
+			player.BuildArea = image.Rectangle{
 				Min: image.Point{X: x - minX, Y: y - minY},
 				Max: image.Point{X: x - minX + w, Y: y - minY + h},
 			}

@@ -35,6 +35,10 @@ struct ActionData_AddPlayer {
     uint16 spawnAreaY;
     uint8 spawnAreaWidth;
     uint8 spawnAreaHeight;
+    uint16 buildAreaX;
+    uint16 buildAreaY;
+    uint8 buildAreaWidth;
+    uint8 buildAreaHeight;
     uint16 workerPortX;
     uint16 workerPortY;
     uint8 unpurgeableUnitCount;

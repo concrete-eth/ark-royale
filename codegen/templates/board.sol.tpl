@@ -52,6 +52,10 @@ library BoardLib {
             addPlayerData.spawnAreaY = {{ $player.SpawnArea.Min.Y }};
             addPlayerData.spawnAreaWidth = {{ $player.SpawnArea.Dx }};
             addPlayerData.spawnAreaHeight = {{ $player.SpawnArea.Dy }};
+            addPlayerData.buildAreaX = {{ $player.BuildArea.Min.X }};
+            addPlayerData.buildAreaY = {{ $player.BuildArea.Min.Y }};
+            addPlayerData.buildAreaWidth = {{ $player.BuildArea.Dx }};
+            addPlayerData.buildAreaHeight = {{ $player.BuildArea.Dy }};
             addPlayerData.workerPortX = {{ $player.WorkerPort.X }};
             addPlayerData.workerPortY = {{ $player.WorkerPort.Y }};
             proxy.addPlayer(addPlayerData);

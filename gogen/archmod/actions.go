@@ -53,6 +53,10 @@ var ActionSchemasJson = `{
             "spawnAreaY": "uint16",
             "spawnAreaWidth": "uint8",
             "spawnAreaHeight": "uint8",
+            "buildAreaX": "uint16",
+            "buildAreaY": "uint16",
+            "buildAreaWidth": "uint8",
+            "buildAreaHeight": "uint8",
             "workerPortX": "uint16",
             "workerPortY": "uint16",
             "unpurgeableUnitCount": "uint8"

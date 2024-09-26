@@ -457,27 +457,21 @@ func (c *Core) GetSpawnArea(playerId uint8) image.Rectangle {
 	return area
 }
 
-func (c *Core) GetSpawnPoint(layer LayerId, playerId uint8) (image.Point, bool) {
-	spawnArea := c.GetSpawnArea(playerId)
-	mainBuildingArea := c.GetMainBuildingArea(playerId)
-	var nearestTile image.Point
-	nearestDistance := -1
-	for x := uint16(spawnArea.Min.X); x < uint16(spawnArea.Max.X); x++ {
-		for y := uint16(spawnArea.Min.Y); y < uint16(spawnArea.Max.Y); y++ {
-			tile := c.GetBoardTile(x, y)
-			if IsTileEmptyAllLayers(tile) {
-				distance := DistanceToArea(nearestTile, mainBuildingArea)
-				if nearestDistance == -1 || distance < nearestDistance {
-					nearestTile = image.Point{int(x), int(y)}
-					nearestDistance = distance
-				}
-			}
-		}
+func (c *Core) GetBuildArea(playerId uint8) image.Rectangle {
+	player := c.GetPlayer(playerId)
+	position := image.Point{
+		int(player.GetBuildAreaX()),
+		int(player.GetBuildAreaY()),
 	}
-	if nearestDistance == -1 {
-		return image.Point{}, false
+	size := image.Point{
+		int(player.GetBuildAreaWidth()),
+		int(player.GetBuildAreaHeight()),
 	}
-	return nearestTile, true
+	area := image.Rectangle{
+		Min: position,
+		Max: position.Add(size),
+	}
+	return area
 }
 
 type ObjectMatchByDistance struct {
@@ -559,9 +553,12 @@ func (c *Core) TileIsInBoard(position image.Point) bool {
 	return position.In(c.BoardRect())
 }
 
-func (c *Core) IsBuildableArea(area image.Rectangle) bool {
-	if !area.In(c.BoardRect()) {
-		return false
+func (c *Core) IsBuildableArea(playerId uint8, area image.Rectangle) bool {
+	if playerId != NilPlayerId {
+		buildArea := c.GetBuildArea(playerId)
+		if !area.In(buildArea) {
+			return false
+		}
 	}
 	nPlayers := c.GetMeta().GetPlayerCount()
 	for playerId := uint8(1); playerId < nPlayers+1; playerId++ {
@@ -1817,6 +1814,9 @@ func (c *Core) Initialize(action *Initialization) error {
 }
 
 func (c *Core) AddPlayer(action *PlayerAddition) error {
+	if !c.IsInitialized() {
+		return ErrNotInitialized
+	}
 	if c.HasStarted() {
 		return ErrAlreadyStarted
 	}
@@ -1825,12 +1825,30 @@ func (c *Core) AddPlayer(action *PlayerAddition) error {
 	if playerId == NilPlayerId {
 		return ErrPlayerLimitReached
 	}
+
+	spawnArea := image.Rectangle{
+		Min: image.Point{int(action.SpawnAreaX), int(action.SpawnAreaY)},
+		Max: image.Point{int(action.SpawnAreaX) + int(action.SpawnAreaWidth), int(action.SpawnAreaY) + int(action.SpawnAreaHeight)},
+	}
+	buildArea := image.Rectangle{
+		Min: image.Point{int(action.BuildAreaX), int(action.BuildAreaY)},
+		Max: image.Point{int(action.BuildAreaX) + int(action.BuildAreaWidth), int(action.BuildAreaY) + int(action.BuildAreaHeight)},
+	}
+	boardArea := c.BoardRect()
+
+	spawnArea = spawnArea.Intersect(boardArea)
+	buildArea = buildArea.Intersect(boardArea)
+
 	c.GetMeta().SetPlayerCount(playerId)
 	player := c.GetPlayer(playerId)
-	player.SetSpawnAreaX(action.SpawnAreaX)
-	player.SetSpawnAreaY(action.SpawnAreaY)
-	player.SetSpawnAreaWidth(action.SpawnAreaWidth)
-	player.SetSpawnAreaHeight(action.SpawnAreaHeight)
+	player.SetSpawnAreaX(uint16(spawnArea.Min.X))
+	player.SetSpawnAreaY(uint16(spawnArea.Min.Y))
+	player.SetSpawnAreaWidth(uint8(spawnArea.Dx()))
+	player.SetSpawnAreaHeight(uint8(spawnArea.Dy()))
+	player.SetBuildAreaX(uint16(buildArea.Min.X))
+	player.SetBuildAreaY(uint16(buildArea.Min.Y))
+	player.SetBuildAreaWidth(uint8(buildArea.Dx()))
+	player.SetBuildAreaHeight(uint8(buildArea.Dy()))
 	player.SetWorkerPortX(action.WorkerPortX)
 	player.SetWorkerPortY(action.WorkerPortY)
 	player.SetUnpurgeableUnitCount(action.UnpurgeableUnitCount)
@@ -2034,7 +2052,7 @@ func (c *Core) PlaceBuilding(action *BuildingPlacement) error {
 		}
 	}
 	buildArea := image.Rectangle{Min: position, Max: position.Add(size)}
-	if !c.IsBuildableArea(buildArea) {
+	if !c.IsBuildableArea(playerId, buildArea) {
 		fmt.Println("Build area is not buildable", buildArea, protoId)
 		return ErrAreaNotBuildable
 	}
